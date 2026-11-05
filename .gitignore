@@ -21,6 +21,9 @@ test-results/
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+.wrangler/
 
 # --- OS / editor ---
 .DS_Store
