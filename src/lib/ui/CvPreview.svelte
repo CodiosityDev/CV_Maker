@@ -95,6 +95,8 @@
 		overflow: hidden;
 		background: #fff;
 		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-card);
 	}
 	.paper {
 		width: 210mm;
@@ -118,16 +120,23 @@
 		min-height: 44px;
 		margin-top: 0.5rem;
 		padding: 0.5rem 1rem;
-		border: 1px solid var(--color-control-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-surface);
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		background: var(--color-brand-50);
 		color: var(--color-brand-ink);
 		font: inherit;
+		cursor: pointer;
+		transition: background-color var(--motion-duration) ease-out;
+	}
+	button:hover {
+		background: var(--color-secondary-hover);
 	}
 	@media print {
 		.viewport {
 			height: auto !important;
 			overflow: visible;
+			border: 0;
+			border-radius: 0;
 			box-shadow: none;
 		}
 		.paper {

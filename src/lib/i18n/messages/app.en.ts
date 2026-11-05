@@ -145,53 +145,64 @@ export const appEn: AppMessages = {
 		},
 		steps: {
 			type: {
+				short: 'Type',
 				title: 'Choose your CV type',
 				description: 'Choose a CV type for how you apply and the role you want.'
 			},
 			target: {
+				short: 'Direction',
 				title: 'Your career direction',
 				description:
 					'Start with your CV language and the role you want. Give it a title so you can find it again.'
 			},
 			personal: {
+				short: 'Personal',
 				title: 'Personal details',
 				description: 'Help recruiters get to know and contact you. Include the details that matter.'
 			},
 			education: {
+				short: 'Education',
 				title: 'Education',
 				description:
 					'Share your educational background. Final projects, coursework, and scholarships can show your skills too.'
 			},
 			experience: {
+				short: 'Experience',
 				title: 'Work experience / internships',
 				description:
 					'Internships, part-time work, and freelance projects count too. Nothing yet? You can skip this step.'
 			},
 			organizations: {
+				short: 'Organisation',
 				title: 'Organisations & committees',
 				description: 'Show your role and contribution when working with others.'
 			},
 			projects: {
+				short: 'Projects',
 				title: 'Projects',
 				description:
 					'University projects, a thesis, and personal work can demonstrate what you can do.'
 			},
 			skills: {
+				short: 'Skills',
 				title: 'Skills & achievements',
 				description:
 					'Add skills, languages, certifications, or achievements relevant to the role you want.'
 			},
 			summary: {
+				short: 'Summary',
 				title: 'Profile summary',
 				description:
 					'Write 2–4 sentences about your education, skills, and target role. Use an example if needed.'
 			},
 			review: {
+				short: 'Review',
 				title: 'Review your CV',
 				description:
 					'Check your content, spelling, and contact details. The preview shows what a recruiter will read.'
 			},
 			done: {
+				short: 'Done',
 				title: 'Well done, your CV is taking shape!',
 				description: 'Your CV details are complete. You can review and update the content here.'
 			}

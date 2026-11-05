@@ -120,6 +120,12 @@
 		font-size: 1rem;
 		line-height: 1.6;
 		resize: vertical;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out;
+	}
+	textarea:hover:not(:disabled):not([aria-invalid='true']) {
+		border-color: var(--color-focus);
 	}
 	textarea::placeholder {
 		color: var(--color-text-muted);

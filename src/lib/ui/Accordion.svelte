@@ -64,15 +64,26 @@
 		justify-content: space-between;
 		gap: 16px;
 		border: 0;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-md);
 		background: transparent;
-		padding: 16px 0;
+		padding: 16px 12px;
 		color: var(--color-text);
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.6;
 		text-align: left;
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out;
+	}
+	button:hover:not(:disabled) {
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
+	}
+	button[aria-expanded='true'] {
+		background: var(--color-mint-50);
+		color: var(--color-brand-ink);
 	}
 	button:disabled {
 		opacity: 0.65;
@@ -83,12 +94,13 @@
 		height: 20px;
 		flex-shrink: 0;
 		color: var(--color-text-muted);
+		transition: transform var(--motion-duration) ease-out;
 	}
 	svg.expanded {
 		transform: scaleY(-1);
 	}
 	.content {
-		padding: 0 28px 20px 0;
+		padding: 12px 40px 20px 12px;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.8;

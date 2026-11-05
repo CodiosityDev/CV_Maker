@@ -136,33 +136,43 @@
 		text-decoration: none;
 		cursor: pointer;
 		transition:
-			transform 150ms ease,
-			opacity 150ms ease;
-	}
-	.button:hover:not(:disabled):not([aria-disabled='true']) {
-		transform: translateY(-1px);
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out,
+			transform var(--motion-duration) ease-out,
+			opacity var(--motion-duration) ease-out;
 	}
 	.button:active:not(:disabled):not([aria-disabled='true']) {
-		transform: translateY(0);
+		transform: translateY(1px);
 	}
 	.primary {
-		border-color: var(--color-brand-ink);
 		background: var(--color-brand);
 		color: var(--color-ink);
 	}
+	.primary:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--color-brand-hover);
+	}
 	.secondary {
-		border-color: var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
+	}
+	.secondary:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--color-secondary-hover);
 	}
 	.ghost {
 		background: transparent;
 		color: var(--color-brand-ink);
 	}
+	.ghost:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--color-brand-50);
+	}
 	.danger {
-		border-color: var(--color-coral-ink);
 		background: var(--color-coral);
 		color: var(--color-ink);
+	}
+	.danger:hover:not(:disabled):not([aria-disabled='true']) {
+		background: var(--color-coral-50);
+		color: var(--color-danger);
 	}
 	.sm {
 		min-height: 44px;

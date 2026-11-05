@@ -149,6 +149,12 @@
 		color: var(--color-text);
 		font: inherit;
 		font-size: 1rem;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out;
+	}
+	select:hover:not(:disabled):not([aria-invalid='true']) {
+		border-color: var(--color-focus);
 	}
 	select[aria-invalid='true'] {
 		border-color: var(--color-danger);
@@ -168,10 +174,36 @@
 		cursor: pointer;
 	}
 	.current-label input {
+		appearance: none;
+		display: grid;
 		width: 20px;
 		height: 20px;
 		margin: 0;
-		accent-color: var(--color-brand-ink);
+		flex-shrink: 0;
+		place-items: center;
+		border: 1px solid var(--color-control-border);
+		border-radius: 5px;
+		background: var(--color-surface);
+		color: var(--color-surface);
+		cursor: inherit;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out;
+	}
+	.current-label input::after {
+		width: 12px;
+		height: 10px;
+		background: currentColor;
+		clip-path: polygon(0 42%, 14% 27%, 40% 58%, 86% 0, 100% 15%, 41% 100%);
+		content: '';
+		opacity: 0;
+	}
+	.current-label input:checked {
+		border-color: var(--color-brand-ink);
+		background: var(--color-brand-ink);
+	}
+	.current-label input:checked::after {
+		opacity: 1;
 	}
 	.current-label:has(input:disabled) {
 		color: var(--color-text-muted);
@@ -188,5 +220,13 @@
 	}
 	.error {
 		color: var(--color-danger);
+	}
+	@media (forced-colors: active) {
+		.current-label input {
+			appearance: auto;
+		}
+		.current-label input::after {
+			display: none;
+		}
 	}
 </style>

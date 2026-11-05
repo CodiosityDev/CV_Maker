@@ -185,7 +185,7 @@
 		min-width: 0;
 		padding: 1rem;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface);
 	}
 	.item-heading {
@@ -207,13 +207,17 @@
 	button {
 		min-width: 44px;
 		min-height: 44px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-surface);
-		color: var(--color-text);
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
 		font: inherit;
 		font-weight: 600;
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out,
+			transform var(--motion-duration) ease-out;
 	}
 	.item-actions button {
 		display: grid;
@@ -221,7 +225,10 @@
 		font-size: 1.25rem;
 	}
 	button:hover:not(:disabled) {
-		background: var(--color-surface-muted);
+		background: var(--color-secondary-hover);
+	}
+	button:active:not(:disabled) {
+		transform: translateY(1px);
 	}
 	button:disabled {
 		opacity: 0.5;
@@ -244,9 +251,9 @@
 	.empty {
 		margin: 0 0 1rem;
 		padding: 1.25rem;
-		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface-muted);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		background: var(--color-mint-50);
 		color: var(--color-text-muted);
 		line-height: 1.7;
 	}
@@ -266,12 +273,12 @@
 		padding: 0.625rem 1rem;
 	}
 	.confirm-delete {
-		border-color: var(--color-coral-ink);
 		background: var(--color-coral);
 		color: var(--color-ink);
 	}
 	.confirm-delete:hover:not(:disabled) {
-		background: var(--color-coral);
+		background: var(--color-coral-50);
+		color: var(--color-danger);
 	}
 	.sr-only {
 		position: absolute;
