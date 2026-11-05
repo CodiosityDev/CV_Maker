@@ -1,0 +1,5 @@
+/*
+ * Global styles + design tokens. Owned by the UI (Codex) — tokens are added in milestone M2.
+ * Tailwind v4 is configured here via CSS (`@theme`), there is no tailwind.config.js.
+ */
+@import 'tailwindcss';

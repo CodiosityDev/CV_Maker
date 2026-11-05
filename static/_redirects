@@ -1,0 +1,5 @@
+# Cloudflare Pages: serve the SPA shell for client-only app routes (status 200 = rewrite, URL unchanged).
+/buat     /200.html  200
+/buat/*   /200.html  200
+/cv       /200.html  200
+/cv/*     /200.html  200

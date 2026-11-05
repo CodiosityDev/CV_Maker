@@ -1,0 +1,23 @@
+# Package managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Build & generated
+/build/
+/.svelte-kit/
+/coverage/
+/playwright-report/
+/test-results/
+
+# Static assets (headers/redirects files have their own syntax)
+/static/
+
+# Private AI docs (not in repo)
+PROJECT_SPEC.md
+AGENTS.md
+CLAUDE.md
+HANDOFF.md
+CODEX_PROMPTS.md
