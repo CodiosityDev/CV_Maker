@@ -40,7 +40,9 @@
 	function resize(_value: string) {
 		if (element && element.clientWidth > 0) {
 			element.style.height = 'auto';
-			element.style.height = `${element.scrollHeight}px`;
+			const style = getComputedStyle(element);
+			const border = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+			element.style.height = `${element.scrollHeight + border}px`;
 		}
 	}
 	$effect(() => resize(value));
@@ -48,14 +50,25 @@
 		const textarea = element;
 		if (!textarea || typeof ResizeObserver === 'undefined') return;
 		let previousWidth: number | undefined;
+		let frame: number | undefined;
 		const observer = new ResizeObserver(([entry]) => {
 			const width = entry?.contentRect.width;
 			if (width === undefined || width === previousWidth) return;
 			previousWidth = width;
-			if (width > 0) resize(value);
+			if (width > 0) {
+				if (frame !== undefined) cancelAnimationFrame(frame);
+				// Mutating the observed box during delivery produces ResizeObserver loop errors.
+				frame = requestAnimationFrame(() => {
+					frame = undefined;
+					resize(value);
+				});
+			}
 		});
 		observer.observe(textarea);
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			if (frame !== undefined) cancelAnimationFrame(frame);
+		};
 	});
 </script>
 
@@ -95,6 +108,7 @@
 		font-weight: 600;
 	}
 	textarea {
+		box-sizing: border-box;
 		width: 100%;
 		min-width: 0;
 		min-height: 96px;
