@@ -139,6 +139,46 @@ export const guidance: Guidance = {
 			text: 'Lulusan [jurusan] yang senang merancang [UI/identitas visual/konten] yang mudah dipahami. Berpengalaman mengerjakan [proyek/freelance] menggunakan [Figma/Adobe]. Siap berkontribusi sebagai [posisi].'
 		},
 		{
+			field: 'health',
+			label: 'Kesehatan',
+			text: 'Lulusan [D3/S1] [Keperawatan/Farmasi/Kesehatan Masyarakat] yang telah menjalani praktik klinik di [rumah sakit/puskesmas]. Terbiasa [keterampilan utama, mis. asuhan keperawatan/edukasi pasien] dan bekerja sesuai SOP. Siap berkontribusi sebagai [posisi] dengan pelayanan yang teliti dan empatik.'
+		},
+		{
+			field: 'education',
+			label: 'Pendidikan',
+			text: 'Lulusan [jurusan pendidikan] dengan pengalaman [PPL/mengajar les] selama [durasi]. Terbiasa menyusun materi ajar dan menyesuaikan cara mengajar dengan kebutuhan siswa. Siap berkontribusi sebagai [posisi].'
+		},
+		{
+			field: 'admin',
+			label: 'Administrasi & Perkantoran',
+			text: 'Lulusan [jenjang] [jurusan] yang teliti dan rapi dalam mengelola dokumen. Berpengalaman [magang/organisasi] dalam [pengarsipan/data entry/surat-menyurat] dan menguasai Microsoft Office. Siap mendukung kelancaran operasional sebagai [posisi].'
+		},
+		{
+			field: 'hr',
+			label: 'SDM / HR',
+			text: 'Lulusan [Psikologi/Manajemen SDM] dengan pengalaman [magang/kepanitiaan] dalam [rekrutmen/administrasi kepegawaian]. Terbiasa berkomunikasi dengan banyak orang dan menjaga kerahasiaan data. Siap berkontribusi sebagai [posisi].'
+		},
+		{
+			field: 'sales',
+			label: 'Penjualan & Layanan Pelanggan',
+			text: 'Lulusan [jurusan] yang senang bertemu dan membantu orang. Berpengalaman [kerja paruh waktu/organisasi] dalam [penjualan/melayani pelanggan] dengan hasil [mis. melayani 80 pelanggan per hari]. Siap mencapai target sebagai [posisi].'
+		},
+		{
+			field: 'hospitality',
+			label: 'Perhotelan & Pariwisata',
+			text: 'Lulusan [Perhotelan/Pariwisata] dengan pengalaman [magang di hotel/restoran] di bagian [front office/F&B]. Terbiasa melayani tamu dengan ramah dan bekerja dalam shift. Siap berkontribusi sebagai [posisi].'
+		},
+		{
+			field: 'legal',
+			label: 'Hukum',
+			text: 'Lulusan Ilmu Hukum dengan minat pada [hukum perdata/korporasi/ketenagakerjaan]. Berpengalaman [magang di kantor hukum/LBH] dalam [riset hukum/penyusunan dokumen]. Siap berkontribusi sebagai [posisi].'
+		},
+		{
+			field: 'agriculture',
+			label: 'Pertanian',
+			text: 'Lulusan [Agroteknologi/Agribisnis] dengan pengalaman [penelitian/magang] di bidang [budidaya/perkebunan]. Terbiasa bekerja di lapangan dan mencatat data dengan teliti. Siap berkontribusi sebagai [posisi].'
+		},
+		{
 			field: 'general',
 			label: 'Umum',
 			text: 'Lulusan [jenjang] [jurusan] dari [kampus] yang aktif dalam [organisasi/kegiatan]. Memiliki kemampuan [keahlian utama] serta terbiasa bekerja dalam tim dan memenuhi tenggat waktu. Siap belajar dan berkontribusi sebagai [posisi].'

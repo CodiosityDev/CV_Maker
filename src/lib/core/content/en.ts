@@ -137,6 +137,46 @@ export const guidance: Guidance = {
 			text: '[Major] graduate who enjoys designing clear [UI/visual identities/content]. Experienced in [projects/freelance] using [Figma/Adobe]. Ready to contribute as a [role].'
 		},
 		{
+			field: 'health',
+			label: 'Health',
+			text: '[Diploma/Bachelor] graduate in [Nursing/Pharmacy/Public Health] with clinical placement at [hospital/community health centre]. Experienced in [key skill, e.g. nursing care/patient education] and following SOPs. Ready to contribute as a [role] with careful, empathetic care.'
+		},
+		{
+			field: 'education',
+			label: 'Education',
+			text: "[Education major] graduate with [teaching practice/tutoring] experience over [duration]. Used to preparing lesson materials and adapting to students' needs. Ready to contribute as a [role]."
+		},
+		{
+			field: 'admin',
+			label: 'Administration & Office',
+			text: 'Detail-oriented [degree] [major] graduate who keeps documents organised. Experienced in [filing/data entry/correspondence] through [internship/organisation] and proficient in Microsoft Office. Ready to support daily operations as a [role].'
+		},
+		{
+			field: 'hr',
+			label: 'Human Resources',
+			text: '[Psychology/HR Management] graduate with [internship/committee] experience in [recruitment/personnel administration]. Comfortable communicating with many people and handling confidential data. Ready to contribute as a [role].'
+		},
+		{
+			field: 'sales',
+			label: 'Sales & Customer Service',
+			text: '[Major] graduate who enjoys meeting and helping people. Experienced in [sales/customer service] through [part-time work/organisation], e.g. [serving 80 customers a day]. Ready to hit targets as a [role].'
+		},
+		{
+			field: 'hospitality',
+			label: 'Hospitality & Tourism',
+			text: '[Hospitality/Tourism] graduate with [internship at a hotel/restaurant] in [front office/F&B]. Friendly with guests and used to shift work. Ready to contribute as a [role].'
+		},
+		{
+			field: 'legal',
+			label: 'Law',
+			text: 'Law graduate with an interest in [civil/corporate/labour law]. Experienced in [legal research/document drafting] through [an internship at a law firm/legal aid institute]. Ready to contribute as a [role].'
+		},
+		{
+			field: 'agriculture',
+			label: 'Agriculture',
+			text: '[Agrotechnology/Agribusiness] graduate with [research/internship] experience in [cultivation/plantations]. Comfortable with field work and careful data recording. Ready to contribute as a [role].'
+		},
+		{
 			field: 'general',
 			label: 'General',
 			text: '[Degree] [major] graduate from [university], active in [organisations/activities]. Skilled in [key skill], used to teamwork and meeting deadlines. Eager to learn and contribute as a [role].'
