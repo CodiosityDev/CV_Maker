@@ -1,0 +1,301 @@
+/**
+ * CVDocument → RenderModel: everything a template needs, already prepared (PROJECT_SPEC §7.1).
+ *
+ * Templates only DISPLAY the model: no business logic, no formatting, no URL handling.
+ * - hidden & empty sections removed, order applied
+ * - titles translated to the CV's language (custom titles respected)
+ * - dates formatted ("Jul 2024 – Sekarang")
+ * - links sanitized (unsafe URLs dropped) with short display text
+ * - blank bullets/items removed, text trimmed
+ *
+ *   import { toRenderModel } from '#lib/core/render/index.ts';
+ *   const model = $derived(toRenderModel(store.cv, { photoUrl }));
+ */
+import type {
+	BuiltinSectionKey,
+	CVDocument,
+	CVKind,
+	CVTheme,
+	CustomSectionKey,
+	Locale,
+	SectionKey,
+	SkillGroups
+} from '../schema/types';
+import { displayUrl, sanitizeUrl } from '../security/url';
+import { formatDateRange, formatYearMonth, phoneHref } from './format';
+import { CV_LABELS, type CvLabels } from './labels';
+
+export { CV_LABELS, type CvLabels } from './labels';
+export { formatDateRange, formatYearMonth } from './format';
+
+export interface RenderLink {
+	label: string;
+	href: string;
+	/** Short text for print, e.g. 'linkedin.com/in/rizky'. */
+	display: string;
+}
+
+export interface RenderEntry {
+	id: string;
+	/** Main line: role, institution, project name, ... */
+	title: string;
+	/** Secondary line: company, degree + major, issuer, ... */
+	subtitle?: string;
+	/** Small facts, e.g. ['IPK 3.65/4.00', 'Magang']. */
+	meta: string[];
+	dateText?: string;
+	location?: string;
+	link?: RenderLink;
+	description?: string;
+	bullets: string[];
+}
+
+export type RenderSection =
+	| { type: 'text'; key: 'summary'; title: string; paragraphs: string[] }
+	| {
+			type: 'entries';
+			key: Exclude<BuiltinSectionKey, 'summary' | 'skills'> | CustomSectionKey;
+			title: string;
+			entries: RenderEntry[];
+	  }
+	| {
+			type: 'skills';
+			key: 'skills';
+			title: string;
+			groups: { key: keyof SkillGroups; label: string; items: string[] }[];
+	  };
+
+export interface RenderModel {
+	id: string;
+	kind: CVKind;
+	locale: Locale;
+	templateId: string;
+	theme: CVTheme;
+	labels: CvLabels;
+	personal: {
+		fullName: string;
+		headline?: string;
+		email?: string;
+		emailHref?: string;
+		phone?: string;
+		phoneHref?: string;
+		/** 'Malang, Jawa Timur' */
+		location?: string;
+		links: RenderLink[];
+		/** Only set for creative CVs. */
+		photoUrl?: string;
+	};
+	/** Visible, non-empty sections in display order. */
+	sections: RenderSection[];
+}
+
+export interface RenderOptions {
+	/** Object URL from assetRepo.getPhotoUrl(); ignored for ATS CVs. */
+	photoUrl?: string;
+}
+
+const trim = (value: string | undefined): string => (value ?? '').trim();
+const opt = (value: string | undefined): string | undefined => trim(value) || undefined;
+const cleanList = (items: readonly string[]): string[] => items.map(trim).filter(Boolean);
+const join = (...parts: (string | undefined)[]): string | undefined =>
+	parts.map(opt).filter(Boolean).join(' ') || undefined;
+
+function makeLink(url: string | undefined, label?: string): RenderLink | undefined {
+	const href = sanitizeUrl(url);
+	if (!href) return undefined;
+	const display = displayUrl(href);
+	return { href, display, label: opt(label) ?? display };
+}
+
+/** Keeps an entry only if it has something to show as a heading. */
+function keep(entry: RenderEntry): boolean {
+	return Boolean(entry.title || entry.subtitle);
+}
+
+function buildEntries(
+	cv: CVDocument,
+	key: Exclude<BuiltinSectionKey, 'summary' | 'skills'>,
+	labels: CvLabels
+): RenderEntry[] {
+	const locale = cv.locale;
+	switch (key) {
+		case 'education':
+			return cv.education
+				.map((e) => {
+					const gpa = opt(e.gpa);
+					const meta: string[] = [];
+					if (gpa)
+						meta.push(`${labels.gpa} ${gpa}${opt(e.gpaScale) ? `/${trim(e.gpaScale)}` : ''}`);
+					if (opt(e.thesisTitle)) meta.push(`${labels.thesis}: ${trim(e.thesisTitle)}`);
+					return {
+						id: e.id,
+						title: trim(e.institution),
+						subtitle: join(e.degree, e.major),
+						meta,
+						dateText: formatDateRange(e.dates, locale),
+						bullets: cleanList(e.highlights)
+					};
+				})
+				.filter(keep);
+		case 'experience':
+			return cv.experience
+				.map((e) => ({
+					id: e.id,
+					title: trim(e.role),
+					subtitle: opt(e.company),
+					meta: e.type === 'fulltime' ? [] : [labels.experienceType[e.type]],
+					dateText: formatDateRange(e.dates, locale),
+					location: opt(e.location),
+					bullets: cleanList(e.bullets)
+				}))
+				.filter(keep);
+		case 'organizations':
+			return cv.organizations
+				.map((o) => ({
+					id: o.id,
+					title: trim(o.role),
+					subtitle: opt(o.name),
+					meta: [],
+					dateText: formatDateRange(o.dates, locale),
+					bullets: cleanList(o.bullets)
+				}))
+				.filter(keep);
+		case 'projects':
+			return cv.projects
+				.map((p) => ({
+					id: p.id,
+					title: trim(p.name),
+					subtitle: opt(p.role),
+					meta: [],
+					dateText: formatDateRange(p.dates, locale),
+					link: makeLink(p.url),
+					bullets: cleanList(p.bullets)
+				}))
+				.filter(keep);
+		case 'languages':
+			return cv.languages
+				.map((l) => ({
+					id: l.id,
+					title: trim(l.name),
+					subtitle: [labels.languageLevel[l.level], opt(l.score)].filter(Boolean).join(' · '),
+					meta: [],
+					bullets: []
+				}))
+				.filter((entry) => Boolean(entry.title));
+		case 'certifications':
+			return cv.certifications
+				.map((c) => ({
+					id: c.id,
+					title: trim(c.name),
+					subtitle: opt(c.issuer),
+					meta: [],
+					dateText: formatYearMonth(c.date, locale),
+					link: makeLink(c.credentialUrl),
+					bullets: []
+				}))
+				.filter(keep);
+		case 'awards':
+			return cv.awards
+				.map((a) => ({
+					id: a.id,
+					title: trim(a.title),
+					subtitle: opt(a.issuer),
+					meta: [],
+					dateText: formatYearMonth(a.date, locale),
+					description: opt(a.description),
+					bullets: []
+				}))
+				.filter(keep);
+	}
+}
+
+function buildSection(cv: CVDocument, key: SectionKey, labels: CvLabels): RenderSection | null {
+	const title = opt(cv.layout.customTitles[key]);
+
+	if (key === 'summary') {
+		const paragraphs = cv.summary
+			.split(/\n\s*\n|\n/)
+			.map((p) => p.trim())
+			.filter(Boolean);
+		return paragraphs.length
+			? { type: 'text', key, title: title ?? labels.sections.summary, paragraphs }
+			: null;
+	}
+
+	if (key === 'skills') {
+		const groups = (['hard', 'soft', 'tools'] as const)
+			.map((group) => ({
+				key: group,
+				label: labels.skillGroups[group],
+				items: cleanList(cv.skills[group])
+			}))
+			.filter((group) => group.items.length > 0);
+		return groups.length
+			? { type: 'skills', key, title: title ?? labels.sections.skills, groups }
+			: null;
+	}
+
+	if (key.startsWith('custom:')) {
+		const section = cv.custom.find((s) => s.key === key);
+		if (!section) return null;
+		const entries = section.items
+			.map((item) => ({
+				id: item.id,
+				title: trim(item.title),
+				subtitle: opt(item.subtitle),
+				meta: [],
+				dateText: formatDateRange(item.dates, cv.locale),
+				bullets: cleanList(item.bullets)
+			}))
+			.filter(keep);
+		const sectionTitle = title ?? opt(section.title);
+		return entries.length && sectionTitle
+			? { type: 'entries', key: section.key, title: sectionTitle, entries }
+			: null;
+	}
+
+	const builtin = key as Exclude<BuiltinSectionKey, 'summary' | 'skills'>;
+	const entries = buildEntries(cv, builtin, labels);
+	return entries.length
+		? { type: 'entries', key: builtin, title: title ?? labels.sections[builtin], entries }
+		: null;
+}
+
+/** Pure and fast: safe to call inside `$derived` on every edit. */
+export function toRenderModel(cv: CVDocument, options: RenderOptions = {}): RenderModel {
+	const labels = CV_LABELS[cv.locale];
+	const p = cv.personal;
+	const email = opt(p.email);
+	const phone = opt(p.phone);
+	const hidden = new Set(cv.layout.hidden);
+
+	const sections: RenderSection[] = [];
+	for (const key of cv.layout.order) {
+		if (hidden.has(key)) continue;
+		const section = buildSection(cv, key, labels);
+		if (section) sections.push(section);
+	}
+
+	return {
+		id: cv.id,
+		kind: cv.kind,
+		locale: cv.locale,
+		templateId: cv.templateId,
+		theme: { ...cv.theme },
+		labels,
+		personal: {
+			fullName: trim(p.fullName),
+			headline: opt(p.headline),
+			email,
+			emailHref: email ? sanitizeUrl(`mailto:${email}`) : undefined,
+			phone,
+			phoneHref: phone ? phoneHref(phone) : undefined,
+			location: [opt(p.city), opt(p.province)].filter(Boolean).join(', ') || undefined,
+			links: p.links
+				.map((link) => makeLink(link.url, link.label))
+				.filter((link): link is RenderLink => link !== undefined),
+			photoUrl: cv.kind === 'creative' ? options.photoUrl : undefined
+		},
+		sections
+	};
+}

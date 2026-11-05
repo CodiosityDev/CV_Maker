@@ -2,6 +2,9 @@ export const LOCALES = ['id', 'en'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'id';
 
+/** localStorage key for the UI language preference (cleared by storage.wipeAll). */
+export const UI_LOCALE_STORAGE_KEY = 'cvmaker.uiLocale';
+
 export function isLocale(value: unknown): value is Locale {
 	return typeof value === 'string' && (LOCALES as readonly string[]).includes(value);
 }

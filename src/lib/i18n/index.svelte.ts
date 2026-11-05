@@ -1,19 +1,26 @@
 /**
- * UI language (reactive). For CV content language use `translate(cv.locale, key)` instead.
+ * UI language (reactive).
  *
  * Usage in components:
- *   import { t, i18n, setLocale } from '#lib/i18n/index.svelte';
+ *   import { t, i18n, setLocale } from '#lib/i18n/index.svelte.ts';
  *   <h1>{t('app.name')}</h1>
  *   <button type="button" onclick={() => setLocale('en')}>EN</button>
  *   {i18n.locale}  // 'id' | 'en'
+ *
+ * CV CONTENT labels (section titles, "Sekarang"/"Present", ...) are NOT here:
+ * they come from the render model (`#lib/core/render/index.ts`).
  */
-import { translate, type MessageKey } from './translate';
-import { DEFAULT_LOCALE, isLocale, type Locale, type MessageParams } from './types';
+import { loadDictionary, translate, type MessageKey } from './translate';
+import {
+	DEFAULT_LOCALE,
+	UI_LOCALE_STORAGE_KEY,
+	isLocale,
+	type Locale,
+	type MessageParams
+} from './types';
 
 export { translate, monthName, monthNames, type MessageKey, type Messages } from './translate';
 export { LOCALES, DEFAULT_LOCALE, isLocale, type Locale, type MessageParams } from './types';
-
-const STORAGE_KEY = 'cvmaker.uiLocale';
 
 export const i18n = $state<{ locale: Locale }>({ locale: DEFAULT_LOCALE });
 
@@ -26,26 +33,38 @@ function applyToDocument(locale: Locale): void {
 	if (typeof document !== 'undefined') document.documentElement.lang = locale;
 }
 
-/** Change UI language and remember it on this device. */
-export function setLocale(locale: Locale): void {
-	i18n.locale = locale;
-	applyToDocument(locale);
+let latestRequest = 0;
+
+/**
+ * Change UI language and remember it on this device.
+ * The dictionary is loaded first, so the switch happens in one step (no mixed-language flash).
+ * If called again before loading finishes, only the latest call wins.
+ */
+export async function setLocale(locale: Locale): Promise<void> {
+	const request = ++latestRequest;
 	try {
-		localStorage.setItem(STORAGE_KEY, locale);
+		localStorage.setItem(UI_LOCALE_STORAGE_KEY, locale);
 	} catch {
 		// Storage can be unavailable (privacy mode, blocked site data). The choice still applies for this visit.
 	}
+	try {
+		await loadDictionary(locale);
+	} catch {
+		return; // Offline and not cached: stay on the current language.
+	}
+	if (request !== latestRequest) return;
+	i18n.locale = locale;
+	applyToDocument(locale);
 }
 
 /** Call once on the client (root layout). Restores the saved UI language, if any. */
-export function initLocale(): void {
+export async function initLocale(): Promise<void> {
 	let saved: string | null;
 	try {
-		saved = localStorage.getItem(STORAGE_KEY);
+		saved = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
 	} catch {
 		saved = null;
 	}
-	const locale = isLocale(saved) ? saved : DEFAULT_LOCALE;
-	i18n.locale = locale;
-	applyToDocument(locale);
+	if (isLocale(saved) && saved !== i18n.locale) await setLocale(saved);
+	else applyToDocument(i18n.locale);
 }

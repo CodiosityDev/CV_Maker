@@ -280,5 +280,14 @@ export const id = {
 		label: 'Bahasa',
 		id: 'Bahasa Indonesia',
 		en: 'English'
+	},
+	validation: {
+		required: 'Wajib diisi.',
+		nameTooShort: 'Nama terlalu pendek.',
+		emailInvalid: 'Format email belum benar. Contoh: nama@email.com',
+		phoneInvalid: 'Nomor HP belum benar. Contoh: 0812-3456-7890',
+		educationRequired: 'Tambahkan minimal satu riwayat pendidikan.',
+		dateOrder: 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+		itemTitleRequired: 'Lengkapi judul isian ini atau hapus isiannya.'
 	}
 };

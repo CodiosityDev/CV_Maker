@@ -274,5 +274,14 @@ export const en: Messages = {
 		label: 'Language',
 		id: 'Bahasa Indonesia',
 		en: 'English'
+	},
+	validation: {
+		required: 'This field is required.',
+		nameTooShort: 'Name is too short.',
+		emailInvalid: 'Email format is not valid. Example: name@email.com',
+		phoneInvalid: 'Phone number is not valid. Example: 0812-3456-7890',
+		educationRequired: 'Add at least one education entry.',
+		dateOrder: 'End date cannot be before the start date.',
+		itemTitleRequired: 'Complete the title of this entry or remove it.'
 	}
 };
