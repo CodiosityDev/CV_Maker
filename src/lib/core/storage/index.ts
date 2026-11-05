@@ -9,6 +9,7 @@ import type { StorageBackend } from './backend';
 import { openIdbBackend } from './idb-backend';
 import { createMemoryBackend } from './memory-backend';
 import { createRepositories } from './repo';
+import { createBackupRepository } from './backup';
 
 let backendPromise: Promise<StorageBackend> | undefined;
 
@@ -26,8 +27,20 @@ function getBackend(): Promise<StorageBackend> {
 }
 
 export const { cvRepo, assetRepo, storage } = createRepositories(getBackend);
+/** Backup (export JSON) and restore (import JSON) of CVs incl. photos. */
+export const backupRepo = createBackupRepository(getBackend);
 
 export { createRepositories, LOCAL_STORAGE_KEYS, ORPHAN_MIN_AGE_MS } from './repo';
+export {
+	createBackupRepository,
+	BackupError,
+	BACKUP_FORMAT,
+	BACKUP_VERSION,
+	BACKUP_LIMITS,
+	type BackupRepository,
+	type ImportResult,
+	type ImportErrorCode
+} from './backup';
 export type { CvRepository, AssetRepository, StorageControl } from './repo';
 export type { StorageBackend, StorageMode, StoredAsset } from './backend';
 export { createMemoryBackend } from './memory-backend';
