@@ -48,6 +48,8 @@ export const id = {
 		loading: 'Memuat…',
 		required: 'wajib',
 		characterCount: '{count}/{max}',
+		autocompleteHelp: 'Gunakan panah atas atau bawah untuk memilih saran.',
+		suggestionCount: '{count} saran tersedia.',
 		stepProgress: 'Langkah {current} dari {total}',
 		steps: 'Langkah pembuatan CV',
 		completed: 'Selesai',

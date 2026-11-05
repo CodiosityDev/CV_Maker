@@ -50,9 +50,11 @@ async function fillPersonal(page: Page) {
 
 async function addEducation(page: Page) {
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus').fill('Universitas Contoh');
-	await page.getByLabel('Jenjang pendidikan', { exact: true }).fill('S1');
-	await page.getByLabel('Jurusan', { exact: true }).fill('Teknik Informatika');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Contoh');
+	await page.getByRole('combobox', { name: 'Jenjang pendidikan', exact: true }).fill('S1');
+	await page.getByRole('combobox', { name: 'Jurusan', exact: true }).fill('Teknik Informatika');
 	await expect(page.getByLabel('Skala IPK', { exact: true })).toHaveValue('4.00');
 	const start = page.getByRole('group', { name: 'Mulai', exact: true });
 	await start.getByLabel('Bulan', { exact: true }).selectOption('09');
@@ -99,7 +101,9 @@ test('ATS happy path reaches review and done with saved content and heading focu
 		if (message.type() === 'error') errors.push(message.text());
 	});
 	await createCv(page);
-	await page.getByLabel('Posisi yang dituju', { exact: true }).fill('Junior Web Developer');
+	await page
+		.getByRole('combobox', { name: 'Posisi yang dituju', exact: true })
+		.fill('Junior Web Developer');
 	await page.getByLabel('Judul CV', { exact: true }).fill('CV Alya — Web Developer');
 	await fitsViewport(page, 'target');
 	await advance(page, 'Data diri');
@@ -255,7 +259,7 @@ test('review links jump to a partially completed optional item and focus its inv
 		.getByRole('button', { name: /^Pengalaman kerja \/ magang — Posisi \/ peran:/ })
 		.click();
 	await expect(heading(page)).toHaveText('Pengalaman kerja / magang');
-	const role = page.getByLabel('Posisi / peran', { exact: true });
+	const role = page.getByRole('combobox', { name: 'Posisi / peran', exact: true });
 	await expect(role).toBeFocused();
 	await expect(role).toHaveAttribute('aria-invalid', 'true');
 });
@@ -273,7 +277,9 @@ test('CV content language remains independent of the UI language', async ({ page
 	if ((page.viewportSize()?.width ?? 0) < 1024) await page.keyboard.press('Escape');
 	await page.getByRole('button', { name: 'English', exact: true }).click();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-	await expect(page.getByLabel('School / university')).toHaveValue('Universitas Contoh');
+	await expect(
+		page.getByRole('combobox', { name: 'School / university', exact: false })
+	).toHaveValue('Universitas Contoh');
 	await page.getByRole('button', { name: 'Back', exact: true }).click();
 	await page.getByRole('button', { name: 'Back', exact: true }).click();
 	await page.getByLabel('CV content language', { exact: true }).selectOption('id');

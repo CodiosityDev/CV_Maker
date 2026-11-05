@@ -10,10 +10,14 @@ async function startBullets(page: Page) {
 	await page.getByLabel('Nomor HP').fill('081234567890');
 	await next.click();
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus').fill('Universitas Nusantara');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Nusantara');
 	await next.click();
 	await page.getByRole('button', { name: 'Tambah Pengalaman kerja / magang', exact: true }).click();
-	await page.getByLabel('Posisi / peran', { exact: true }).fill('Data Analyst Intern');
+	await page
+		.getByRole('combobox', { name: 'Posisi / peran', exact: true })
+		.fill('Data Analyst Intern');
 	await page.getByLabel('Perusahaan / tempat kerja', { exact: true }).fill('PT Nusantara');
 	const bullets = page.locator('.bullets');
 	await bullets.getByRole('button', { name: 'Tambah poin', exact: true }).click();
@@ -55,6 +59,8 @@ test('bullet Enter and empty Backspace manage focus and each change can be undon
 	await undo(page);
 	await expect(fields).toHaveCount(2);
 	await expect(fields.nth(1)).toHaveValue('');
+	if ((page.viewportSize()?.width ?? 0) < 768)
+		await bullets.locator('.point-menu').nth(1).locator('summary').click();
 	await bullets.getByRole('button', { name: 'Hapus poin 2', exact: true }).click();
 	await expect(fields).toHaveCount(1);
 	await expect(fields.first()).toBeFocused();

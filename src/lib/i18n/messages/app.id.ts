@@ -33,6 +33,14 @@ export const appId = {
 		redo: 'Ulangi',
 		tips: 'Tips',
 		examples: 'Contoh',
+		otherExamples: 'Contoh bidang lain',
+		recommendations: {
+			forRole: 'Disarankan untuk {targetRole}',
+			emptyTarget: 'Isi posisi tujuan untuk melihat saran yang lebih sesuai.',
+			targetAction: 'Isi posisi tujuan',
+			popularSoft: 'Soft skill populer',
+			added: '{skill} ditambahkan.'
+		},
 		useExample: 'Pakai contoh',
 		useSummary: 'Pakai contoh',
 		actionVerbs: 'Pilihan kata kerja',

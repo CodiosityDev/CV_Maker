@@ -5,18 +5,22 @@
 	import { assetRepo } from '#lib/core/storage/index.ts';
 	import { PhotoError } from '#lib/core/security/photo.ts';
 	import { normalizePhone, type StepIssue } from '#lib/core/wizard/index.ts';
+	import { suggest, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Input from '../Input.svelte';
+	import Autocomplete from '../Autocomplete.svelte';
 	import ListEditor from '../ListEditor.svelte';
 	import Button from '../Button.svelte';
 
 	let {
 		store,
 		issues,
+		suggestionsData,
 		photoUrl
 	}: {
 		store: CvStore;
 		issues: StepIssue[];
+		suggestionsData?: SuggestionData;
 		photoUrl?: string;
 	} = $props();
 	let busy = $state(false);
@@ -123,18 +127,18 @@
 		bind:value={() => store.cv.personal.phone, (value) => set('phone', value)}
 	/>
 	<div class="pair">
-		<Input
+		<Autocomplete
 			id="personal.city"
 			label={t('wizard.fields.city')}
-			autocomplete="address-level2"
+			suggestions={(query) => (suggestionsData ? suggest(suggestionsData, 'city', query) : [])}
 			maxlength={LIMITS.short}
 			showCounter
 			bind:value={() => store.cv.personal.city, (value) => set('city', value)}
 		/>
-		<Input
+		<Autocomplete
 			id="personal.province"
 			label={t('wizard.fields.province')}
-			autocomplete="address-level1"
+			suggestions={(query) => (suggestionsData ? suggest(suggestionsData, 'province', query) : [])}
 			maxlength={LIMITS.short}
 			showCounter
 			bind:value={() => store.cv.personal.province ?? '', (value) => set('province', value)}

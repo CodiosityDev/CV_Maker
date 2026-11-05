@@ -8,6 +8,12 @@
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import {
+		loadSuggestions,
+		suggest,
+		categoryOf,
+		type SuggestionData
+	} from '#lib/core/suggest/index.ts';
+	import {
 		WIZARD_STEPS,
 		validateStep,
 		validateAll,
@@ -21,6 +27,7 @@
 	import Button from '../Button.svelte';
 	import Card from '../Card.svelte';
 	import Input from '../Input.svelte';
+	import Autocomplete from '../Autocomplete.svelte';
 	import Textarea from '../Textarea.svelte';
 	import Select from '../Select.svelte';
 	import Stepper from '../Stepper.svelte';
@@ -54,6 +61,23 @@
 	const reviewIssues = $derived(validateAll(store.cv));
 	let guidance = $state.raw<Guidance>();
 	let examples = $state.raw<Guidance>();
+	let suggestionsData = $state.raw<SuggestionData>();
+	const summaryExamples = $derived.by(() => {
+		const available = examples?.summaryExamples ?? [];
+		if (!suggestionsData) return available;
+		const category = categoryOf(suggestionsData, store.cv.targetRole);
+		const field =
+			category === 'finance' ? 'accounting' : category === 'customer' ? 'sales' : category;
+		const preferred = available.some((example) => example.field === field)
+			? field
+			: category === 'data'
+				? 'it'
+				: 'general';
+		return [
+			...available.filter((example) => example.field === preferred),
+			...available.filter((example) => example.field !== preferred)
+		];
+	});
 	let guidanceError = $state(false);
 	let exampleError = $state(false);
 	let guidanceAttempt = $state(0);
@@ -124,6 +148,22 @@
 			},
 			() => {
 				if (current) exampleError = true;
+			}
+		);
+		return () => {
+			current = false;
+		};
+	});
+	$effect(() => {
+		const locale = store.cv.locale;
+		let current = true;
+		suggestionsData = undefined;
+		void loadSuggestions(locale).then(
+			(loaded) => {
+				if (current) suggestionsData = loaded;
+			},
+			() => {
+				if (current) suggestionsData = undefined;
 			}
 		);
 		return () => {
@@ -395,9 +435,14 @@
 									)
 							}
 						/>
-						<Input
+						<Autocomplete
 							id="targetRole"
 							label={t('wizard.fields.targetRole')}
+							popularWhenEmpty
+							suggestions={(query) =>
+								suggestionsData
+									? suggest(suggestionsData, 'jobTitle', query, { popularWhenEmpty: true })
+									: []}
 							maxlength={LIMITS.title}
 							showCounter
 							bind:value={
@@ -430,9 +475,16 @@
 					{:else if step === 'personal'}
 						{#if photoMissing}<p role="alert" class="error">{t('wizard.photoMissing')}</p>{/if}
 						{#if photoLoadError}<p role="alert" class="error">{t('wizard.photoFailed')}</p>{/if}
-						<PersonalStep {store} {issues} {photoUrl} />
+						<PersonalStep {store} {issues} {photoUrl} {suggestionsData} />
 					{:else if collectionSteps.includes(step)}
-						<CollectionSteps {store} {step} {issues} {examples} />
+						<CollectionSteps
+							{store}
+							{step}
+							{issues}
+							{examples}
+							{suggestionsData}
+							onTarget={() => move(1)}
+						/>
 					{:else if step === 'summary'}
 						<Textarea
 							id="summary"
@@ -455,10 +507,10 @@
 								<summary>{t('wizard.actionVerbs')}</summary>
 								<p>{examples.actionVerbs.join(', ')}</p>
 							</details>
-							<details class="tips">
+							<details class="tips summary-examples">
 								<summary>{t('wizard.examples')}</summary>
 								<div class="examples">
-									{#each examples.summaryExamples as example (example.field)}<article>
+									{#each summaryExamples.slice(0, 1) as example (example.field)}<article>
 											<h2>{example.label}</h2>
 											<p>{example.text}</p>
 											<Button variant="secondary" onclick={() => useSummary(example.text)}
@@ -466,6 +518,20 @@
 											>
 										</article>{/each}
 								</div>
+								{#if summaryExamples.length > 1}
+									<details class="other-examples">
+										<summary>{t('wizard.otherExamples')}</summary>
+										<div class="examples">
+											{#each summaryExamples.slice(1) as example (example.field)}<article>
+													<h2>{example.label}</h2>
+													<p>{example.text}</p>
+													<Button variant="secondary" onclick={() => useSummary(example.text)}
+														>{t('wizard.useSummary')}</Button
+													>
+												</article>{/each}
+										</div>
+									</details>
+								{/if}
 							</details>
 						{/if}
 					{:else if step === 'review'}

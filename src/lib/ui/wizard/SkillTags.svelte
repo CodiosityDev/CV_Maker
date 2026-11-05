@@ -1,8 +1,9 @@
 ﻿<script lang="ts">
 	import { tick } from 'svelte';
 	import { LIMITS } from '#lib/core/schema/index.ts';
+	import { suggest, type SuggestField, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import Input from '../Input.svelte';
+	import Autocomplete from '../Autocomplete.svelte';
 	import Button from '../Button.svelte';
 
 	let {
@@ -10,18 +11,22 @@
 		label,
 		items,
 		hint,
+		suggestionsData,
+		suggestField,
 		onChange
 	}: {
 		id: string;
 		label: string;
 		items: string[];
 		hint?: string;
+		suggestionsData?: SuggestionData;
+		suggestField: Extract<SuggestField, 'skillHard' | 'skillSoft' | 'skillTool'>;
 		onChange: (items: string[]) => void;
 	} = $props();
 	let draft = $state('');
 
-	function add() {
-		const value = draft.trim();
+	function add(text = draft) {
+		const value = text.trim();
 		if (!value || items.length >= LIMITS.skillsPerGroup) return;
 		onChange([...items, value]);
 		draft = '';
@@ -36,10 +41,13 @@
 
 <section class="skill-group" aria-label={label}>
 	<div class="add-row">
-		<Input
+		<Autocomplete
 			{id}
 			{label}
 			{hint}
+			suggestions={(query) =>
+				suggestionsData ? suggest(suggestionsData, suggestField, query, { exclude: items }) : []}
+			onselect={(value) => add(value)}
 			bind:value={draft}
 			showCounter
 			maxlength={LIMITS.short}
@@ -54,7 +62,7 @@
 		<Button
 			variant="secondary"
 			disabled={!draft.trim() || items.length >= LIMITS.skillsPerGroup}
-			onclick={add}>{t('wizard.addSkill')}</Button
+			onclick={() => add()}>{t('wizard.addSkill')}</Button
 		>
 	</div>
 	{#if items.length}

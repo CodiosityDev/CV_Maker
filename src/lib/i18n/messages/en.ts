@@ -43,6 +43,8 @@ export const en: BaseMessages = {
 		loading: 'Loading…',
 		required: 'required',
 		characterCount: '{count}/{max}',
+		autocompleteHelp: 'Use the up or down arrow to choose a suggestion.',
+		suggestionCount: '{count} suggestions available.',
 		stepProgress: 'Step {current} of {total}',
 		steps: 'CV creation steps',
 		completed: 'Complete',

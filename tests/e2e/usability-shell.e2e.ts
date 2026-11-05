@@ -71,7 +71,9 @@ test('mobile actions stay in one 64px row for required optional and review steps
 	for (const width of [320, 360]) await assertBar(page, width);
 	await page.getByRole('button', { name: 'Lanjut', exact: true }).click();
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus').fill('Universitas Contoh');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Contoh');
 	await page.getByRole('button', { name: 'Lanjut', exact: true }).click();
 	for (const width of [320, 360]) {
 		await assertBar(page, width);

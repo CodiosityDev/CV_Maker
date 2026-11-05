@@ -11,7 +11,9 @@ test('wizard progress uses a full mobile row and retains its accessible value at
 	await page.getByLabel('Nomor HP').fill('081234567890');
 	await page.getByRole('button', { name: 'Lanjut', exact: true }).click();
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus').fill('Universitas Contoh');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Contoh');
 	await page.getByRole('button', { name: 'Lanjut', exact: true }).click();
 	await expect(page.locator('.step-heading h1')).toHaveText('Pengalaman kerja / magang');
 	const progress = page.getByRole('progressbar', { name: 'Langkah pembuatan CV', exact: true });
@@ -78,7 +80,9 @@ test('wizard progress uses a full mobile row and retains its accessible value at
 	);
 	await page.getByRole('button', { name: 'Back', exact: true }).click();
 	await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
-	await expect(page.getByLabel('School / university')).toHaveValue('Universitas Contoh');
+	await expect(
+		page.getByRole('combobox', { name: 'School / university', exact: false })
+	).toHaveValue('Universitas Contoh');
 });
 
 test('desktop site header shares one row from 1024px and keeps a logical focus sequence', async ({
