@@ -5,6 +5,7 @@
  *   base  (messages/id.ts, en.ts)          — shared: app, common, nav, footer, ui, locale, validation, a11y
  *   site  (messages/site.id.ts, site.en.ts) — landing, privacy, about     → registered by (site) layout
  *   app   (messages/app.id.ts, app.en.ts)   — wizard, preview, editor, …  → registered by (app) layout
+ *   ats   (messages/ats.id.ts, ats.en.ts)   — ATS checker messages (core) → registered by (app) layout
  *
  * Indonesian base is always bundled. A route group registers its Indonesian namespace synchronously
  * (static import → no flash, works in prerender) and English parts are loaded on demand.
@@ -12,15 +13,17 @@
 import { id as baseId } from './messages/id';
 import type { siteId } from './messages/site.id';
 import type { appId } from './messages/app.id';
+import type { atsId } from './messages/ats.id';
 import type { DeepStringRecord, LeafPaths, Locale, MessageParams } from './types';
 
 export type BaseMessages = DeepStringRecord<typeof baseId>;
 export type SiteMessages = DeepStringRecord<typeof siteId>;
 export type AppMessages = DeepStringRecord<typeof appId>;
-export type Messages = BaseMessages & SiteMessages & AppMessages;
+export type AtsMessages = DeepStringRecord<typeof atsId>;
+export type Messages = BaseMessages & SiteMessages & AppMessages & AtsMessages;
 export type MessageKey = LeafPaths<Messages>;
 
-export type Namespace = 'site' | 'app';
+export type Namespace = 'site' | 'app' | 'ats';
 type Part = 'base' | Namespace;
 type Dict = Record<string, unknown>;
 
@@ -32,7 +35,8 @@ const activeNamespaces = new Set<Namespace>();
 const englishLoaders: Record<Part, () => Promise<Dict>> = {
 	base: () => import('./messages/en').then((m) => m.en),
 	site: () => import('./messages/site.en').then((m) => m.siteEn),
-	app: () => import('./messages/app.en').then((m) => m.appEn)
+	app: () => import('./messages/app.en').then((m) => m.appEn),
+	ats: () => import('./messages/ats.en').then((m) => m.atsEn)
 };
 
 /**
