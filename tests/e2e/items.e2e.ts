@@ -19,7 +19,9 @@ async function experience(page: Page) {
 	await personal(page);
 	await next(page, 'Pendidikan');
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus', { exact: false }).fill('Universitas Nusantara');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Nusantara');
 	await next(page, 'Pengalaman kerja / magang');
 }
 async function addExperience(page: Page, role: string, company: string) {
@@ -27,7 +29,7 @@ async function addExperience(page: Page, role: string, company: string) {
 	const card = cards(page).last();
 	await expect(card).toHaveAttribute('open', '');
 	await expect(card.getByLabel('Jenis pengalaman', { exact: true })).toBeFocused();
-	await card.getByLabel('Posisi / peran', { exact: true }).fill(role);
+	await card.getByRole('combobox', { name: 'Posisi / peran', exact: true }).fill(role);
 	await card.getByLabel('Perusahaan / tempat kerja', { exact: true }).fill(company);
 	return card;
 }
@@ -56,7 +58,9 @@ test('cards add open with focus, collapse to meaningful dates, and keep only the
 	await summary.click();
 	await expect(first).not.toHaveAttribute('open', '');
 	await expect(summary).toBeVisible();
-	await expect(first.getByLabel('Posisi / peran', { exact: true })).not.toBeVisible();
+	await expect(
+		first.getByRole('combobox', { name: 'Posisi / peran', exact: true, includeHidden: true })
+	).not.toBeVisible();
 	await addExperience(page, 'Asisten peneliti', 'Laboratorium Kampus');
 	await expect(first).not.toHaveAttribute('open', '');
 	await expect(page.getByTestId('save-status')).toHaveText('Tersimpan ✓');
@@ -69,7 +73,9 @@ test('cards add open with focus, collapse to meaningful dates, and keep only the
 	);
 	await cards(page).nth(1).locator('.card-summary').focus();
 	await page.keyboard.press('Enter');
-	await expect(cards(page).nth(1).getByLabel('Posisi / peran', { exact: true })).toBeVisible();
+	await expect(
+		cards(page).nth(1).getByRole('combobox', { name: 'Posisi / peran', exact: true })
+	).toBeVisible();
 });
 
 test('item menus reorder atomically and delete with a working, focused Undo toast', async ({
@@ -106,9 +112,9 @@ test('item menus reorder atomically and delete with a working, focused Undo toas
 	await page.locator('.toaster').getByRole('button', { name: 'Urungkan', exact: true }).click();
 	await expect(cards(page)).toHaveCount(2);
 	await expect(cards(page).first().getByLabel('Jenis pengalaman', { exact: true })).toBeFocused();
-	await expect(cards(page).first().getByLabel('Posisi / peran', { exact: true })).toHaveValue(
-		'Analis data'
-	);
+	await expect(
+		cards(page).first().getByRole('combobox', { name: 'Posisi / peran', exact: true })
+	).toHaveValue('Analis data');
 	await expect(page.locator('.toaster .notification')).toHaveCount(0);
 	// Undoing the last row restores focus to that row, after the bound array updates.
 	const lastActions = await menu(cards(page).last());
@@ -140,22 +146,26 @@ test('education, organisation, project, language, certificate, award and link ca
 	await expect(links.locator('.card-summary')).toHaveText('Portofolio');
 	await next(page, 'Pendidikan');
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await expect(page.getByLabel('Nama sekolah / kampus', { exact: false })).toBeFocused();
-	await page.getByLabel('Nama sekolah / kampus', { exact: false }).fill('Universitas Nusantara');
+	await expect(
+		page.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+	).toBeFocused();
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Nusantara');
 	await expect(cards(page).first().locator('.card-summary')).toHaveText('Universitas Nusantara');
 	await next(page, 'Pengalaman kerja / magang');
 	await next(page, 'Organisasi & kepanitiaan', true);
 	await page.getByRole('button', { name: 'Tambah Organisasi & kepanitiaan', exact: true }).click();
-	await expect(page.getByLabel('Nama', { exact: true })).toBeFocused();
-	await page.getByLabel('Nama', { exact: true }).fill('BEM Fakultas');
-	await page.getByLabel('Posisi / peran', { exact: true }).fill('Sekretaris');
+	await expect(page.getByRole('textbox', { name: 'Nama', exact: true })).toBeFocused();
+	await page.getByRole('textbox', { name: 'Nama', exact: true }).fill('BEM Fakultas');
+	await page.getByRole('combobox', { name: 'Posisi / peran', exact: true }).fill('Sekretaris');
 	await expect(cards(page).first().locator('.card-summary')).toHaveText(
 		'Sekretaris — BEM Fakultas'
 	);
 	await next(page, 'Proyek');
 	await page.getByRole('button', { name: 'Tambah Proyek', exact: true }).click();
-	await expect(page.getByLabel('Nama', { exact: true })).toBeFocused();
-	await page.getByLabel('Nama', { exact: true }).fill('Situs Perpustakaan');
+	await expect(page.getByRole('textbox', { name: 'Nama', exact: true })).toBeFocused();
+	await page.getByRole('textbox', { name: 'Nama', exact: true }).fill('Situs Perpustakaan');
 	await expect(cards(page).first().locator('.card-summary')).toHaveText('Situs Perpustakaan');
 	await next(page, 'Keahlian & pencapaian');
 	for (const entry of [
@@ -163,6 +173,7 @@ test('education, organisation, project, language, certificate, award and link ca
 			label: 'Bahasa',
 			add: 'Tambah Bahasa',
 			field: 'Nama',
+			role: 'combobox' as const,
 			value: 'Jepang',
 			summary: 'Jepang — Dasar'
 		},
@@ -170,6 +181,7 @@ test('education, organisation, project, language, certificate, award and link ca
 			label: 'Sertifikasi & pelatihan',
 			add: 'Tambah Sertifikasi & pelatihan',
 			field: 'Nama',
+			role: 'textbox' as const,
 			value: 'SQL Dasar',
 			summary: 'SQL Dasar'
 		},
@@ -177,17 +189,24 @@ test('education, organisation, project, language, certificate, award and link ca
 			label: 'Prestasi & penghargaan',
 			add: 'Tambah Prestasi & penghargaan',
 			field: 'Judul prestasi',
+			role: 'textbox' as const,
 			value: 'Juara Lomba Data',
 			summary: 'Juara Lomba Data'
 		}
 	]) {
 		const section = page.getByRole('region', { name: entry.label, exact: true });
 		await section.getByRole('button', { name: entry.add, exact: true }).click();
-		await expect(section.getByLabel(entry.field, { exact: true })).toBeFocused();
-		await section.getByLabel(entry.field, { exact: true }).fill(entry.value);
+		await expect(section.getByRole(entry.role, { name: entry.field, exact: true })).toBeFocused();
+		await section.getByRole(entry.role, { name: entry.field, exact: true }).fill(entry.value);
 		await expect(section.locator('.card-summary')).toHaveText(entry.summary);
 		await section.locator('.card-summary').click();
-		await expect(section.getByLabel(entry.field, { exact: true })).not.toBeVisible();
+		const field = section.getByRole(entry.role, {
+			name: entry.field,
+			exact: true,
+			includeHidden: true
+		});
+		await expect(field).toHaveCount(1);
+		await expect(field).not.toBeVisible();
 	}
 });
 
@@ -202,7 +221,7 @@ test('an Undo toast expires on a later edit instead of undoing unrelated content
 	await expect(
 		page.locator('.toaster').getByRole('button', { name: 'Urungkan', exact: true })
 	).toBeVisible();
-	const role = cards(page).first().getByLabel('Posisi / peran', { exact: true });
+	const role = cards(page).first().getByRole('combobox', { name: 'Posisi / peran', exact: true });
 	await role.fill('Asisten peneliti');
 	await expect(page.locator('.toaster .notification')).toHaveCount(0);
 	await page.locator('.history').getByRole('button', { name: 'Urungkan', exact: true }).click();

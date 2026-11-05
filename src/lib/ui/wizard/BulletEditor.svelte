@@ -219,6 +219,15 @@
 								void move(index, 1);
 							}}>{t('wizard.bullets.moveDown')}</button
 						>
+						<button
+							type="button"
+							class="menu-delete"
+							aria-label={t('wizard.bullets.remove', { number: index + 1 })}
+							onclick={(event) => {
+								event.currentTarget.closest('details')?.removeAttribute('open');
+								void remove(index);
+							}}>{t('common.delete')}</button
+						>
 					</div>
 				</details>
 				<button
@@ -336,6 +345,9 @@
 	.remove-point {
 		font-size: 1.5rem;
 	}
+	.menu-delete {
+		display: none;
+	}
 	.point-menu {
 		position: relative;
 	}
@@ -411,12 +423,50 @@
 		text-align: left;
 		overflow-wrap: anywhere;
 	}
+	@media (max-width: 767px) {
+		.bullet-row {
+			grid-template-columns: 0.5rem minmax(0, 1fr);
+			row-gap: 0;
+		}
+		.marker,
+		.bullet-field {
+			grid-row: 1;
+		}
+		.point-menu {
+			grid-column: 2;
+			grid-row: 2;
+			justify-self: end;
+		}
+		.remove-point {
+			display: none;
+		}
+		.menu-delete {
+			display: block;
+		}
+	}
 	@media (max-width: 480px) {
 		.bullets {
-			margin-inline: -4px;
+			margin-inline: -26px;
+		}
+		.bullet-row {
+			position: relative;
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.marker {
+			position: absolute;
+			top: 0;
+			left: -8px;
+		}
+		.bullet-field,
+		.point-menu {
+			grid-column: 1;
 		}
 		legend {
-			padding-inline: 4px;
+			padding-inline: 26px;
+		}
+		.add-row,
+		.bullet-examples {
+			padding-inline: 26px;
 		}
 	}
 </style>

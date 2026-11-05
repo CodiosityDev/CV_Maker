@@ -35,6 +35,14 @@ export const appEn: AppMessages = {
 		redo: 'Redo',
 		tips: 'Tips',
 		examples: 'Examples',
+		otherExamples: 'Examples for other fields',
+		recommendations: {
+			forRole: 'Suggested for {targetRole}',
+			emptyTarget: 'Add a target role for more relevant suggestions.',
+			targetAction: 'Add a target role',
+			popularSoft: 'Popular soft skills',
+			added: '{skill} added.'
+		},
 		useExample: 'Use example',
 		useSummary: 'Use example',
 		actionVerbs: 'Action verbs',

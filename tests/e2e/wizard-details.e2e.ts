@@ -22,7 +22,9 @@ async function reachExperience(page: Page) {
 	await page.getByLabel('Nomor HP').fill('081234567890');
 	await advance(page, 'Pendidikan');
 	await page.getByRole('button', { name: 'Tambah Pendidikan', exact: true }).click();
-	await page.getByLabel('Nama sekolah / kampus').fill('Universitas Nusantara');
+	await page
+		.getByRole('combobox', { name: 'Nama sekolah / kampus', exact: false })
+		.fill('Universitas Nusantara');
 	await advance(page, 'Pengalaman kerja / magang');
 }
 
@@ -57,7 +59,9 @@ test('collection entries preserve own bullets when examples are appended and dat
 	await reachExperience(page);
 	await page.getByRole('button', { name: 'Tambah Pengalaman kerja / magang', exact: true }).click();
 	await page.getByLabel('Jenis pengalaman', { exact: true }).selectOption('parttime');
-	await page.getByLabel('Posisi / peran', { exact: true }).fill('Asisten laboratorium');
+	await page
+		.getByRole('combobox', { name: 'Posisi / peran', exact: true })
+		.fill('Asisten laboratorium');
 	await page.getByLabel('Perusahaan / tempat kerja', { exact: true }).fill('Laboratorium Kampus');
 	await page.getByLabel('Lokasi', { exact: true }).fill('Bandung');
 	const ownExperience = 'Mendampingi 30 mahasiswa mengolah data praktikum';
@@ -78,14 +82,14 @@ test('collection entries preserve own bullets when examples are appended and dat
 	await advance(page, 'Organisasi & kepanitiaan');
 	await page.getByRole('button', { name: 'Tambah Organisasi & kepanitiaan', exact: true }).click();
 	await page.getByLabel('Nama', { exact: true }).fill('Himpunan Mahasiswa');
-	await page.getByLabel('Posisi / peran', { exact: true }).fill('Sekretaris');
+	await page.getByRole('combobox', { name: 'Posisi / peran', exact: true }).fill('Sekretaris');
 	await page.getByLabel('Masih berjalan', { exact: true }).check();
 	const ownOrganisation = 'Menyusun notulen 12 rapat dan mengelola arsip kegiatan';
 	await appendOwnAndExampleBullet(page, ownOrganisation);
 	await advance(page, 'Proyek');
 	await page.getByRole('button', { name: 'Tambah Proyek', exact: true }).click();
 	await page.getByLabel('Nama', { exact: true }).fill('Dashboard Laboratorium');
-	await page.getByLabel('Posisi / peran', { exact: true }).fill('Pengembang');
+	await page.getByRole('textbox', { name: 'Posisi / peran', exact: true }).fill('Pengembang');
 	await page.getByLabel('URL', { exact: true }).fill('https://example.com/portofolio');
 	const ownProject = 'Membangun dashboard untuk memantau 5 ruang praktikum';
 	await appendOwnAndExampleBullet(page, ownProject);
@@ -110,19 +114,19 @@ test('skill Enter stays on the step and languages, certifications, and awards su
 }) => {
 	await reachExperience(page);
 	await skipToSkills(page);
-	await page.getByRole('textbox', { name: 'Keahlian teknis', exact: true }).fill('SQL');
-	await page.getByRole('textbox', { name: 'Keahlian teknis', exact: true }).press('Enter');
+	await page.getByRole('combobox', { name: 'Keahlian teknis', exact: true }).fill('SQL');
+	await page.getByRole('combobox', { name: 'Keahlian teknis', exact: true }).press('Enter');
 	await expect(stepHeading(page)).toHaveText('Keahlian & pencapaian');
 	await expect(page.getByRole('region', { name: 'Keahlian teknis', exact: true })).toContainText(
 		'SQL'
 	);
-	await page.getByRole('textbox', { name: 'Soft skill', exact: true }).fill('Komunikasi');
-	await page.getByRole('textbox', { name: 'Soft skill', exact: true }).press('Enter');
-	await page.getByRole('textbox', { name: 'Tools & software', exact: true }).fill('Excel');
-	await page.getByRole('textbox', { name: 'Tools & software', exact: true }).press('Enter');
+	await page.getByRole('combobox', { name: 'Soft skill', exact: true }).fill('Komunikasi');
+	await page.getByRole('combobox', { name: 'Soft skill', exact: true }).press('Enter');
+	await page.getByRole('combobox', { name: 'Tools & software', exact: true }).fill('Excel');
+	await page.getByRole('combobox', { name: 'Tools & software', exact: true }).press('Enter');
 	await page.getByRole('button', { name: 'Tambah Bahasa', exact: true }).click();
 	const language = page.getByRole('region', { name: 'Bahasa', exact: true });
-	await language.getByLabel('Nama', { exact: true }).fill('Bahasa Inggris');
+	await language.getByRole('combobox', { name: 'Nama', exact: true }).fill('Bahasa Inggris');
 	await language.getByLabel('Tingkat kemampuan', { exact: true }).selectOption('professional');
 	await language.getByLabel('Skor tes / keterangan', { exact: true }).fill('TOEFL ITP 550');
 	await page.getByRole('button', { name: 'Tambah Sertifikasi & pelatihan', exact: true }).click();
@@ -146,7 +150,9 @@ test('skill Enter stays on the step and languages, certifications, and awards su
 	await expect(stepHeading(page)).toHaveText('Keahlian & pencapaian');
 	for (const label of ['SQL', 'Komunikasi', 'Excel'])
 		await expect(page.getByRole('button', { name: `Hapus ${label}`, exact: true })).toBeVisible();
-	await expect(language.getByLabel('Nama', { exact: true })).toHaveValue('Bahasa Inggris');
+	await expect(language.getByRole('combobox', { name: 'Nama', exact: true })).toHaveValue(
+		'Bahasa Inggris'
+	);
 	await expect(language.getByLabel('Tingkat kemampuan', { exact: true })).toHaveValue(
 		'professional'
 	);
@@ -172,7 +178,7 @@ test('skill Enter stays on the step and languages, certifications, and awards su
 	);
 	await page.getByRole('button', { name: 'Hapus SQL', exact: true }).click();
 	await expect(page.getByRole('button', { name: 'Hapus SQL', exact: true })).toHaveCount(0);
-	await expect(page.getByRole('textbox', { name: 'Keahlian teknis', exact: true })).toBeFocused();
+	await expect(page.getByRole('combobox', { name: 'Keahlian teknis', exact: true })).toBeFocused();
 });
 
 test('summary replacement can be cancelled, confirmed, and undone', async ({ page }) => {
@@ -183,11 +189,7 @@ test('summary replacement can be cancelled, confirmed, and undone', async ({ pag
 	const ownSummary = 'Lulusan baru dengan pengalaman proyek analisis data dan organisasi kampus.';
 	await summary.fill(ownSummary);
 	// Applying an example must be its own undo step, even immediately after typing.
-	await page
-		.locator('details')
-		.filter({ has: page.locator('summary').filter({ hasText: /^Contoh$/ }) })
-		.locator('summary')
-		.click();
+	await page.locator('.summary-examples > summary').click();
 	const firstExample = page.locator('.examples article').first();
 	const exampleText = await firstExample.locator('p').innerText();
 	await firstExample.getByRole('button', { name: 'Pakai contoh', exact: true }).click();
@@ -225,15 +227,21 @@ test('two tabs can reload an external update or explicitly keep their local vers
 			'CV diperbarui tab pertama'
 		);
 		await expect(other.getByText('CV ini diubah di tab lain.', { exact: true })).toHaveCount(0);
-		await other.getByLabel('Posisi yang dituju', { exact: true }).fill('Data Analyst');
+		await other
+			.getByRole('combobox', { name: 'Posisi yang dituju', exact: true })
+			.fill('Data Analyst');
 		await expect(saveStatus(other)).toHaveText('Tersimpan ✓');
 		await expect(page.getByText('CV ini diubah di tab lain.', { exact: true })).toBeVisible();
-		await expect(page.getByLabel('Posisi yang dituju', { exact: true })).toHaveValue('');
+		await expect(
+			page.getByRole('combobox', { name: 'Posisi yang dituju', exact: true })
+		).toHaveValue('');
 		await page.getByRole('button', { name: 'Pakai versi ini', exact: true }).click();
 		await expect(page.getByText('CV ini diubah di tab lain.', { exact: true })).toHaveCount(0);
 		await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 		await other.reload();
-		await expect(other.getByLabel('Posisi yang dituju', { exact: true })).toHaveValue('');
+		await expect(
+			other.getByRole('combobox', { name: 'Posisi yang dituju', exact: true })
+		).toHaveValue('');
 		await expect(other.getByLabel('Judul CV', { exact: true })).toHaveValue(
 			'CV diperbarui tab pertama'
 		);

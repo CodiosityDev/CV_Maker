@@ -12,8 +12,10 @@
 	import type { StepIssue, WizardStepId } from '#lib/core/wizard/index.ts';
 	import type { Guidance } from '#lib/core/content/index.ts';
 	import { formatDateRange } from '#lib/core/render/index.ts';
+	import { suggest, type SuggestField, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Input from '../Input.svelte';
+	import Autocomplete from '../Autocomplete.svelte';
 	import Textarea from '../Textarea.svelte';
 	import Select from '../Select.svelte';
 	import ListEditor from '../ListEditor.svelte';
@@ -21,18 +23,27 @@
 	import DateRangeFields from './DateRangeFields.svelte';
 	import BulletEditor from './BulletEditor.svelte';
 	import SkillTags from './SkillTags.svelte';
+	import SkillRecommendations from './SkillRecommendations.svelte';
 
 	let {
 		store,
 		step,
 		issues,
+		suggestionsData,
+		onTarget,
 		examples
 	}: {
 		store: CvStore;
 		step: WizardStepId;
 		issues: StepIssue[];
+		suggestionsData?: SuggestionData;
+		onTarget?: () => void;
 		examples?: Guidance;
 	} = $props();
+
+	function fieldSuggestions(field: SuggestField, query: string, popularWhenEmpty = false) {
+		return suggestionsData ? suggest(suggestionsData, field, query, { popularWhenEmpty }) : [];
+	}
 
 	type ItemSection =
 		| 'education'
@@ -137,7 +148,7 @@
 	);
 </script>
 
-<div class="collection-steps">
+<div class="collection-steps" class:bullet-step={step !== 'skills'}>
 	{#if step === 'education'}
 		<section
 			id="education"
@@ -170,9 +181,11 @@
 					<div class="item-fields">
 						{#each ['institution', 'degree', 'major'] as field (field)}
 							{@const key = field as 'institution' | 'degree' | 'major'}
-							<Input
+							<Autocomplete
 								id={`education.${entry.id}.${key}`}
 								label={t(`wizard.fields.${key}`)}
+								suggestions={(query) => fieldSuggestions(key, query, key === 'degree')}
+								popularWhenEmpty={key === 'degree'}
 								required={key === 'institution'}
 								showCounter
 								maxlength={key === 'degree' ? LIMITS.short : LIMITS.title}
@@ -294,20 +307,38 @@
 					/>
 					{#each ['role', 'company', 'location'] as field (field)}
 						{@const key = field as 'role' | 'company' | 'location'}
-						<Input
-							id={`experience.${entry.id}.${key}`}
-							label={t(`wizard.fields.${key}`)}
-							showCounter
-							maxlength={key === 'location' ? LIMITS.short : LIMITS.title}
-							error={error(`experience.${entry.id}.${key}`)}
-							bind:value={
-								() => entry[key] ?? '',
-								(value) =>
-									editItem('experience', entry.id, key, (draft) => {
-										draft[key] = value;
-									})
-							}
-						/>
+						{#if key === 'role'}
+							<Autocomplete
+								id={`experience.${entry.id}.${key}`}
+								label={t(`wizard.fields.${key}`)}
+								suggestions={(query) => fieldSuggestions('jobTitle', query)}
+								showCounter
+								maxlength={LIMITS.title}
+								error={error(`experience.${entry.id}.${key}`)}
+								bind:value={
+									() => entry[key],
+									(value) =>
+										editItem('experience', entry.id, key, (draft) => {
+											draft[key] = value;
+										})
+								}
+							/>
+						{:else}
+							<Input
+								id={`experience.${entry.id}.${key}`}
+								label={t(`wizard.fields.${key}`)}
+								showCounter
+								maxlength={key === 'location' ? LIMITS.short : LIMITS.title}
+								error={error(`experience.${entry.id}.${key}`)}
+								bind:value={
+									() => entry[key] ?? '',
+									(value) =>
+										editItem('experience', entry.id, key, (draft) => {
+											draft[key] = value;
+										})
+								}
+							/>
+						{/if}
 					{/each}
 					<DateRangeFields
 						id={`experience.${entry.id}.dates`}
@@ -360,20 +391,39 @@
 				<div class="item-fields">
 					{#each ['name', 'role'] as field (field)}
 						{@const key = field as 'name' | 'role'}
-						<Input
-							id={`organizations.${entry.id}.${key}`}
-							label={t(`wizard.fields.${key}`)}
-							showCounter
-							maxlength={LIMITS.title}
-							error={error(`organizations.${entry.id}.${key}`)}
-							bind:value={
-								() => entry[key],
-								(value) =>
-									editItem('organizations', entry.id, key, (draft) => {
-										draft[key] = value;
-									})
-							}
-						/>
+						{#if key === 'role'}
+							<Autocomplete
+								id={`organizations.${entry.id}.${key}`}
+								label={t(`wizard.fields.${key}`)}
+								suggestions={(query) => fieldSuggestions('orgRole', query, true)}
+								popularWhenEmpty
+								showCounter
+								maxlength={LIMITS.title}
+								error={error(`organizations.${entry.id}.${key}`)}
+								bind:value={
+									() => entry[key],
+									(value) =>
+										editItem('organizations', entry.id, key, (draft) => {
+											draft[key] = value;
+										})
+								}
+							/>
+						{:else}
+							<Input
+								id={`organizations.${entry.id}.${key}`}
+								label={t(`wizard.fields.${key}`)}
+								showCounter
+								maxlength={LIMITS.title}
+								error={error(`organizations.${entry.id}.${key}`)}
+								bind:value={
+									() => entry[key],
+									(value) =>
+										editItem('organizations', entry.id, key, (draft) => {
+											draft[key] = value;
+										})
+								}
+							/>
+						{/if}
 					{/each}
 					<DateRangeFields
 						id={`organizations.${entry.id}.dates`}
@@ -488,12 +538,19 @@
 		</ListEditor>
 	{:else if step === 'skills'}
 		<div class="skills-sections">
+			{#if suggestionsData}<SkillRecommendations {store} data={suggestionsData} {onTarget} />{/if}
 			{#each ['hard', 'soft', 'tools'] as field (field)}
 				{@const group = field as 'hard' | 'soft' | 'tools'}
 				<SkillTags
 					id={`skills.${group}`}
 					label={t(`wizard.fields.${group}`)}
 					items={store.cv.skills[group]}
+					{suggestionsData}
+					suggestField={group === 'hard'
+						? 'skillHard'
+						: group === 'soft'
+							? 'skillSoft'
+							: 'skillTool'}
 					onChange={(items) =>
 						store.update(
 							(draft) => {
@@ -521,9 +578,11 @@
 			>
 				{#snippet item(entry)}
 					<div class="item-fields">
-						<Input
+						<Autocomplete
 							id={`languages.${entry.id}.name`}
 							label={t('wizard.fields.name')}
+							suggestions={(query) => fieldSuggestions('language', query, true)}
+							popularWhenEmpty
 							showCounter
 							maxlength={LIMITS.short}
 							bind:value={
@@ -704,5 +763,13 @@
 		color: var(--color-danger);
 		font-size: 0.875rem;
 		line-height: 1.6;
+	}
+	@media (max-width: 480px) {
+		.bullet-step :global(.list-editor > ol > li) {
+			border-color: transparent;
+		}
+		.bullet-step :global(.card-summary) {
+			background: var(--color-brand-50);
+		}
 	}
 </style>
