@@ -113,6 +113,9 @@ test('content pages fit a 320px phone and keep actions easy to tap', async ({ pa
 	for (const path of ['/', '/privasi', '/tentang']) {
 		await page.goto(path);
 		await page.waitForLoadState('networkidle');
+		await page.evaluate(async () => {
+			await document.fonts.ready;
+		});
 		const overflow = await page.evaluate(
 			() => document.documentElement.scrollWidth - document.documentElement.clientWidth
 		);
@@ -122,10 +125,15 @@ test('content pages fit a 320px phone and keep actions easy to tap', async ({ pa
 		for (const action of await page.locator('button:visible, a:visible').all()) {
 			// A skip link becomes a touch target only when focused and revealed.
 			if ((await action.getAttribute('href')) === '#main') continue;
+			const label = await action.evaluate((element) => {
+				const selector = `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`;
+				return `${selector} href=${element.getAttribute('href') ?? ''} aria-label=${element.getAttribute('aria-label') ?? ''} text=${element.textContent?.trim() ?? ''}`;
+			});
+			const context = `${path}: ${label}`;
 			const bounds = await action.boundingBox();
-			expect(bounds, await action.innerText()).not.toBeNull();
-			expect(bounds?.width ?? 0, await action.innerText()).toBeGreaterThanOrEqual(44);
-			expect(bounds?.height ?? 0, await action.innerText()).toBeGreaterThanOrEqual(44);
+			expect(bounds, context).not.toBeNull();
+			expect(bounds?.width ?? 0, context).toBeGreaterThanOrEqual(44);
+			expect(bounds?.height ?? 0, context).toBeGreaterThanOrEqual(44);
 		}
 	}
 });

@@ -123,7 +123,7 @@
 			<h2 class="section-title" id="privacy-title">{t('landing.privacyTitle')}</h2>
 			<p class="section-copy">{t('landing.privacyCopy')}</p>
 			<p class="backup-note">{t('landing.privacyBackup')}</p>
-			<a href={resolve('/privasi')} class="privacy-link"
+			<a href={resolve('/(site)/privasi')} class="privacy-link"
 				>{t('landing.privacyLink')}<Icon size={18} /></a
 			>
 		</div>

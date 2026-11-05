@@ -9,6 +9,7 @@
 		onAdd: () => T;
 		label: string;
 		disabled?: boolean;
+		maxItems?: number;
 		class?: string;
 	}
 
@@ -18,6 +19,7 @@
 		onAdd,
 		label,
 		disabled = false,
+		maxItems = Infinity,
 		class: className = ''
 	}: Props = $props();
 	const uid = $props.id();
@@ -42,7 +44,7 @@
 	}
 
 	async function add() {
-		if (disabled) return;
+		if (disabled || items.length >= maxItems) return;
 		items = [...items, onAdd()];
 		announcement = '';
 		await focusItem(items.length - 1);
@@ -125,7 +127,13 @@
 			</li>
 		{/each}
 	</ol>
-	<button type="button" id="{uid}-add" class="add-button" {disabled} onclick={add}>
+	<button
+		type="button"
+		id="{uid}-add"
+		class="add-button"
+		disabled={disabled || items.length >= maxItems}
+		onclick={add}
+	>
 		<svg
 			viewBox="0 0 24 24"
 			fill="none"

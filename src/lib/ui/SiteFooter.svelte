@@ -7,14 +7,14 @@
 <footer>
 	<div class="site-container footer-inner">
 		<div>
-			<a class="brand" href={resolve('/')}
+			<a class="brand" href={resolve('/(site)')}
 				>{t('app.name')}<span class="brand-dot" aria-hidden="true"></span></a
 			>
 			<p>{t('footer.description')}</p>
 		</div>
 		<nav aria-label={t('footer.links')}>
-			<a href={resolve('/privasi')}>{t('nav.privacy')}</a>
-			<a href={resolve('/tentang')}>{t('nav.about')}</a>
+			<a href={resolve('/(site)/privasi')}>{t('nav.privacy')}</a>
+			<a href={resolve('/(site)/tentang')}>{t('nav.about')}</a>
 			<a href="https://github.com/CodiosityDev/CV_Maker" target="_blank" rel="noopener noreferrer"
 				><Icon name="github" size={18} />{t('footer.github')}</a
 			>

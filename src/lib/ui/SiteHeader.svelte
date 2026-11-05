@@ -10,7 +10,7 @@
 <header class="site-header">
 	<div class="site-container header-inner">
 		<div class="brand-row">
-			<a class="brand" href={resolve('/')} aria-label={t('nav.home')}
+			<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}
 				><span class="brand-mark"><Icon name="file" size={23} /></span><span>{t('app.name')}</span
 				></a
 			>
