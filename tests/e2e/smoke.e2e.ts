@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
  * - no console errors (this also catches Content-Security-Policy violations)
  * - no horizontal scrolling at any tested viewport
  */
-const CONTENT_PAGES = ['/'];
+const CONTENT_PAGES = ['/', '/privasi', '/tentang'];
 
 for (const path of CONTENT_PAGES) {
 	test(`content page ${path} renders cleanly`, async ({ page }) => {
