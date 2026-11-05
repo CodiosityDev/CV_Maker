@@ -146,8 +146,9 @@
 		transform: translateY(0);
 	}
 	.primary {
-		background: var(--color-primary-600);
-		color: white;
+		border-color: var(--color-brand-ink);
+		background: var(--color-brand);
+		color: var(--color-ink);
 	}
 	.secondary {
 		border-color: var(--color-border);
@@ -156,11 +157,12 @@
 	}
 	.ghost {
 		background: transparent;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 	}
 	.danger {
-		background: var(--color-danger);
-		color: white;
+		border-color: var(--color-coral-ink);
+		background: var(--color-coral);
+		color: var(--color-ink);
 	}
 	.sm {
 		min-height: 44px;
@@ -180,11 +182,14 @@
 		width: 20px;
 		height: 20px;
 		flex-shrink: 0;
-		animation: spin 200ms linear infinite;
+		animation: pulse 180ms ease-in-out infinite alternate;
 	}
-	@keyframes spin {
+	@keyframes pulse {
+		from {
+			opacity: 0.4;
+		}
 		to {
-			transform: rotate(360deg);
+			opacity: 1;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {

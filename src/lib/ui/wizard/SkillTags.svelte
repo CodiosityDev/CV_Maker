@@ -98,7 +98,7 @@
 		padding-left: 0.75rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		background: var(--color-primary-50);
+		background: var(--color-mint);
 	}
 	li span {
 		overflow-wrap: anywhere;
@@ -109,7 +109,7 @@
 		min-height: 44px;
 		border: 0;
 		background: transparent;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-size: 1.25rem;
 		cursor: pointer;
 	}

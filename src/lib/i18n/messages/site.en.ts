@@ -1,139 +1,119 @@
-/**
- * Namespace 'site' — English (lazy-loaded).
- * Plain text only. Every key here must also exist in the other language file.
- */
+﻿/** Site content — English (lazy-loaded). */
 import type { SiteMessages } from '../translate';
 
 export const siteEn: SiteMessages = {
 	landing: {
-		title: 'CV Maker — A free CV for your first career step',
+		title: 'CV Maker — Create a free CV for your first job application',
 		description:
-			'Build an ATS-friendly or creative CV with guidance for fresh graduates. Free, no sign-up, and your data stays on your device.',
-		eyebrow: 'FROM CAMPUS TO NEW OPPORTUNITIES',
-		headline: 'Your first step towards a career.',
-		headlineStart: 'Your first step',
-		headlineEnd: 'towards a career.',
-		intro:
-			'Not much experience yet? You still have a story. Turn your education, student activities, and projects into a CV ready for what comes next.',
-		start: 'Start my CV',
-		free: 'Free, no sign-up',
-		local: 'Your data stays on your device',
+			'Build an ATS or Creative CV with guidance for fresh graduates. Free, no sign-up, and your data stays on your device.',
+		headline: 'Create a CV for your first job application.',
+		intro: 'Free, no sign-up. Choose an ATS or Creative CV, then follow the guidance.',
 		mockupLabel: 'Example CV layout',
-		mockupName: 'Your full name',
-		mockupRole: 'Fresh Graduate · Your chosen field',
-		mockupContact: 'Email · Phone · City',
-		mockupSummary: 'Profile',
-		mockupSummaryText: 'Share your skills and the career direction you want to take.',
+		mockupName: 'Alya Putri',
+		mockupRole: 'Information Systems Graduate',
+		mockupContact: 'alya@example.com · 0812-3456-7890 · Malang',
+		mockupSummary: 'Summary',
+		mockupSummaryText:
+			'Information Systems graduate with data analysis project experience. Skilled in SQL and Microsoft Excel.',
 		mockupEducation: 'Education',
-		mockupUniversity: 'Your university / school',
-		mockupDegree: 'Study programme · Graduation year',
+		mockupUniversity: 'Example University',
+		mockupDegree: 'BSc Information Systems · 2024',
 		mockupExperience: 'Activities & projects',
-		mockupProject: 'Experience that matters',
-		mockupBullet: 'Show your contribution, skills, and what you learned.',
+		mockupProject: 'Small business sales dashboard',
+		mockupBullet: 'Analysed 12 months of sales data and prepared a report for the business owner.',
 		mockupSkills: 'Skills',
-		mockupSkillText: 'Communication · Analysis · Teamwork',
-		mockupTag: 'Your potential, on paper.',
-		mockupNote: 'Your campus experience counts, too.',
-		howEyebrow: 'ONE STEP AT A TIME',
-		howTitle: 'From a blank page to your first CV.',
-		howIntro: 'You do not need all the answers yet. Start with what you have.',
-		stepOne: '01',
-		stepTwo: '02',
-		stepThree: '03',
+		mockupSkillText: 'SQL · Microsoft Excel · Data analysis',
+		howTitle: 'How it works',
 		chooseTitle: 'Choose your CV type',
-		chooseCopy: 'ATS for application portals, or Creative to show your visual side.',
+		chooseCopy: 'Choose ATS for recruitment portals, or Creative for direct applications.',
 		fillTitle: 'Follow the guidance',
-		fillCopy: 'Build your story step by step, with tips that fit a fresh graduate’s experience.',
-		downloadTitle: 'Download PDF / DOCX',
-		downloadCopy: 'Choose the format your application needs. Save a backup for peace of mind.',
-		typeEyebrow: 'MADE FOR YOUR NEXT MOVE',
-		typeTitle: 'One story. Two ways to tell it.',
-		typeIntro: 'Choose what fits the way you apply. You can change your type and template later.',
-		atsLabel: 'CLEAR & EASY TO READ',
+		fillCopy:
+			'Add your personal details, education, experience, and skills. Each step includes tips and examples.',
+		reviewTitle: 'Review your CV',
+		reviewCopy:
+			'Check your content and contact details in the preview. Downloads are being prepared.',
+		typeTitle: 'ATS or Creative',
 		atsTitle: 'ATS CV',
 		atsCopy:
-			'One column, no photo, and a focus on content. A choice for applying through recruitment portals.',
-		atsDetail:
-			'A simple structure helps systems read your CV. Selection still depends on the requirements and recruitment process.',
-		creativeLabel: 'ROOM FOR EXPRESSION',
+			'One column, no photo, and a focus on text. Suited to recruitment portals that use an ATS.',
+		atsDetail: 'A simple structure helps systems read your CV, but does not guarantee selection.',
 		creativeTitle: 'Creative CV',
-		creativeCopy:
-			'Colour, visual layouts, and an optional photo. Suited to portfolios or sending directly to a recruiter.',
+		creativeCopy: 'For direct applications or portfolios, with an optional photo.',
 		creativeWarning: 'Less suited to ATS portals',
-		creativeDetail: 'Follow the job’s requirements. Text in the PDF remains selectable.',
-		privacyEyebrow: 'YOUR STORY STAYS YOURS',
-		privacyTitle: 'A personal CV. On your own device.',
-		privacyCopy:
-			'No account, no CV data sent to a server, and no third-party trackers. You stay in control.',
-		privacyBackup:
-			'Browser data can be erased. Save a backup regularly, especially on shared computers.',
-		privacyLink: 'Read how your privacy is protected',
-		faqEyebrow: 'BEFORE YOU START',
-		faqTitle: 'A few things you might be wondering.',
-		faqIntro: 'A little clarity to help you start with confidence.',
-		faqAtsQuestion: 'What is an ATS?',
-		faqAtsAnswer:
+		creativeDetail:
+			'Creative designs are being prepared. Both CV types currently use the ATS Classic preview.',
+		privacyCopy: 'Your CV is stored in the browser on your device, without being sent to a server.',
+		privacyLink: 'Read the privacy policy',
+		faqCopy: 'Have a question before you start?',
+		faqLink: 'Read the FAQ'
+	},
+	faq: {
+		title: 'FAQ — CV Maker',
+		description:
+			'Answers about ATS CVs, cost, data storage, mobile use, languages, and who makes CV Maker.',
+		heading: 'FAQ',
+		intro: 'Answers about using CV Maker and storing your CV data.',
+		questionsTitle: 'Questions',
+		atsQuestion: 'What is an ATS?',
+		atsAnswer:
 			'An ATS (Applicant Tracking System) helps companies manage applications. A CV with a simple structure is easier for systems to read, but does not guarantee selection.',
-		faqFreeQuestion: 'Is it really free?',
-		faqFreeAnswer: 'Yes. You can create and download your CV for free, without an account.',
-		faqStorageQuestion: 'Where is my data stored?',
-		faqStorageAnswer:
+		freeQuestion: 'Is it really free?',
+		freeAnswer:
+			'Yes. Creating a CV is free and does not require an account. Downloads are being prepared.',
+		storageQuestion: 'Where is my data stored?',
+		storageAnswer:
 			'CV data is stored in your browser on the device you are using. It is not sent to a server and does not automatically move to another device.',
-		faqDeletedQuestion: 'What if my browser data is erased?',
-		faqDeletedAnswer:
-			'CVs stored in that browser will be lost. Save a JSON backup regularly so you can import it again when needed. Keep your own copies of PDF or DOCX files too.',
-		faqMobileQuestion: 'Can I use it on my phone?',
-		faqMobileAnswer:
+		deletedQuestion: 'What if my browser data is erased?',
+		deletedAnswer:
+			'CVs stored in that browser will be lost. JSON backup is not available yet, so avoid clearing site data while you still need your CV.',
+		mobileQuestion: 'Can I use it on my phone?',
+		mobileAnswer:
 			'Yes. The layout is designed for phones, tablets, and computers. You can build your CV right in your browser.',
-		faqEnglishQuestion: 'Is English available?',
-		faqEnglishAnswer:
+		englishQuestion: 'Is English available?',
+		englishAnswer:
 			'Yes. The interface is available in Indonesian and English. You can choose the CV’s content language separately when creating your CV.',
-		closingTitle: 'Your next opportunity starts here.',
-		closingCopy: 'Bring your story. We will help you put it on paper.'
+		makerQuestion: 'Who makes CV Maker?',
+		makerAnswer: 'CV Maker is created by Codiosity.',
+		makerLink: 'Visit Codiosity',
+		back: 'Back to home'
 	},
 	privacy: {
 		title: 'Privacy — CV Maker',
 		description:
-			'Learn how CV Maker stores data on your device, how to delete it, and why backups matter.',
-		eyebrow: 'PRIVACY IN PLAIN LANGUAGE',
-		heading: 'Your data, your control.',
-		intro: 'Your CV tells a personal story. In this version, CV data stays on the device you use.',
+			'How CV Maker stores data on your device and how to delete it through browser settings.',
+		heading: 'CV data privacy',
+		intro: 'CV data and photos are stored in the browser on the device you use.',
 		storageTitle: 'Stored in your browser, without an account',
 		storageCopy:
-			'CV data is stored in browser storage (IndexedDB). Your language preference is saved in localStorage. This version has no accounts, CV storage server, or cross-device sync.',
+			'CV data and your language preference are stored in your browser. This version has no accounts or CV storage server, and does not sync data between devices.',
 		trackingTitle: 'No third-party trackers',
 		trackingCopy:
 			'We do not include analytics, advertising pixels, scripts, or fonts from third-party services. Fonts are served by this site. CV data is not sent to a server.',
 		photoTitle: 'Photos and location metadata',
 		photoCopy:
-			'When photo uploads are available, photos are processed on your device: resized and re-encoded to remove EXIF metadata, including GPS locations. Photos stay in browser storage.',
+			'Photos for Creative CVs are processed on your device: resized and re-encoded to remove EXIF metadata, including GPS locations. Photos stay in browser storage.',
 		deleteTitle: 'Deleting your data',
 		deleteCopy:
-			'When the dashboard is available, use “Delete all data on this device” in My CVs. You can also clear this site’s data in your browser settings. This removes CVs and photos stored in that browser.',
-		backupTitle: 'Keep a backup, especially on shared computers',
+			'Clear this site’s data through your browser settings. This removes CVs, photos, and the language preference stored in that browser.',
+		backupTitle: 'If browser data is erased',
 		backupCopy:
-			'Clearing browser data, a broken device, or changing browsers can mean losing your CV. Save a JSON backup regularly and keep downloaded files somewhere you control.',
+			'Clearing browser data, a broken device, or changing browsers can mean losing your CV. Downloads and JSON backup are not available yet. Avoid clearing site data while you still need your CV.',
 		sharedCopy:
-			'On a public computer, download what you need and clear site data before leaving. Also delete downloaded files from that computer after transferring them.',
+			'On a public computer, clear site data when you finish so the next user cannot open your CV.',
 		back: 'Back to home'
 	},
 	about: {
 		title: 'About — CV Maker',
 		description:
-			'CV Maker is an open-source project helping fresh graduates create ATS and creative CVs for free.',
-		eyebrow: 'ABOUT CV MAKER',
-		heading: 'Your first story deserves a place.',
+			'CV Maker is created and maintained by Codiosity to help fresh graduates build ATS or Creative CVs.',
+		heading: 'About CV Maker',
 		intro:
-			'No work experience does not mean no skills. This project helps fresh graduates turn education, student activities, internships, and projects into a clear CV.',
-		purposeTitle: 'Built for your first career step',
-		purposeCopy:
-			'CV Maker is designed to be free and easy to use on a phone. You will follow a guided flow before moving to a flexible editor. Choose an ATS CV for a simple structure, or a Creative CV for visual needs.',
-		openTitle: 'Open for everyone to learn together',
-		openCopy:
-			'CV Maker is an open-source project. The source code and project development are available on GitHub.',
+			'CV Maker helps fresh graduates build an ATS or Creative CV with guidance, without creating an account.',
+		attribution: 'CV Maker is created and maintained by Codiosity.',
+		codiosityLink: 'Visit Codiosity',
+		openTitle: 'Source code',
+		openCopy: 'The CV Maker source code is available on GitHub.',
 		github: 'View the code on GitHub',
-		privacyCopy:
-			'No account needed. Your CV data stays on your device. Save a backup to keep your story safe.',
 		back: 'Back to home'
 	}
 };

@@ -258,7 +258,7 @@
 		max-width: 100%;
 		margin-top: 1rem;
 		padding: 0.625rem 1rem;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		text-align: left;
 	}
 	.cancel-button,
@@ -266,12 +266,12 @@
 		padding: 0.625rem 1rem;
 	}
 	.confirm-delete {
-		border-color: var(--color-danger);
-		background: var(--color-danger);
-		color: var(--color-surface);
+		border-color: var(--color-coral-ink);
+		background: var(--color-coral);
+		color: var(--color-ink);
 	}
 	.confirm-delete:hover:not(:disabled) {
-		background: var(--color-danger);
+		background: var(--color-coral);
 	}
 	.sr-only {
 		position: absolute;

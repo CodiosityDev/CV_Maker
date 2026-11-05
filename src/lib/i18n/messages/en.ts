@@ -21,22 +21,23 @@ export const en: BaseMessages = {
 		present: 'Present'
 	},
 	a11y: {
-		skipToContent: 'Skip to main content'
+		skipToContent: 'Skip to main content',
+		opensNewTab: '(opens in a new tab)'
 	},
 	nav: {
 		label: 'Main navigation',
-		create: 'Create a free CV',
-		myCvs: 'My CVs',
+		create: 'Create CV',
+		menu: 'Menu',
+		faq: 'FAQ',
+		codiosity: 'Codiosity',
 		home: 'Home',
 		about: 'About',
 		privacy: 'Privacy'
 	},
 	footer: {
-		description: 'A small step towards bigger opportunities.',
-		local: 'Made for you. Saved on your device.',
+		madeBy: 'Made by',
 		github: 'GitHub',
-		links: 'Site links',
-		openSource: 'Free & open source'
+		links: 'Site links'
 	},
 	ui: {
 		loading: 'Loading…',
@@ -58,7 +59,7 @@ export const en: BaseMessages = {
 		moveDown: 'Move item {number} down',
 		deleteTitle: 'Delete this item?',
 		deleteDescription: 'Item {number} will be removed from this list.',
-		emptyList: 'No items yet. Add one to start telling your story.',
+		emptyList: 'No entries yet. Add one to start.',
 		itemPosition: 'Item {current} of {total}',
 		reordered: 'Item moved from position {from} to {to}.',
 		removed: 'Item {number} deleted.',
@@ -105,8 +106,8 @@ export const en: BaseMessages = {
 		stepEducation: 'Education',
 		stepReview: 'Review',
 		cards: 'Cards',
-		cardTitle: 'A good start',
-		cardBody: 'Student activities and university projects are worth sharing too.',
+		cardTitle: 'Example education',
+		cardBody: 'Add relevant education, student activities, or projects.',
 		cardFooter: 'Saved on this device ✓',
 		overlays: 'Dialogs & bottom sheets',
 		openDialog: 'Open dialog',

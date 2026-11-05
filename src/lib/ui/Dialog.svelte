@@ -180,13 +180,12 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-surface);
 		color: var(--color-text);
-		box-shadow: var(--shadow-lg);
 	}
 	.ui-dialog[open] {
 		animation: appear 180ms ease-out;
 	}
 	.ui-dialog::backdrop {
-		background: rgb(15 23 42 / 48%);
+		background: rgb(31 29 61 / 40%);
 	}
 	.dialog-heading {
 		display: flex;
@@ -215,7 +214,7 @@
 		cursor: pointer;
 	}
 	.close-button:hover {
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 	}
 	svg {
 		width: 20px;

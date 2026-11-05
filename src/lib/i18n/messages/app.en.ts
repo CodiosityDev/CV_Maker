@@ -7,7 +7,6 @@ import type { AppMessages } from '../translate';
 export const appEn: AppMessages = {
 	wizard: {
 		pageTitle: 'Create a CV — CV Maker',
-		typeEyebrow: 'START WITH HOW YOU APPLY',
 		localNote: 'No account. Your CV stays on your device.',
 		resumeTitle: 'Continue an unfinished CV',
 		resume: 'Continue',
@@ -147,8 +146,7 @@ export const appEn: AppMessages = {
 		steps: {
 			type: {
 				title: 'Choose your CV type',
-				description:
-					'Match your CV to how you apply and the role you want. We will build it together, one step at a time.'
+				description: 'Choose a CV type for how you apply and the role you want.'
 			},
 			target: {
 				title: 'Your career direction',
@@ -186,7 +184,7 @@ export const appEn: AppMessages = {
 			summary: {
 				title: 'Profile summary',
 				description:
-					'Tell a short story about yourself, your main strengths, and your career direction. The examples below can help you start.'
+					'Write 2–4 sentences about your education, skills, and target role. Use an example if needed.'
 			},
 			review: {
 				title: 'Review your CV',
@@ -195,8 +193,7 @@ export const appEn: AppMessages = {
 			},
 			done: {
 				title: 'Well done, your CV is taking shape!',
-				description:
-					'You have completed an important step. You can review and improve your content from here whenever you need.'
+				description: 'Your CV details are complete. You can review and update the content here.'
 			}
 		}
 	},

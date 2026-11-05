@@ -81,7 +81,7 @@
 		min-height: 44px;
 		padding: 0.75rem 0;
 		cursor: pointer;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-weight: 600;
 	}
 	.examples {

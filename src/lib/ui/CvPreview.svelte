@@ -94,7 +94,7 @@
 		width: 100%;
 		overflow: hidden;
 		background: #fff;
-		box-shadow: var(--shadow-md);
+		border: 1px solid var(--color-border);
 	}
 	.paper {
 		width: 210mm;
@@ -121,7 +121,7 @@
 		border: 1px solid var(--color-control-border);
 		border-radius: var(--radius-sm);
 		background: var(--color-surface);
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font: inherit;
 	}
 	@media print {

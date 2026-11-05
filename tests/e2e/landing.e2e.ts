@@ -4,20 +4,21 @@ test('landing offers the planned CV actions and honest template guidance', async
 	await page.goto('/');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-		'Langkah pertama menuju kariermu.'
+		'Buat CV untuk lamaran pertamamu.'
 	);
 
-	const createLinks = page.getByRole('link', { name: 'Buat CV Gratis', exact: true });
+	const createLinks = page.getByRole('link', { name: 'Buat CV', exact: true });
 	expect(await createLinks.count()).toBeGreaterThanOrEqual(2);
 	for (const link of await createLinks.all()) {
 		await expect(link).toHaveAttribute('href', '/buat');
 	}
-	for (const link of await page.getByRole('link', { name: 'CV Saya', exact: true }).all()) {
-		await expect(link).toHaveAttribute('href', '/cv');
-	}
+	await expect(page.locator('a[href="/cv"]')).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Apa itu ATS?', exact: true })).toHaveCount(0);
+	await expect(page.locator('main a[href="/faq"]')).toBeVisible();
 	await expect(page.getByText(/kurang cocok untuk portal ATS/i)).toBeVisible();
 	await expect(page.locator('footer a[href="/privasi"]')).toBeVisible();
 	await expect(page.locator('footer a[href="/tentang"]')).toBeVisible();
+	await expect(page.locator('footer a[href="/faq"]')).toBeVisible();
 	await expect(
 		page.locator('footer a[href="https://github.com/CodiosityDev/CV_Maker"]')
 	).toHaveAttribute('rel', /noopener/);
@@ -35,16 +36,14 @@ test('language changes content and metadata, and survives reload and navigation'
 	await page.getByRole('button', { name: 'English', exact: true }).click();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-		'Your first step towards a career.'
+		'Create a CV for your first job application.'
 	);
 	await expect(page).not.toHaveTitle(originalTitle);
 	await expect(page.locator('meta[name="description"]')).not.toHaveAttribute(
 		'content',
 		originalDescription ?? ''
 	);
-	await expect(
-		page.getByRole('link', { name: 'Create a free CV', exact: true }).first()
-	).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Create CV', exact: true }).first()).toBeVisible();
 	await expect(page.getByRole('button', { name: 'English', exact: true })).toHaveAttribute(
 		'aria-pressed',
 		'true'
@@ -52,7 +51,7 @@ test('language changes content and metadata, and survives reload and navigation'
 
 	await page.reload();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-		'Your first step towards a career.'
+		'Create a CV for your first job application.'
 	);
 	await page.locator('footer a[href="/privasi"]').click();
 	await expect(page).toHaveURL(/\/privasi$/);
@@ -66,7 +65,7 @@ test('language changes content and metadata, and survives reload and navigation'
 });
 
 test('FAQ panels open independently with the keyboard', async ({ page }) => {
-	await page.goto('/');
+	await page.goto('/faq');
 	const atsQuestion = page.getByRole('button', { name: 'Apa itu ATS?', exact: true });
 	const freeQuestion = page.getByRole('button', {
 		name: 'Apakah gratis?',
@@ -110,7 +109,7 @@ test('the first keyboard action exposes the skip link and focuses main content',
 
 test('content pages fit a 320px phone and keep actions easy to tap', async ({ page }) => {
 	await page.setViewportSize({ width: 320, height: 780 });
-	for (const path of ['/', '/privasi', '/tentang']) {
+	for (const path of ['/', '/faq', '/privasi', '/tentang']) {
 		await page.goto(path);
 		await page.waitForLoadState('networkidle');
 		await page.evaluate(async () => {
