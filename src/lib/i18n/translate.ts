@@ -1,35 +1,76 @@
-import { id } from './messages/id';
+/**
+ * Translation engine with code-split dictionaries.
+ *
+ * Messages are split by LANGUAGE and by NAMESPACE so each page only ships the text it uses:
+ *   base  (messages/id.ts, en.ts)          — shared: app, common, nav, footer, ui, locale, validation, a11y
+ *   site  (messages/site.id.ts, site.en.ts) — landing, privacy, about     → registered by (site) layout
+ *   app   (messages/app.id.ts, app.en.ts)   — wizard, preview, editor, …  → registered by (app) layout
+ *
+ * Indonesian base is always bundled. A route group registers its Indonesian namespace synchronously
+ * (static import → no flash, works in prerender) and English parts are loaded on demand.
+ */
+import { id as baseId } from './messages/id';
+import type { siteId } from './messages/site.id';
+import type { appId } from './messages/app.id';
 import type { DeepStringRecord, LeafPaths, Locale, MessageParams } from './types';
 
-export type Messages = DeepStringRecord<typeof id>;
+export type BaseMessages = DeepStringRecord<typeof baseId>;
+export type SiteMessages = DeepStringRecord<typeof siteId>;
+export type AppMessages = DeepStringRecord<typeof appId>;
+export type Messages = BaseMessages & SiteMessages & AppMessages;
 export type MessageKey = LeafPaths<Messages>;
 
-/**
- * Indonesian (default) is bundled; other locales are code-split and loaded on demand,
- * so pages only ship the dictionary they actually use.
- */
-const dictionaries: Partial<Record<Locale, Messages>> = { id };
+export type Namespace = 'site' | 'app';
+type Part = 'base' | Namespace;
+type Dict = Record<string, unknown>;
 
-const loaders: Record<Exclude<Locale, 'id'>, () => Promise<Messages>> = {
-	en: () => import('./messages/en').then((module) => module.en)
+const dictionaries: Record<Locale, Dict> = { id: { ...baseId }, en: {} };
+const loadedParts: Record<Locale, Set<Part>> = { id: new Set(['base']), en: new Set() };
+/** Namespaces registered so far in this page session (any language). */
+const activeNamespaces = new Set<Namespace>();
+
+const englishLoaders: Record<Part, () => Promise<Dict>> = {
+	base: () => import('./messages/en').then((m) => m.en),
+	site: () => import('./messages/site.en').then((m) => m.siteEn),
+	app: () => import('./messages/app.en').then((m) => m.appEn)
 };
 
-/** Loads a locale's dictionary (no-op if already loaded). */
+/**
+ * Register a namespace's Indonesian messages (call at module level in the route group's +layout.ts
+ * with a STATIC import). English is fetched by `loadDictionary` when needed.
+ */
+export function registerNamespace(namespace: Namespace, indonesian: Dict): void {
+	activeNamespaces.add(namespace);
+	if (loadedParts.id.has(namespace)) return;
+	Object.assign(dictionaries.id, indonesian);
+	loadedParts.id.add(namespace);
+}
+
+/** Loads every part (base + registered namespaces) of a locale that is not loaded yet. */
 export async function loadDictionary(locale: Locale): Promise<void> {
-	if (dictionaries[locale]) return;
 	if (locale === 'id') return;
-	dictionaries[locale] = await loaders[locale]();
+	const missing = (['base', ...activeNamespaces] as Part[]).filter(
+		(part) => !loadedParts[locale].has(part)
+	);
+	await Promise.all(
+		missing.map(async (part) => {
+			const messages = await englishLoaders[part]();
+			Object.assign(dictionaries[locale], messages);
+			loadedParts[locale].add(part);
+		})
+	);
 }
 
+/** True when base + all registered namespaces are loaded for this locale. */
 export function isDictionaryLoaded(locale: Locale): boolean {
-	return dictionaries[locale] !== undefined;
+	return (['base', ...activeNamespaces] as Part[]).every((part) => loadedParts[locale].has(part));
 }
 
-function lookup(messages: Messages | undefined, key: string): string | undefined {
+function lookup(messages: Dict | undefined, key: string): string | undefined {
 	let node: unknown = messages;
 	for (const part of key.split('.')) {
 		if (node === null || typeof node !== 'object' || !Object.hasOwn(node, part)) return undefined;
-		node = (node as Record<string, unknown>)[part];
+		node = (node as Dict)[part];
 	}
 	return typeof node === 'string' ? node : undefined;
 }
@@ -48,7 +89,7 @@ function interpolate(template: string, params?: MessageParams): string {
 export function translate(locale: Locale, key: MessageKey, params?: MessageParams): string {
 	const message = lookup(dictionaries[locale], key) ?? lookup(dictionaries.id, key);
 	if (message === undefined) {
-		if (import.meta.env?.DEV) console.warn(`[i18n] missing key: ${key}`);
+		if (import.meta.env?.DEV) console.warn(`[i18n] missing key (namespace registered?): ${key}`);
 		return key;
 	}
 	return interpolate(message, params);

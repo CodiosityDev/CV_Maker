@@ -148,8 +148,8 @@ const educationSchema = v.object({
 	institution: text(LIMITS.title),
 	degree: text(LIMITS.short),
 	major: text(LIMITS.title),
-	gpa: optText(10),
-	gpaScale: optText(10),
+	gpa: optText(LIMITS.gpa),
+	gpaScale: optText(LIMITS.gpa),
 	dates: dateRange,
 	thesisTitle: optText(LIMITS.description),
 	highlights: bullets

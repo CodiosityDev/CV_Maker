@@ -36,10 +36,21 @@ export interface AssetRepository {
 	getPhotoBlob(id: string): Promise<Blob | null>;
 	/** Object URL for <img src>. The caller MUST call `URL.revokeObjectURL()` when done. */
 	getPhotoUrl(id: string): Promise<string | null>;
+	/**
+	 * Deletes a photo immediately. Do NOT call this when the user replaces/removes a photo in the
+	 * editor: undo may bring the old photo back. Old photos are cleaned up by `removeOrphans()`.
+	 */
 	remove(id: string): Promise<void>;
-	/** Deletes photos no CV refers to anymore. Returns how many were removed. */
-	removeOrphans(): Promise<number>;
+	/**
+	 * Deletes photos that no CV refers to AND that are older than `minAgeMs` (default 24 h).
+	 * The age guard keeps photos that an open editor's undo history may still restore.
+	 * Call once when the app area opens. Returns how many were removed.
+	 */
+	removeOrphans(options?: { minAgeMs?: number }): Promise<number>;
 }
+
+/** Orphaned photos younger than this are kept (undo safety). */
+export const ORPHAN_MIN_AGE_MS = 24 * 60 * 60 * 1000;
 
 export interface StorageControl {
 	/** 'memory' means data will be lost when the tab closes → show a warning. */
@@ -180,19 +191,24 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 			await (await getBackend()).deleteAsset(id);
 		},
 
-		async removeOrphans() {
+		async removeOrphans(options = {}) {
+			const minAgeMs = options.minAgeMs ?? ORPHAN_MIN_AGE_MS;
 			const backend = await getBackend();
 			const used = new Set(
 				(await loadAll(backend))
 					.map((doc) => doc.personal.photoAssetId)
 					.filter((id): id is string => id !== undefined)
 			);
+			const cutoff = Date.now() - minAgeMs;
 			let removed = 0;
 			for (const id of await backend.getAllAssetIds()) {
-				if (!used.has(id)) {
-					await backend.deleteAsset(id);
-					removed += 1;
-				}
+				if (used.has(id)) continue;
+				const asset = await backend.getAsset(id);
+				const createdAt = asset ? Date.parse(asset.createdAt) : Number.NaN;
+				// Unknown/invalid dates count as old: such records can't be from this session.
+				if (Number.isFinite(createdAt) && createdAt > cutoff) continue;
+				await backend.deleteAsset(id);
+				removed += 1;
 			}
 			return removed;
 		}

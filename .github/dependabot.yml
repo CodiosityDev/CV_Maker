@@ -6,9 +6,16 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # One PR for all dev tooling, one for runtime deps.
       dev-tooling:
         dependency-type: development
+      runtime:
+        dependency-type: production
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      # One PR per month for all workflow action updates.
+      github-actions:
+        patterns: ['*']

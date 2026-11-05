@@ -1,11 +1,18 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { assetRepo } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+
+	onMount(() => {
+		// Housekeeping: delete photos no CV uses anymore (older than 24 h, so undo stays safe).
+		void assetRepo.removeOrphans().catch(() => {});
+	});
 </script>
 
 <header class="app-header">

@@ -58,10 +58,10 @@
 				await assetRepo.remove(id);
 				return;
 			}
-			const oldId = store.cv.personal.photoAssetId;
+			// The previous photo is NOT deleted here: undo may restore it.
+			// assetRepo.removeOrphans() (run when the app area opens) cleans it up later.
 			set('photoAssetId', id);
 			await store.flush();
-			if (oldId && store.saveState !== 'error') await assetRepo.remove(oldId);
 		} catch (error) {
 			photoError =
 				error instanceof PhotoError ? `wizard.photoErrors.${error.code}` : 'wizard.photoFailed';
@@ -72,11 +72,10 @@
 	async function removePhoto() {
 		busy = true;
 		photoError = undefined;
-		const oldId = store.cv.personal.photoAssetId;
 		try {
+			// Kept in storage for undo; cleaned up later by assetRepo.removeOrphans().
 			set('photoAssetId', undefined);
 			await store.flush();
-			if (oldId && store.saveState !== 'error') await assetRepo.remove(oldId);
 		} catch {
 			photoError = 'wizard.photoFailed';
 		} finally {

@@ -10,7 +10,12 @@
  * Always mutate through `update()` — direct writes to `store.cv` bypass undo history and autosave.
  */
 import type { CVDocument } from '../schema/types';
-import { cvRepo as defaultRepo, onExternalChange, type CvRepository } from '../storage/index';
+import {
+	cvRepo as defaultRepo,
+	onExternalChange,
+	type CvRepository,
+	type SyncEvent
+} from '../storage/index';
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -66,6 +71,11 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let saveChain: Promise<void> = Promise.resolve();
 	let destroyed = false;
+	/**
+	 * Set when another tab deleted this CV (or wiped all data): autosave must not resurrect it.
+	 * Edits are kept in memory (dirty) until the user explicitly chooses `keepLocalVersion()`.
+	 */
+	let savingBlocked = false;
 
 	const snapshot = (): CVDocument => $state.snapshot(cv) as CVDocument;
 
@@ -80,9 +90,17 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 		cv.updatedAt = new Date(now()).toISOString();
 	}
 
+	function cancelTimer(): void {
+		if (timer !== undefined) {
+			clearTimeout(timer);
+			timer = undefined;
+		}
+	}
+
 	function scheduleSave(): void {
 		dirty = true;
-		if (timer !== undefined) clearTimeout(timer);
+		cancelTimer();
+		if (savingBlocked) return;
 		timer = setTimeout(() => {
 			timer = undefined;
 			void flush();
@@ -91,15 +109,18 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 
 	/** Saves pending changes now. Resolves when everything queued so far is written. */
 	function flush(): Promise<void> {
-		if (timer !== undefined) {
-			clearTimeout(timer);
-			timer = undefined;
-		}
-		if (!dirty) return saveChain;
+		cancelTimer();
+		if (!dirty || savingBlocked) return saveChain;
 		dirty = false;
 		const doc = snapshot();
 		saveState = 'saving';
 		saveChain = saveChain.then(async () => {
+			if (savingBlocked) {
+				// Deleted elsewhere while this save was queued: drop it, keep the edits pending.
+				dirty = true;
+				saveState = 'idle';
+				return;
+			}
 			try {
 				await repo.save(doc);
 				if (!dirty) saveState = 'saved';
@@ -177,6 +198,7 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 		redoStack.length = 0;
 		lastCoalesceKey = undefined;
 		externalChange = 'none';
+		savingBlocked = false;
 		dirty = false;
 		syncCounts();
 	}
@@ -190,11 +212,29 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 		return true;
 	}
 
-	/** Keep this tab's version: dismiss the "changed in another tab" notice and overwrite on next save. */
-	function keepLocalVersion(): void {
+	/**
+	 * Keep this tab's version: dismiss the notice and save it now with a fresh `updatedAt`
+	 * (so it is the newest version everywhere). If the CV was deleted elsewhere, this re-creates it.
+	 */
+	function keepLocalVersion(): Promise<void> {
 		externalChange = 'none';
+		savingBlocked = false;
+		touch();
 		dirty = true;
-		void flush();
+		return flush();
+	}
+
+	/** React to a change made in another tab (wired automatically; exposed for tests). */
+	function applyExternalChange(event: SyncEvent): void {
+		if (event.type !== 'wiped' && event.id !== cv.id) return;
+		if (event.type === 'cv-saved') {
+			if (event.updatedAt > cv.updatedAt) externalChange = 'updated';
+			return;
+		}
+		// 'cv-removed' or 'wiped': never let a pending autosave bring the CV back.
+		externalChange = 'removed';
+		savingBlocked = true;
+		cancelTimer();
 	}
 
 	const onPageHide = () => void flush();
@@ -206,12 +246,7 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 	if (listenToPage) {
 		window.addEventListener('pagehide', onPageHide);
 		document.addEventListener('visibilitychange', onVisibility);
-		stopSync = onExternalChange((event) => {
-			if (event.type === 'wiped') externalChange = 'removed';
-			else if (event.id !== cv.id) return;
-			else if (event.type === 'cv-removed') externalChange = 'removed';
-			else if (event.updatedAt > cv.updatedAt) externalChange = 'updated';
-		});
+		stopSync = onExternalChange(applyExternalChange);
 	}
 
 	/** Stop listeners and save pending changes. Call in onDestroy. */
@@ -254,6 +289,7 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 		replace,
 		reloadFromRepo,
 		keepLocalVersion,
+		applyExternalChange,
 		destroy
 	};
 }

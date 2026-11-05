@@ -98,14 +98,31 @@ for (const [name, open] of Object.entries(backends)) {
 			expect(await assetRepo.getPhotoBlob(photoId)).toBeNull();
 		});
 
-		it('removes orphaned photos', async () => {
+		it('removes orphaned photos, but keeps recent ones (undo may restore them)', async () => {
 			const used = await repos.assetRepo.putImage(image());
-			await repos.assetRepo.putImage(image());
+			const recentOrphan = await repos.assetRepo.putImage(image());
 			const cv = structuredClone(sampleCvCreative);
 			cv.personal.photoAssetId = used;
 			await repos.cvRepo.save(cv);
-			expect(await repos.assetRepo.removeOrphans()).toBe(1);
+
+			expect(await repos.assetRepo.removeOrphans()).toBe(0);
+			expect(await repos.assetRepo.getPhotoBlob(recentOrphan)).not.toBeNull();
+
+			expect(await repos.assetRepo.removeOrphans({ minAgeMs: 0 })).toBe(1);
+			expect(await repos.assetRepo.getPhotoBlob(recentOrphan)).toBeNull();
 			expect(await repos.assetRepo.getPhotoBlob(used)).not.toBeNull();
+		});
+
+		it('treats orphaned photos with an invalid date as old', async () => {
+			await backend.putAsset({
+				id: 'legacy',
+				type: 'image/jpeg',
+				bytes: new ArrayBuffer(1),
+				width: 1,
+				height: 1,
+				createdAt: 'not-a-date'
+			});
+			expect(await repos.assetRepo.removeOrphans()).toBe(1);
 		});
 
 		it('wipes everything', async () => {

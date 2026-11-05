@@ -8,6 +8,8 @@ export default defineConfig({
 	testDir: 'tests/e2e',
 	testMatch: '**/*.e2e.ts',
 	fullyParallel: true,
+	// One preview server serves all workers; too many parallel wizard flows cause timeouts (flaky).
+	workers: process.env.CI ? 2 : 4,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
 	reporter: process.env.CI ? 'github' : 'list',

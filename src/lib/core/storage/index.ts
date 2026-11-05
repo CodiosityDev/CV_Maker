@@ -27,7 +27,7 @@ function getBackend(): Promise<StorageBackend> {
 
 export const { cvRepo, assetRepo, storage } = createRepositories(getBackend);
 
-export { createRepositories, LOCAL_STORAGE_KEYS } from './repo';
+export { createRepositories, LOCAL_STORAGE_KEYS, ORPHAN_MIN_AGE_MS } from './repo';
 export type { CvRepository, AssetRepository, StorageControl } from './repo';
 export type { StorageBackend, StorageMode, StoredAsset } from './backend';
 export { createMemoryBackend } from './memory-backend';

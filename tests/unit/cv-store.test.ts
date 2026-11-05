@@ -164,6 +164,73 @@ describe('cv store', () => {
 		expect(repo.saved.at(-1)?.summary).toBe('last words');
 	});
 
+	describe('changes from other tabs', () => {
+		it('flags a newer save of the same CV, ignores older saves and other CVs', () => {
+			const { store } = setup();
+			store.applyExternalChange({ type: 'cv-saved', id: 'other', updatedAt: '2099-01-01' });
+			store.applyExternalChange({ type: 'cv-saved', id: sampleCvAts.id, updatedAt: '2000-01-01' });
+			expect(store.externalChange).toBe('none');
+			store.applyExternalChange({
+				type: 'cv-saved',
+				id: sampleCvAts.id,
+				updatedAt: '2099-01-01T00:00:00.000Z'
+			});
+			expect(store.externalChange).toBe('updated');
+		});
+
+		it('a CV deleted elsewhere is never re-created by autosave', async () => {
+			const { repo, store } = setup();
+			store.update((d) => (d.summary = 'pending'));
+			store.applyExternalChange({ type: 'cv-removed', id: sampleCvAts.id });
+			expect(store.externalChange).toBe('removed');
+			await vi.advanceTimersByTimeAsync(2000);
+			store.update((d) => (d.summary = 'more edits'));
+			await vi.advanceTimersByTimeAsync(2000);
+			await store.flush();
+			await store.destroy();
+			expect(repo.save).not.toHaveBeenCalled();
+		});
+
+		it('wiping all data also blocks autosave', async () => {
+			const { repo, store } = setup();
+			store.update((d) => (d.summary = 'x'));
+			store.applyExternalChange({ type: 'wiped' });
+			await vi.advanceTimersByTimeAsync(2000);
+			expect(repo.save).not.toHaveBeenCalled();
+		});
+
+		it('drops a save that was already queued when the deletion arrives', async () => {
+			const { repo, store } = setup();
+			let release!: () => void;
+			repo.save.mockImplementationOnce(
+				() => new Promise<void>((resolve) => (release = () => resolve()))
+			);
+			store.update((d) => (d.summary = 'first'));
+			const first = store.flush();
+			await Promise.resolve(); // let the first save start (now in flight, waiting on release)
+			expect(repo.save).toHaveBeenCalledTimes(1);
+			store.update((d) => (d.summary = 'second'));
+			const second = store.flush(); // queued behind the first
+			store.applyExternalChange({ type: 'cv-removed', id: sampleCvAts.id });
+			release();
+			await first;
+			await second;
+			expect(repo.save).toHaveBeenCalledTimes(1);
+		});
+
+		it('keepLocalVersion() saves immediately with a newer updatedAt', async () => {
+			const { repo, store } = setup();
+			store.update((d) => (d.summary = 'mine'));
+			store.applyExternalChange({ type: 'cv-removed', id: sampleCvAts.id });
+			const before = store.cv.updatedAt;
+			clock += 60_000;
+			await store.keepLocalVersion();
+			expect(store.externalChange).toBe('none');
+			expect(repo.saved.at(-1)?.summary).toBe('mine');
+			expect(repo.saved.at(-1)!.updatedAt > before).toBe(true);
+		});
+	});
+
 	it('replace() swaps the document and clears history', () => {
 		const { store } = setup();
 		store.update((d) => (d.summary = 'x'));

@@ -14,6 +14,8 @@ export const LIMITS = {
 	email: 254,
 	url: 500,
 	cvTitle: 80,
+	/** gpa and gpaScale, e.g. '3.65' / '4.00' */
+	gpa: 10,
 	itemsPerSection: 20,
 	bulletsPerItem: 8,
 	skillsPerGroup: 50,

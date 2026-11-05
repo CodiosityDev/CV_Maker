@@ -19,7 +19,15 @@ import {
 	type MessageParams
 } from './types';
 
-export { translate, monthName, monthNames, type MessageKey, type Messages } from './translate';
+export {
+	translate,
+	monthName,
+	monthNames,
+	registerNamespace,
+	type MessageKey,
+	type Messages,
+	type Namespace
+} from './translate';
 export { LOCALES, DEFAULT_LOCALE, isLocale, type Locale, type MessageParams } from './types';
 
 export const i18n = $state<{ locale: Locale }>({ locale: DEFAULT_LOCALE });
@@ -55,6 +63,16 @@ export async function setLocale(locale: Locale): Promise<void> {
 	if (request !== latestRequest) return;
 	i18n.locale = locale;
 	applyToDocument(locale);
+}
+
+/**
+ * Make sure every registered namespace is available in the current UI language.
+ * Call from a route group's `load` right after `registerNamespace(...)`.
+ */
+export function ensureMessages(): Promise<void> {
+	return loadDictionary(i18n.locale).catch(() => {
+		// Offline and not cached: Indonesian fallback is used.
+	});
 }
 
 /** Call once on the client (root layout). Restores the saved UI language, if any. */
