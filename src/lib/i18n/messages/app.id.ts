@@ -10,9 +10,9 @@ export const appId = {
 		resume: 'Lanjutkan',
 		untitled: 'CV tanpa judul',
 		updatedAt: 'Terakhir diubah:',
-		createError: 'CV belum bisa dibuat. Coba pilih lagi.',
-		quizTitle: 'Belum yakin? Coba kuis singkat.',
-		quizDescription: 'Dua pertanyaan ini membantu memilih jenis CV. Kamu tetap bebas memilih.',
+		createError: 'CV belum bisa dibuat. Coba lagi.',
+		quizTitle: 'Belum yakin pilih yang mana?',
+		quizDescription: 'Jawab dua pertanyaan untuk mendapat saran.',
 		quizApplication: 'Bagaimana kamu akan mengirim lamaran?',
 		quizOnline: 'Portal online, perusahaan besar, atau BUMN',
 		quizDirect: 'Langsung ke perekrut / portofolio',
@@ -20,34 +20,33 @@ export const appId = {
 		quizUnanswered: 'Pilih jawaban',
 		quizYes: 'Ya, bidang kreatif',
 		quizNo: 'Bidang lainnya',
-		quizOptional: 'Kuis ini opsional. Kamu juga bisa langsung memilih di bawah.',
-		quizResult: 'Rekomendasi untukmu: {type}. Pilihan akhir tetap di tanganmu.',
+		quizOptional: 'Boleh langsung pilih jenis CV di bawah.',
+		quizResult: 'Saran: {type}. Kamu boleh memilih yang lain.',
 		recommended: 'Direkomendasikan',
 		chooseAts: 'Pilih CV ATS',
 		chooseCreative: 'Pilih CV Creative',
 		back: 'Kembali',
 		next: 'Lanjut',
 		skip: 'Lewati',
-		finish: 'Selesaikan CV',
+		finish: 'Selesai',
 		undo: 'Urungkan',
 		redo: 'Ulangi',
-		tips: 'Tips untuk langkah ini',
-		examples: 'Contoh untuk inspirasi',
+		tips: 'Tips',
+		examples: 'Contoh',
 		useExample: 'Pakai contoh',
-		useSummary: 'Pakai sebagai awal',
-		actionVerbs: 'Kata kerja untuk inspirasi',
+		useSummary: 'Pakai contoh',
+		actionVerbs: 'Pilihan kata kerja',
 		replaceTitle: 'Ganti ringkasanmu dengan contoh?',
-		replaceDescription:
-			'Ringkasan yang sudah kamu tulis akan diganti. Kamu bisa mengurungkannya setelah itu.',
+		replaceDescription: 'Ringkasan lama akan diganti. Bisa diurungkan.',
 		replace: 'Ganti ringkasan',
 		reviewReady: 'CV siap',
 		reviewIssues: 'Ada bagian yang perlu dilengkapi',
-		reviewInstruction: 'Pilih catatan di bawah untuk langsung memperbaiki isian terkait.',
+		reviewInstruction: 'Klik catatan untuk memperbaiki isian.',
 		issueContext: '{section} — {field}: {message}',
 		editAgain: 'Ubah lagi',
 		optional: 'Opsional',
-		saved: 'Tersimpan di perangkat ini ✓',
-		savedMemory: 'Tersimpan sementara di tab ini',
+		saved: 'Tersimpan ✓',
+		savedMemory: 'Tersimpan sementara',
 		saving: 'Menyimpan…',
 		saveError: 'Perubahan belum tersimpan. Coba simpan lagi.',
 		retry: 'Coba lagi',
@@ -56,26 +55,62 @@ export const appId = {
 		reload: 'Muat versi terbaru',
 		keepLocal: 'Pakai versi ini',
 		notFound: 'CV tidak ditemukan',
-		notFoundDescription:
-			'CV ini mungkin sudah dihapus, atau tersimpan di browser atau perangkat lain.',
+		notFoundDescription: 'Coba buka browser atau perangkat tempat kamu membuatnya.',
 		startNew: 'Buat CV baru',
-		memoryWarning:
-			'Penyimpanan perangkat tidak tersedia. Data hanya tersimpan sementara dan akan hilang setelah tab ditutup.',
+		memoryWarning: 'Data akan hilang saat tab ditutup karena browser tidak bisa menyimpannya.',
 		photoRemove: 'Hapus foto',
 		photoAlt: 'Foto profil CV',
 		photoBusy: 'Memproses foto…',
-		photoFailed: 'Foto belum bisa disimpan. Silakan coba lagi.',
+		photoFailed: 'Foto belum tersimpan. Coba lagi.',
 		photoMissing: 'Foto tidak ditemukan di perangkat ini. Pilih foto lagi.',
-		atsPhotoHint: 'CV ATS tidak memakai foto agar isi lebih mudah dibaca sistem rekrutmen.',
+		atsPhotoHint: 'Foto tidak ditampilkan pada CV ATS.',
 		loading: 'Menyiapkan panduan…',
 		loadError: 'Panduan belum bisa dimuat. Periksa koneksi lalu coba lagi.',
-		previewNotice:
-			'Preview saat ini memakai ATS Klasik untuk kedua jenis CV. Pilihan desain Creative akan hadir pada tahap template berikutnya.',
-		doneAvailability:
-			'Isi CV-mu sudah tersimpan. Pilihan template, unduhan, dan editor lengkap akan hadir di tahap berikutnya.',
+		previewNotice: 'Preview memakai ATS Klasik. Desain Creative belum tersedia.',
+		doneAvailability: 'Template lain, unduhan, dan editor belum tersedia.',
 		addSkill: 'Tambah',
 		removeSkill: 'Hapus {skill}',
 		skillsLimit: 'Maksimal {max} keahlian per kelompok.',
+		hints: {
+			gpa: 'Contoh: 3.65 dari 4.00.',
+			photo: 'Pilih foto formal berlatar polos.'
+		},
+		newItems: {
+			education: 'Pendidikan baru',
+			experience: 'Pengalaman baru',
+			organizations: 'Organisasi baru',
+			projects: 'Proyek baru',
+			languages: 'Bahasa baru',
+			certifications: 'Sertifikasi baru',
+			awards: 'Prestasi baru',
+			links: 'Tautan baru'
+		},
+		emptyLists: {
+			education: 'Tambahkan sekolah atau kampus terakhirmu.',
+			experience: 'Magang atau kerja paruh waktu bisa ditulis di sini.',
+			organizations: 'Tambahkan organisasi atau kepanitiaan yang pernah kamu ikuti.',
+			projects: 'Tambahkan proyek kuliah atau karya pribadimu.',
+			languages: 'Tambahkan bahasa yang kamu kuasai.',
+			certifications: 'Tambahkan sertifikasi atau pelatihan yang relevan.',
+			awards: 'Tambahkan prestasi yang mendukung lamaranmu.',
+			links: 'Tambahkan LinkedIn, GitHub, atau portofoliomu.'
+		},
+		bullets: {
+			point: 'Poin {number}',
+			remove: 'Hapus poin {number}',
+			actions: 'Aksi poin {number}',
+			add: 'Tambah poin',
+			moveUp: 'Naik',
+			moveDown: 'Turun',
+			moved: 'Poin {from} dipindah ke {to}.',
+			removed: 'Poin {number} dihapus.',
+			added: 'Poin {number} ditambahkan.',
+			limit: 'Maksimal {count} poin.',
+			help: 'Enter untuk poin baru. Alt + ↑ / ↓ untuk mengurutkan.',
+			examples: 'Contoh — klik untuk menambah',
+			pasteLimited: 'Sebagian teks tidak ditambahkan. Maksimal {count} poin.',
+			empty: 'Tulis tugas atau hasil yang paling relevan.'
+		},
 		photoErrors: {
 			'not-an-image': 'Pilih file gambar, misalnya JPEG atau PNG.',
 			'too-large': 'Ukuran foto terlalu besar. Pilih file di bawah 15 MB.',
@@ -100,15 +135,15 @@ export const appId = {
 			major: 'Jurusan',
 			gpa: 'IPK',
 			gpaScale: 'Skala IPK',
-			start: 'Tanggal mulai',
-			end: 'Tanggal selesai',
+			start: 'Mulai',
+			end: 'Selesai',
 			thesisTitle: 'Judul skripsi / tugas akhir',
 			highlights: 'Sorotan pendidikan',
 			type: 'Jenis pengalaman',
 			role: 'Posisi / peran',
 			company: 'Perusahaan / tempat kerja',
 			location: 'Lokasi',
-			bullets: 'Kontribusi dan pencapaian',
+			bullets: 'Apa yang kamu kerjakan & capai',
 			name: 'Nama',
 			hard: 'Keahlian teknis',
 			soft: 'Soft skill',
@@ -145,68 +180,62 @@ export const appId = {
 			type: {
 				short: 'Jenis',
 				title: 'Pilih jenis CV-mu',
-				description: 'Pilih jenis CV sesuai cara melamar dan posisi yang kamu tuju.'
+				description: 'Sesuaikan dengan cara kamu melamar.'
 			},
 			target: {
-				short: 'Arah',
-				title: 'Arah kariermu',
-				description:
-					'Mulai dari bahasa CV dan posisi yang kamu incar. Beri judul agar mudah ditemukan lagi.'
+				short: 'Tujuan',
+				title: 'Bahasa & posisi tujuan',
+				description: 'Pilih bahasa CV dan posisi yang kamu incar.'
 			},
 			personal: {
 				short: 'Data diri',
 				title: 'Data diri',
-				description: 'Bantu perekrut mengenal dan menghubungimu. Cukup isi informasi yang relevan.'
+				description: 'Isi kontak yang bisa dihubungi perekrut.'
 			},
 			education: {
 				short: 'Pendidikan',
 				title: 'Pendidikan',
-				description:
-					'Ceritakan latar pendidikanmu. Tugas akhir, mata kuliah, dan beasiswa juga bisa menunjukkan kemampuanmu.'
+				description: 'Tambahkan sekolah atau kampus terakhir.'
 			},
 			experience: {
 				short: 'Pengalaman',
 				title: 'Pengalaman kerja / magang',
-				description:
-					'Magang, kerja paruh waktu, dan freelance juga berarti. Belum ada? Kamu boleh melewati langkah ini.'
+				description: 'Isi magang, kerja paruh waktu, atau freelance.'
 			},
 			organizations: {
 				short: 'Organisasi',
 				title: 'Organisasi & kepanitiaan',
-				description: 'Tunjukkan peran dan kontribusimu saat bekerja bersama orang lain.'
+				description: 'Isi peranmu di organisasi atau kepanitiaan.'
 			},
 			projects: {
 				short: 'Proyek',
 				title: 'Proyek',
-				description: 'Proyek kuliah, tugas akhir, dan karya pribadi bisa menjadi bukti kemampuanmu.'
+				description: 'Tambahkan proyek kuliah, tugas akhir, atau karya pribadi.'
 			},
 			skills: {
 				short: 'Keahlian',
 				title: 'Keahlian & pencapaian',
-				description:
-					'Tambahkan keahlian, bahasa, sertifikasi, atau prestasi yang relevan dengan posisi tujuan.'
+				description: 'Pilih keahlian dan pencapaian yang sesuai posisi tujuan.'
 			},
 			summary: {
 				short: 'Ringkasan',
 				title: 'Ringkasan profil',
-				description:
-					'Tulis 2–4 kalimat tentang pendidikan, keahlian, dan posisi yang kamu tuju. Gunakan contoh jika diperlukan.'
+				description: 'Tulis 2–4 kalimat tentang pendidikan dan keahlianmu.'
 			},
 			review: {
 				short: 'Tinjau',
 				title: 'Tinjau CV-mu',
-				description:
-					'Periksa isi, ejaan, dan kontakmu. Preview menampilkan informasi yang akan dibaca perekrut.'
+				description: 'Periksa isi, ejaan, dan kontakmu di preview.'
 			},
 			done: {
 				short: 'Selesai',
-				title: 'Selamat, CV-mu sudah tersusun!',
-				description: 'Isian CV sudah selesai. Kamu bisa meninjau dan memperbaiki isinya dari sini.'
+				title: 'CV-mu tersimpan',
+				description: 'Kamu masih bisa kembali untuk memperbaiki isinya.'
 			}
 		}
 	},
 	preview: {
-		empty: 'Mulai isi data diri untuk melihat CV-mu terbentuk di sini.',
+		empty: 'Isi data diri untuk melihat preview.',
 		label: 'Preview CV',
 		loading: 'Menyiapkan preview…',
 		caption: 'ATS Klasik · A4',

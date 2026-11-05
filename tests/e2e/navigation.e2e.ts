@@ -42,6 +42,7 @@ test('site navigation marks only the current page and links to existing routes',
 		await expect(page.locator('a[href="/cv"]')).toHaveCount(0);
 	}
 	await page.goto('/buat');
+	await page.locator('.app-menu > summary').click();
 	await expect(page.locator('header nav a[href="/"]')).toBeVisible();
 	await expect(page.locator('header nav a[href="/faq"]')).toBeVisible();
 	await expect(page.locator('a[href="/cv"]')).toHaveCount(0);

@@ -43,7 +43,7 @@
 <style>
 	.date-range {
 		display: grid;
-		gap: 1.25rem;
+		gap: 0.75rem;
 		min-width: 0;
 	}
 	@media (min-width: 640px) {

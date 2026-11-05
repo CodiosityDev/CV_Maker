@@ -23,7 +23,7 @@ async function createCv(page: Page, kind: 'ats' | 'creative' = 'ats') {
 		})
 		.click();
 	await expect(page).toHaveURL(/\/buat\/[a-f\d-]+$/);
-	await expect(heading(page)).toHaveText('Arah kariermu');
+	await expect(heading(page)).toHaveText('Bahasa & posisi tujuan');
 }
 
 async function advance(page: Page, title: string, skip = false) {
@@ -54,10 +54,10 @@ async function addEducation(page: Page) {
 	await page.getByLabel('Jenjang pendidikan', { exact: true }).fill('S1');
 	await page.getByLabel('Jurusan', { exact: true }).fill('Teknik Informatika');
 	await expect(page.getByLabel('Skala IPK', { exact: true })).toHaveValue('4.00');
-	const start = page.getByRole('group', { name: 'Tanggal mulai', exact: true });
+	const start = page.getByRole('group', { name: 'Mulai', exact: true });
 	await start.getByLabel('Bulan', { exact: true }).selectOption('09');
 	await start.getByLabel('Tahun', { exact: true }).selectOption('2020');
-	const end = page.getByRole('group', { name: 'Tanggal selesai', exact: true });
+	const end = page.getByRole('group', { name: 'Selesai', exact: true });
 	await end.getByLabel('Bulan', { exact: true }).selectOption('07');
 	await end.getByLabel('Tahun', { exact: true }).selectOption('2024');
 }
@@ -125,12 +125,12 @@ test('ATS happy path reaches review and done with saved content and heading focu
 	).toBeVisible();
 	await expect(preview).toContainText('Universitas Contoh');
 	await fitsViewport(page, 'review');
-	await page.getByRole('button', { name: 'Selesaikan CV', exact: true }).click();
-	await expect(heading(page)).toHaveText('Selamat, CV-mu sudah tersusun!');
+	await page.getByRole('button', { name: 'Selesai', exact: true }).click();
+	await expect(heading(page)).toHaveText('CV-mu tersimpan');
 	await expect(heading(page)).toBeFocused();
-	await expect(saved(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saved(page)).toHaveText('Tersimpan ✓');
 	await page.reload();
-	await expect(heading(page)).toHaveText('Selamat, CV-mu sudah tersusun!');
+	await expect(heading(page)).toHaveText('CV-mu tersimpan');
 	await expect(page.getByTestId('cv-preview')).toContainText('Alya Putri');
 	await page.getByRole('button', { name: 'Ubah lagi', exact: true }).click();
 	await expect(heading(page)).toHaveText('Tinjau CV-mu');
@@ -172,7 +172,7 @@ test('autosaved name and current step survive reload and an unfinished CV can be
 }) => {
 	await enterPersonal(page);
 	await page.getByLabel('Nama lengkap').fill('Nama yang tersimpan');
-	await expect(saved(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saved(page)).toHaveText('Tersimpan ✓');
 	const cvUrl = page.url();
 	await page.reload();
 	await expect(heading(page)).toHaveText('Data diri');
@@ -324,7 +324,7 @@ test('Creative photo errors are translated and a valid photo can be replaced and
 	await expect(page.getByRole('alert')).toHaveCount(0);
 	await page.getByRole('button', { name: 'Hapus foto', exact: true }).click();
 	await expect(photo).toHaveCount(0);
-	await expect(saved(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saved(page)).toHaveText('Tersimpan ✓');
 	await page.reload();
 	await expect(heading(page)).toHaveText('Data diri');
 	await expect(page.getByRole('img', { name: 'Foto profil CV', exact: true })).toHaveCount(0);

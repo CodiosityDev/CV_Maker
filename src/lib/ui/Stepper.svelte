@@ -80,9 +80,10 @@
 	}
 	.progress-row {
 		display: flex;
+		flex-direction: column;
 		min-width: 0;
-		align-items: center;
-		gap: 12px;
+		align-items: stretch;
+		gap: 8px;
 	}
 	.progress-label {
 		display: flex;
@@ -108,7 +109,7 @@
 	.progress-track {
 		min-width: 40px;
 		height: 8px;
-		flex: 1 0 40px;
+		flex: 0 0 8px;
 		overflow: hidden;
 		border-radius: var(--radius-pill);
 		background: var(--color-brand-50);
@@ -136,6 +137,16 @@
 	@media (min-width: 360px) {
 		.progress-label {
 			font-size: 0.875rem;
+		}
+	}
+	@media (min-width: 768px) {
+		.progress-row {
+			flex-direction: row;
+			align-items: center;
+			gap: 12px;
+		}
+		.progress-track {
+			flex: 1 0 40px;
 		}
 	}
 	@media (min-width: 1024px) {

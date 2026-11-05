@@ -5,7 +5,6 @@
 	import { assetRepo } from '#lib/core/storage/index.ts';
 	import { PhotoError } from '#lib/core/security/photo.ts';
 	import { normalizePhone, type StepIssue } from '#lib/core/wizard/index.ts';
-	import type { Guidance } from '#lib/core/content/index.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Input from '../Input.svelte';
 	import ListEditor from '../ListEditor.svelte';
@@ -14,12 +13,10 @@
 	let {
 		store,
 		issues,
-		guidance,
 		photoUrl
 	}: {
 		store: CvStore;
 		issues: StepIssue[];
-		guidance?: Guidance;
 		photoUrl?: string;
 	} = $props();
 	let busy = $state(false);
@@ -33,12 +30,12 @@
 		const issue = issues.find((issue) => issue.field === field);
 		return issue ? t(issue.messageKey) : undefined;
 	}
-	function set<K extends keyof PersonalInfo>(key: K, value: PersonalInfo[K]) {
+	function set<K extends keyof PersonalInfo>(key: K, value: PersonalInfo[K], structural = false) {
 		store.update(
 			(draft) => {
 				draft.personal[key] = value;
 			},
-			{ coalesceKey: `personal.${key}` }
+			{ coalesceKey: `personal.${key}${structural ? `.${newId()}` : ''}` }
 		);
 	}
 	function normalize() {
@@ -100,7 +97,6 @@
 		label={t('wizard.fields.headline')}
 		maxlength={LIMITS.headline}
 		showCounter
-		hint={guidance?.fieldTips.headline}
 		bind:value={() => store.cv.personal.headline, (value) => set('headline', value)}
 	/>
 	<Input
@@ -111,7 +107,6 @@
 		autocomplete="email"
 		maxlength={LIMITS.email}
 		showCounter
-		hint={guidance?.fieldTips.email}
 		error={error('personal.email')}
 		bind:value={() => store.cv.personal.email, (value) => set('email', value)}
 	/>
@@ -123,7 +118,6 @@
 		autocomplete="tel"
 		maxlength={LIMITS.short}
 		showCounter
-		hint={guidance?.fieldTips.phone}
 		error={error('personal.phone')}
 		onblur={normalize}
 		bind:value={() => store.cv.personal.phone, (value) => set('phone', value)}
@@ -146,12 +140,16 @@
 			bind:value={() => store.cv.personal.province ?? '', (value) => set('province', value)}
 		/>
 	</div>
-	<p class="hint">{guidance?.fieldTips.links}</p>
 	<ListEditor
 		label={t('wizard.fields.links')}
+		getKey={(link) => link.id}
+		getSummary={(link) => link.label.trim() || link.url.trim() || t('wizard.newItems.links')}
+		emptyMessage={t('wizard.emptyLists.links')}
+		onUndo={() => store.undo()}
+		undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
 		maxItems={LIMITS.links}
 		onAdd={() => ({ id: newId(), label: '', url: '' })}
-		bind:items={() => store.cv.personal.links, (value) => set('links', value)}
+		bind:items={() => store.cv.personal.links, (value) => set('links', value, true)}
 	>
 		{#snippet item(link)}
 			<div class="fields">
@@ -196,7 +194,7 @@
 	{#if store.cv.kind === 'creative'}
 		<div class="photo">
 			<label for="personal.photoAssetId">{t('wizard.fields.photo')}</label>
-			<p id="photo-hint" class="hint">{guidance?.fieldTips.photo}</p>
+			<p id="photo-hint" class="hint">{t('wizard.hints.photo')}</p>
 			{#if photoUrl}<img src={photoUrl} alt={t('wizard.photoAlt')} width="96" height="96" />{/if}
 			<input
 				id="personal.photoAssetId"

@@ -12,9 +12,9 @@ export const appEn: AppMessages = {
 		resume: 'Continue',
 		untitled: 'Untitled CV',
 		updatedAt: 'Last updated:',
-		createError: 'Your CV could not be created. Please try choosing again.',
-		quizTitle: 'Not sure yet? Try a quick quiz.',
-		quizDescription: 'These two questions help you choose a CV type. The choice is still yours.',
+		createError: 'Could not create your CV. Try again.',
+		quizTitle: 'Not sure which to choose?',
+		quizDescription: 'Answer two questions for a suggestion.',
 		quizApplication: 'How will you send your application?',
 		quizOnline: 'Online portal, large company, or state-owned company',
 		quizDirect: 'Directly to a recruiter / portfolio',
@@ -22,33 +22,33 @@ export const appEn: AppMessages = {
 		quizUnanswered: 'Choose an answer',
 		quizYes: 'Yes, a creative role',
 		quizNo: 'Another field',
-		quizOptional: 'This quiz is optional. You can also choose directly below.',
-		quizResult: 'Our recommendation: {type}. The final choice is yours.',
+		quizOptional: 'You can choose a CV type below without taking the quiz.',
+		quizResult: 'Suggestion: {type}. You can choose another type.',
 		recommended: 'Recommended',
 		chooseAts: 'Choose ATS CV',
 		chooseCreative: 'Choose Creative CV',
 		back: 'Back',
 		next: 'Next',
 		skip: 'Skip',
-		finish: 'Finish my CV',
+		finish: 'Done',
 		undo: 'Undo',
 		redo: 'Redo',
-		tips: 'Tips for this step',
-		examples: 'Examples for inspiration',
+		tips: 'Tips',
+		examples: 'Examples',
 		useExample: 'Use example',
-		useSummary: 'Use as a starting point',
-		actionVerbs: 'Action verbs for inspiration',
+		useSummary: 'Use example',
+		actionVerbs: 'Action verbs',
 		replaceTitle: 'Replace your summary with this example?',
-		replaceDescription: 'This replaces the summary you have written. You can undo it afterwards.',
+		replaceDescription: 'Your current summary will be replaced. You can undo this.',
 		replace: 'Replace summary',
 		reviewReady: 'Your CV is ready',
-		reviewIssues: 'A few details need your attention',
-		reviewInstruction: 'Select a note below to go straight to the field that needs attention.',
+		reviewIssues: 'A few details are missing',
+		reviewInstruction: 'Select a note to edit that field.',
 		issueContext: '{section} — {field}: {message}',
 		editAgain: 'Edit again',
 		optional: 'Optional',
-		saved: 'Saved on this device ✓',
-		savedMemory: 'Saved temporarily in this tab',
+		saved: 'Saved ✓',
+		savedMemory: 'Saved temporarily',
 		saving: 'Saving…',
 		saveError: 'Changes have not been saved. Please try saving again.',
 		retry: 'Try again',
@@ -57,27 +57,62 @@ export const appEn: AppMessages = {
 		reload: 'Load the latest version',
 		keepLocal: 'Use this version',
 		notFound: 'CV not found',
-		notFoundDescription:
-			'This CV may have been deleted, or it may be saved in another browser or on another device.',
+		notFoundDescription: 'Try the browser or device where you created it.',
 		startNew: 'Create a new CV',
-		memoryWarning:
-			'Device storage is unavailable. Data is only saved temporarily and will be lost when this tab closes.',
+		memoryWarning: 'Your browser cannot save this CV. It will be lost when the tab closes.',
 		photoRemove: 'Remove photo',
 		photoAlt: 'CV profile photo',
 		photoBusy: 'Processing photo…',
-		photoFailed: 'Your photo could not be saved. Please try again.',
+		photoFailed: 'Photo not saved. Try again.',
 		photoMissing: 'Photo is unavailable on this device. Please choose it again.',
-		atsPhotoHint:
-			'ATS CVs leave out photos so recruitment systems can read the content more easily.',
+		atsPhotoHint: 'Photos are not shown on ATS CVs.',
 		loading: 'Preparing your guidance…',
 		loadError: 'Guidance could not be loaded. Check your connection and try again.',
-		previewNotice:
-			'Both CV types currently use the ATS Classic preview. Creative designs will be available in the next template stage.',
-		doneAvailability:
-			'Your CV content is saved. Template choices, downloads, and the full editor will arrive in a later stage.',
+		previewNotice: 'The preview uses ATS Classic. Creative designs are not available yet.',
+		doneAvailability: 'Other templates, downloads, and the editor are not available yet.',
 		addSkill: 'Add',
 		removeSkill: 'Remove {skill}',
 		skillsLimit: 'Up to {max} skills per group.',
+		hints: {
+			gpa: 'Example: 3.65 out of 4.00.',
+			photo: 'Choose a formal photo with a plain background.'
+		},
+		newItems: {
+			education: 'New education',
+			experience: 'New experience',
+			organizations: 'New organisation',
+			projects: 'New project',
+			languages: 'New language',
+			certifications: 'New certification',
+			awards: 'New award',
+			links: 'New link'
+		},
+		emptyLists: {
+			education: 'Add your most recent school or university.',
+			experience: 'You can include internships or part-time work here.',
+			organizations: 'Add an organisation or committee you have joined.',
+			projects: 'Add a university project or personal work.',
+			languages: 'Add a language you know.',
+			certifications: 'Add relevant certifications or training.',
+			awards: 'Add an achievement relevant to your application.',
+			links: 'Add your LinkedIn, GitHub, or portfolio.'
+		},
+		bullets: {
+			point: 'Point {number}',
+			remove: 'Delete point {number}',
+			actions: 'Point {number} actions',
+			add: 'Add point',
+			moveUp: 'Move up',
+			moveDown: 'Move down',
+			moved: 'Point {from} moved to {to}.',
+			removed: 'Point {number} deleted.',
+			added: 'Point {number} added.',
+			limit: 'Up to {count} points.',
+			help: 'Enter adds a point. Alt + ↑ / ↓ changes the order.',
+			examples: 'Examples — click to add',
+			pasteLimited: 'Some text was not added. Up to {count} points.',
+			empty: 'Add a relevant task or result.'
+		},
 		photoErrors: {
 			'not-an-image': 'Choose an image file, such as JPEG or PNG.',
 			'too-large': 'This photo is too large. Choose a file under 15 MB.',
@@ -102,15 +137,15 @@ export const appEn: AppMessages = {
 			major: 'Major',
 			gpa: 'GPA',
 			gpaScale: 'GPA scale',
-			start: 'Start date',
-			end: 'End date',
+			start: 'Start',
+			end: 'End',
 			thesisTitle: 'Thesis / final project title',
 			highlights: 'Education highlights',
 			type: 'Experience type',
 			role: 'Position / role',
 			company: 'Company / workplace',
 			location: 'Location',
-			bullets: 'Contributions and achievements',
+			bullets: 'What you did & achieved',
 			name: 'Name',
 			hard: 'Technical skills',
 			soft: 'Soft skills',
@@ -147,69 +182,62 @@ export const appEn: AppMessages = {
 			type: {
 				short: 'Type',
 				title: 'Choose your CV type',
-				description: 'Choose a CV type for how you apply and the role you want.'
+				description: 'Choose a type for how you plan to apply.'
 			},
 			target: {
-				short: 'Direction',
-				title: 'Your career direction',
-				description:
-					'Start with your CV language and the role you want. Give it a title so you can find it again.'
+				short: 'Target',
+				title: 'CV language & target role',
+				description: 'Choose your CV language and target role.'
 			},
 			personal: {
 				short: 'Personal',
 				title: 'Personal details',
-				description: 'Help recruiters get to know and contact you. Include the details that matter.'
+				description: 'Add the contact details recruiters can reach you at.'
 			},
 			education: {
 				short: 'Education',
 				title: 'Education',
-				description:
-					'Share your educational background. Final projects, coursework, and scholarships can show your skills too.'
+				description: 'Add your most recent school or university.'
 			},
 			experience: {
 				short: 'Experience',
 				title: 'Work experience / internships',
-				description:
-					'Internships, part-time work, and freelance projects count too. Nothing yet? You can skip this step.'
+				description: 'Add internships, part-time work, or freelance work.'
 			},
 			organizations: {
 				short: 'Organisation',
 				title: 'Organisations & committees',
-				description: 'Show your role and contribution when working with others.'
+				description: 'Add your role in an organisation or committee.'
 			},
 			projects: {
 				short: 'Projects',
 				title: 'Projects',
-				description:
-					'University projects, a thesis, and personal work can demonstrate what you can do.'
+				description: 'Add university projects, a thesis, or personal work.'
 			},
 			skills: {
 				short: 'Skills',
 				title: 'Skills & achievements',
-				description:
-					'Add skills, languages, certifications, or achievements relevant to the role you want.'
+				description: 'Choose skills and achievements relevant to your target role.'
 			},
 			summary: {
 				short: 'Summary',
 				title: 'Profile summary',
-				description:
-					'Write 2–4 sentences about your education, skills, and target role. Use an example if needed.'
+				description: 'Write 2–4 sentences about your education and skills.'
 			},
 			review: {
 				short: 'Review',
 				title: 'Review your CV',
-				description:
-					'Check your content, spelling, and contact details. The preview shows what a recruiter will read.'
+				description: 'Check your content, spelling, and contacts in the preview.'
 			},
 			done: {
 				short: 'Done',
-				title: 'Well done, your CV is taking shape!',
-				description: 'Your CV details are complete. You can review and update the content here.'
+				title: 'Your CV is saved',
+				description: 'You can still go back to change the content.'
 			}
 		}
 	},
 	preview: {
-		empty: 'Add your personal details to see your CV take shape here.',
+		empty: 'Add personal details to see a preview.',
 		label: 'CV preview',
 		loading: 'Preparing preview…',
 		caption: 'ATS Classic · A4',

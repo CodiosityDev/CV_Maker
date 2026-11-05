@@ -7,6 +7,15 @@
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+	let menuOpen = $state(false);
+	let menu: HTMLDetailsElement | undefined = $state();
+	function closeMenu(event: KeyboardEvent) {
+		if (event.key === 'Escape' && menuOpen) {
+			event.preventDefault();
+			menuOpen = false;
+			menu?.querySelector('summary')?.focus();
+		}
+	}
 
 	onMount(() => {
 		// Housekeeping: delete photos no CV uses anymore (older than 24 h, so undo stays safe).
@@ -14,16 +23,34 @@
 	});
 </script>
 
+<svelte:window
+	onkeydown={closeMenu}
+	onclick={(event) => {
+		if (event.target instanceof Node && !menu?.contains(event.target)) menuOpen = false;
+	}}
+/>
+
 <header class="app-header">
 	<div class="site-container header-inner">
 		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
 			<span>{t('app.name')}</span>
 		</a>
 		<LanguageSwitcher />
-		<nav aria-label={t('nav.label')}>
-			<a href={resolve('/(site)')}>{t('nav.home')}</a>
-			<a href={resolve('/(site)/faq')}>{t('nav.faq')}</a>
-		</nav>
+		<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
+			<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.75"
+					aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg
+				>
+			</summary>
+			<nav aria-label={t('nav.label')}>
+				<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
+				<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
+			</nav>
+		</details>
 	</div>
 </header>
 <main id="main" tabindex="-1">{@render children()}</main>
@@ -35,11 +62,11 @@
 	}
 	.header-inner {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: space-between;
-		gap: 4px 12px;
-		padding-block: 12px;
+		gap: 8px;
+		padding-block: 7px;
 	}
 	.brand {
 		display: inline-flex;
@@ -53,16 +80,47 @@
 		text-decoration: none;
 		white-space: nowrap;
 	}
+	.app-menu {
+		position: relative;
+		flex-shrink: 0;
+	}
+	summary {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border-radius: var(--radius-md);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
+		cursor: pointer;
+		list-style: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	summary svg {
+		width: 20px;
+		height: 20px;
+	}
 	nav {
-		display: flex;
-		flex-basis: 100%;
-		gap: 1rem;
+		position: absolute;
+		z-index: 20;
+		top: calc(100% + 8px);
+		right: 0;
+		display: grid;
+		min-width: 160px;
+		padding: 8px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 	}
 	nav a {
 		display: inline-flex;
 		align-items: center;
 		min-width: 44px;
 		min-height: 44px;
+		padding-inline: 12px;
 		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
@@ -70,11 +128,5 @@
 	}
 	nav a:hover {
 		text-decoration: underline;
-	}
-	@media (min-width: 768px) {
-		nav {
-			flex-basis: auto;
-			margin-left: 0.75rem;
-		}
 	}
 </style>

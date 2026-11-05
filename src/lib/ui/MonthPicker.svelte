@@ -66,9 +66,9 @@
 	>
 	<div class="date-fields">
 		<div>
-			<label for="{id}-month">{t('ui.month')}</label>
 			<select
 				id="{id}-month"
+				aria-label={t('ui.month')}
 				value={month}
 				disabled={inactive}
 				required={required && !inactive}
@@ -83,9 +83,9 @@
 			</select>
 		</div>
 		<div>
-			<label for="{id}-year">{t('ui.year')}</label>
 			<select
 				id="{id}-year"
+				aria-label={t('ui.year')}
 				value={year}
 				disabled={inactive}
 				required={required && !inactive}
@@ -116,7 +116,7 @@
 		border: 0;
 	}
 	legend {
-		margin-bottom: 0.75rem;
+		margin-bottom: 0.375rem;
 		padding: 0;
 		font-size: 0.875rem;
 		font-weight: 600;
@@ -127,16 +127,10 @@
 	.date-fields {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-		gap: 0.75rem;
+		gap: 0.5rem;
 	}
 	.date-fields > div {
 		min-width: 0;
-	}
-	.date-fields label {
-		display: block;
-		margin-bottom: 0.375rem;
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
 	}
 	select {
 		width: 100%;

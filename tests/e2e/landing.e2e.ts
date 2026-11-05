@@ -121,18 +121,27 @@ test('content pages fit a 320px phone and keep actions easy to tap', async ({ pa
 		expect(overflow, `${path} must fit a 320px viewport`).toBeLessThanOrEqual(0);
 		await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
 
-		for (const action of await page.locator('button:visible, a:visible').all()) {
-			// A skip link becomes a touch target only when focused and revealed.
-			if ((await action.getAttribute('href')) === '#main') continue;
-			const label = await action.evaluate((element) => {
-				const selector = `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`;
-				return `${selector} href=${element.getAttribute('href') ?? ''} aria-label=${element.getAttribute('aria-label') ?? ''} text=${element.textContent?.trim() ?? ''}`;
-			});
-			const context = `${path}: ${label}`;
-			const bounds = await action.boundingBox();
-			expect(bounds, context).not.toBeNull();
-			expect(bounds?.width ?? 0, context).toBeGreaterThanOrEqual(44);
-			expect(bounds?.height ?? 0, context).toBeGreaterThanOrEqual(44);
+		// Measure all targets together; keep every size assertion without a round trip per property.
+		const targets = await page.locator('button:visible, a:visible').evaluateAll((elements) =>
+			elements
+				.filter((element) => element.getAttribute('href') !== '#main')
+				.map((element) => {
+					const bounds = element.getBoundingClientRect();
+					const selector = `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}`;
+					return {
+						label: `${selector} href=${element.getAttribute('href') ?? ''} aria-label=${element.getAttribute('aria-label') ?? ''} text=${element.textContent?.trim() ?? ''}`,
+						visible: element.getClientRects().length > 0,
+						width: bounds.width,
+						height: bounds.height
+					};
+				})
+		);
+		expect(targets.length).toBeGreaterThan(0);
+		for (const target of targets) {
+			const context = `${path}: ${target.label}`;
+			expect(target.visible, context).toBe(true);
+			expect(target.width, context).toBeGreaterThanOrEqual(44);
+			expect(target.height, context).toBeGreaterThanOrEqual(44);
 		}
 	}
 });

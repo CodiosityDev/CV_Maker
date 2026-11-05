@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { toast, toastState } from './toast.svelte.ts';
 
 	let { disabled = false, class: className = '' }: { disabled?: boolean; class?: string } =
 		$props();
+	const aboveWizard = $derived(page.url.pathname.startsWith('/buat/'));
 </script>
 
 <div
 	class="toaster {className}"
+	class:above-wizard={aboveWizard}
 	role="status"
 	aria-live="polite"
 	aria-atomic="false"
@@ -32,6 +35,18 @@
 				{/if}
 			</svg>
 			<p>{item.message}</p>
+			{#if item.action}
+				<span aria-hidden="true">·</span>
+				<button
+					type="button"
+					class="toast-action"
+					{disabled}
+					onclick={() => {
+						item.action?.run();
+						toast.dismiss(item.id);
+					}}>{t(item.action.labelKey)}</button
+				>
+			{/if}
 			<button
 				type="button"
 				{disabled}
@@ -74,6 +89,14 @@
 		color: var(--color-text);
 		animation: appear 180ms ease-out;
 		pointer-events: auto;
+	}
+	.toast-action {
+		width: auto;
+		padding: 0.5rem;
+		color: var(--color-brand-ink);
+		font: inherit;
+		font-size: 0.875rem;
+		font-weight: 600;
 	}
 	.notification[data-kind='success'] {
 		background: var(--color-mint-50);
@@ -141,6 +164,11 @@
 	@media (prefers-reduced-motion: reduce) {
 		.notification {
 			animation: none;
+		}
+	}
+	@media (max-width: 1023px) {
+		.toaster.above-wizard {
+			bottom: calc(76px + env(safe-area-inset-bottom));
 		}
 	}
 </style>
