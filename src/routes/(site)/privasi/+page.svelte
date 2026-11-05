@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import Icon from '#lib/ui/Icon.svelte';
 </script>
 
 <svelte:head
@@ -12,7 +11,6 @@
 >
 
 <main id="main" tabindex="-1" class="site-container prose-page">
-	<p class="eyebrow">{t('privacy.eyebrow')}</p>
 	<h1>{t('privacy.heading')}</h1>
 	<p class="intro">{t('privacy.intro')}</p>
 	<section>
@@ -37,17 +35,12 @@
 		<p>{t('privacy.sharedCopy')}</p>
 	</section>
 	<div class="back-link">
-		<Button href="/" variant="secondary"
-			><Icon name="arrow" class="back-arrow" />{t('privacy.back')}</Button
-		>
+		<Button href="/" variant="secondary">{t('privacy.back')}</Button>
 	</div>
 </main>
 
 <style>
 	.back-link {
 		margin-top: 40px;
-	}
-	:global(.back-arrow) {
-		transform: rotate(180deg);
 	}
 </style>

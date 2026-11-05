@@ -49,7 +49,7 @@
 		width: 20px;
 		height: 20px;
 		flex-shrink: 0;
-		accent-color: var(--color-primary-600);
+		accent-color: var(--color-brand-ink);
 	}
 	.disabled {
 		opacity: 0.65;

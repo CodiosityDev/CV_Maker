@@ -91,10 +91,9 @@
 
 <div class="site-container type-page">
 	<div class="intro">
-		<p class="eyebrow">{t('wizard.typeEyebrow')}</p>
 		<h1>{t('wizard.steps.type.title')}</h1>
 		<p>{t('wizard.steps.type.description')}</p>
-		<p class="local-note"><Icon name="shield" size={18} />{t('wizard.localNote')}</p>
+		<p class="local-note">{t('wizard.localNote')}</p>
 	</div>
 
 	{#if memory}<p class="notice warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
@@ -162,12 +161,7 @@
 		<div class="type-cards">
 			{#each kinds as kind (kind)}
 				<Card class={recommendation === kind ? 'recommended-card' : ''}>
-					<div class="type-heading">
-						<span class="type-icon"
-							><Icon name={kind === 'ats' ? 'file' : 'spark'} size={24} /></span
-						>
-						{#if recommendation === kind}<span class="badge">{t('wizard.recommended')}</span>{/if}
-					</div>
+					{#if recommendation === kind}<p class="badge">{t('wizard.recommended')}</p>{/if}
 					<h2>{guidance.cvTypes[kind].title}</h2>
 					<ul>
 						{#each guidance.cvTypes[kind].points as point (point)}<li>{point}</li>{/each}
@@ -209,7 +203,7 @@
 		margin-block: 12px 16px;
 		font-size: clamp(1.875rem, 5vw, 2.75rem);
 	}
-	.intro > p:not(.eyebrow) {
+	.intro > p {
 		color: var(--color-text-muted);
 	}
 	.local-note {
@@ -218,9 +212,6 @@
 		gap: 8px;
 		margin-top: 16px;
 		font-size: 0.875rem;
-	}
-	.local-note :global(svg) {
-		color: var(--color-primary-700);
 	}
 	h2 {
 		font-size: 1.25rem;
@@ -282,7 +273,7 @@
 		align-items: center;
 		gap: 8px;
 		min-height: 44px;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 700;
 	}
@@ -305,7 +296,7 @@
 		gap: 20px;
 	}
 	.recommendation {
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
 	}
@@ -319,32 +310,14 @@
 		height: 100%;
 	}
 	.type-cards :global(.recommended-card) {
-		border-color: var(--color-primary-600);
-		box-shadow: 0 0 0 2px var(--color-primary-600);
-	}
-	.type-heading {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		margin-bottom: 18px;
-	}
-	.type-icon {
-		display: grid;
-		place-items: center;
-		width: 48px;
-		height: 48px;
-		border-radius: var(--radius-md);
-		background: var(--color-primary-50);
-		color: var(--color-primary-700);
+		border-color: var(--color-brand-ink);
+		background: var(--color-mint);
 	}
 	.badge {
-		padding: 5px 10px;
-		border-radius: var(--radius-sm);
-		background: var(--color-primary-50);
-		color: var(--color-primary-700);
-		font-size: 0.75rem;
-		font-weight: 700;
+		margin-bottom: 12px;
+		color: var(--color-ink);
+		font-size: 0.875rem;
+		font-weight: 600;
 	}
 	.type-cards h2 {
 		font-size: 1.5rem;

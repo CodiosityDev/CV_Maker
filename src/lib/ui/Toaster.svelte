@@ -69,11 +69,10 @@
 		gap: 0.75rem;
 		padding: 0.5rem 0.5rem 0.5rem 1rem;
 		border: 1px solid var(--color-border);
-		border-left: 4px solid var(--color-primary-600);
+		border-left: 4px solid var(--color-brand-ink);
 		border-radius: var(--radius-md);
 		background: var(--color-surface);
 		color: var(--color-text);
-		box-shadow: var(--shadow-lg);
 		animation: appear 180ms ease-out;
 		pointer-events: auto;
 	}
@@ -87,7 +86,7 @@
 		flex-shrink: 0;
 		width: 24px;
 		height: 24px;
-		color: var(--color-primary-600);
+		color: var(--color-brand-ink);
 	}
 	.notification[data-kind='success'] > svg {
 		color: var(--color-success);

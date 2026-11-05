@@ -1,140 +1,116 @@
-/**
- * Namespace 'site' (landing, privasi, tentang) — Bahasa Indonesia. Loaded only by (site) pages.
- * Plain text only. Every key here must also exist in the other language file.
- */
+﻿/** Site content — Bahasa Indonesia. */
 export const siteId = {
 	landing: {
-		title: 'CV Maker — Buat CV gratis untuk langkah karier pertamamu',
+		title: 'CV Maker — Buat CV gratis untuk lamaran pertamamu',
 		description:
-			'Buat CV ATS atau Creative dengan panduan yang ramah untuk fresh graduate. Gratis, tanpa login, dan data tetap di perangkatmu.',
-		eyebrow: 'DARI KAMPUS, MENUJU KESEMPATAN BARU',
-		headline: 'Langkah pertama menuju kariermu.',
-		headlineStart: 'Langkah pertama',
-		headlineEnd: 'menuju kariermu.',
-		intro:
-			'Belum banyak pengalaman? Kamu tetap punya cerita. Susun pendidikan, organisasi, dan proyekmu menjadi CV yang siap melangkah.',
-		start: 'Mulai buat CV',
-		free: 'Gratis, tanpa daftar',
-		local: 'Data tetap di perangkatmu',
+			'Buat CV ATS atau Creative dengan panduan untuk fresh graduate. Gratis, tanpa daftar, dan data tersimpan di perangkatmu.',
+		headline: 'Buat CV untuk lamaran pertamamu.',
+		intro: 'Gratis, tanpa daftar. Pilih CV ATS atau Creative, lalu isi dengan panduan.',
 		mockupLabel: 'Contoh tampilan CV',
-		mockupName: 'Nama lengkapmu',
-		mockupRole: 'Fresh Graduate · Bidang pilihanmu',
-		mockupContact: 'Email · Telepon · Kota',
-		mockupSummary: 'Profil singkat',
-		mockupSummaryText: 'Ceritakan kemampuan dan arah karier yang ingin kamu tuju.',
+		mockupName: 'Alya Putri',
+		mockupRole: 'Lulusan Sistem Informasi',
+		mockupContact: 'alya@example.com · 0812-3456-7890 · Malang',
+		mockupSummary: 'Ringkasan',
+		mockupSummaryText:
+			'Lulusan Sistem Informasi dengan pengalaman proyek analisis data. Menguasai SQL dan Microsoft Excel.',
 		mockupEducation: 'Pendidikan',
-		mockupUniversity: 'Universitas / sekolahmu',
-		mockupDegree: 'Program studi · Tahun lulus',
+		mockupUniversity: 'Universitas Contoh',
+		mockupDegree: 'S1 Sistem Informasi · 2024',
 		mockupExperience: 'Organisasi & proyek',
-		mockupProject: 'Pengalaman yang berarti',
-		mockupBullet: 'Tunjukkan kontribusi, keterampilan, dan hal yang kamu pelajari.',
+		mockupProject: 'Dashboard penjualan UMKM',
+		mockupBullet: 'Menganalisis data penjualan 12 bulan dan menyusun laporan untuk pemilik usaha.',
 		mockupSkills: 'Keahlian',
-		mockupSkillText: 'Komunikasi · Analisis · Kerja tim',
-		mockupTag: 'Potensimu, tersusun rapi.',
-		mockupNote: 'Pengalaman kuliah juga berarti.',
-		howEyebrow: 'SELANGKAH DEMI SELANGKAH',
-		howTitle: 'Dari halaman kosong ke CV pertamamu.',
-		howIntro: 'Tidak perlu tahu semuanya dari awal. Kita mulai dari yang kamu punya.',
-		stepOne: '01',
-		stepTwo: '02',
-		stepThree: '03',
+		mockupSkillText: 'SQL · Microsoft Excel · Analisis data',
+		howTitle: 'Cara kerja',
 		chooseTitle: 'Pilih jenis CV',
-		chooseCopy: 'ATS untuk portal lamaran, atau Creative untuk menonjolkan sisi visualmu.',
+		chooseCopy: 'Pilih ATS untuk portal rekrutmen, atau Creative untuk lamaran langsung.',
 		fillTitle: 'Isi dengan panduan',
 		fillCopy:
-			'Susun ceritamu langkah demi langkah, dengan tips yang dekat dengan pengalaman fresh graduate.',
-		downloadTitle: 'Unduh PDF / DOCX',
-		downloadCopy: 'Pilih format sesuai kebutuhan lamaran. Simpan juga backup untuk berjaga-jaga.',
-		typeEyebrow: 'SESUAIKAN DENGAN TUJUANMU',
-		typeTitle: 'Satu cerita. Dua cara menyampaikannya.',
-		typeIntro: 'Pilih yang cocok dengan cara kamu melamar. Jenis dan template bisa diganti nanti.',
-		atsLabel: 'RAPI & MUDAH DIBACA',
+			'Tambahkan data diri, pendidikan, pengalaman, dan keahlian. Tips dan contoh tersedia di tiap langkah.',
+		reviewTitle: 'Tinjau CV',
+		reviewCopy: 'Periksa isi dan kontakmu di preview. Fitur unduh sedang disiapkan.',
+		typeTitle: 'ATS atau Creative',
 		atsTitle: 'CV ATS',
 		atsCopy:
-			'Satu kolom, tanpa foto, dan fokus pada isi. Pilihan untuk melamar lewat portal rekrutmen.',
+			'Satu kolom, tanpa foto, dan fokus pada teks. Cocok untuk portal rekrutmen yang memakai ATS.',
 		atsDetail:
-			'Struktur sederhana membantu sistem membaca CV. Hasil seleksi tetap bergantung pada persyaratan dan proses rekrutmen.',
-		creativeLabel: 'RUANG UNTUK EKSPRESI',
+			'Struktur sederhana membantu sistem membaca CV, tetapi tidak menjamin lolos seleksi.',
 		creativeTitle: 'CV Creative',
-		creativeCopy:
-			'Warna, tata letak visual, dan foto opsional. Cocok untuk portofolio atau dikirim langsung ke perekrut.',
+		creativeCopy: 'Untuk lamaran langsung atau portofolio, dengan foto opsional.',
 		creativeWarning: 'Kurang cocok untuk portal ATS',
-		creativeDetail: 'Pilih sesuai kebutuhan lowongan. Teks pada PDF tetap dapat diseleksi.',
-		privacyEyebrow: 'CERITAMU TETAP MILIKMU',
-		privacyTitle: 'CV pribadi. Tetap di perangkat sendiri.',
-		privacyCopy:
-			'Tanpa akun, tanpa mengirim data CV ke server, dan tanpa pelacak pihak ketiga. Kamu yang memegang kendali.',
-		privacyBackup:
-			'Data browser bisa terhapus. Simpan backup secara berkala, terutama jika memakai komputer bersama.',
-		privacyLink: 'Baca cara kami menjaga privasimu',
-		faqEyebrow: 'SEBELUM MULAI',
-		faqTitle: 'Mungkin ini yang kamu pikirkan.',
-		faqIntro: 'Sedikit kejelasan untuk memulai dengan tenang.',
-		faqAtsQuestion: 'Apa itu ATS?',
-		faqAtsAnswer:
+		creativeDetail:
+			'Desain Creative sedang disiapkan. Untuk saat ini, kedua jenis CV memakai preview ATS Klasik.',
+		privacyCopy: 'Data CV tersimpan di browser pada perangkatmu, tanpa dikirim ke server.',
+		privacyLink: 'Baca kebijakan privasi',
+		faqCopy: 'Ada pertanyaan sebelum mulai?',
+		faqLink: 'Baca FAQ'
+	},
+	faq: {
+		title: 'FAQ — CV Maker',
+		description:
+			'Jawaban tentang CV ATS, biaya, penyimpanan data, penggunaan di HP, bahasa, dan pembuat CV Maker.',
+		heading: 'FAQ',
+		intro: 'Jawaban tentang penggunaan CV Maker dan penyimpanan data CV.',
+		questionsTitle: 'Daftar pertanyaan',
+		atsQuestion: 'Apa itu ATS?',
+		atsAnswer:
 			'ATS (Applicant Tracking System) adalah sistem yang membantu perusahaan mengelola lamaran. CV dengan struktur sederhana lebih mudah dibaca sistem, tetapi tidak menjamin lolos seleksi.',
-		faqFreeQuestion: 'Apakah gratis?',
-		faqFreeAnswer:
-			'Ya. Kamu bisa membuat dan mengunduh CV secara gratis, tanpa perlu membuat akun.',
-		faqStorageQuestion: 'Di mana data saya disimpan?',
-		faqStorageAnswer:
+		freeQuestion: 'Apakah gratis?',
+		freeAnswer: 'Ya. Membuat CV gratis dan tidak memerlukan akun. Fitur unduh sedang disiapkan.',
+		storageQuestion: 'Di mana data saya disimpan?',
+		storageAnswer:
 			'Data CV disimpan di penyimpanan browser pada perangkat yang kamu gunakan. Data tersebut tidak dikirim ke server dan tidak otomatis berpindah ke perangkat lain.',
-		faqDeletedQuestion: 'Bagaimana jika data browser terhapus?',
-		faqDeletedAnswer:
-			'CV yang tersimpan di browser ikut hilang. Simpan backup JSON secara berkala agar bisa diimpor kembali saat diperlukan. File PDF atau DOCX juga sebaiknya disimpan sendiri.',
-		faqMobileQuestion: 'Bisa digunakan di HP?',
-		faqMobileAnswer:
+		deletedQuestion: 'Bagaimana jika data browser terhapus?',
+		deletedAnswer:
+			'CV yang tersimpan di browser ikut hilang. Fitur backup JSON belum tersedia, jadi hindari menghapus data situs jika CV masih dibutuhkan.',
+		mobileQuestion: 'Bisa digunakan di HP?',
+		mobileAnswer:
 			'Bisa. Tampilan dirancang untuk HP, tablet, dan komputer. Kamu dapat menyusun CV langsung dari browser.',
-		faqEnglishQuestion: 'Ada bahasa Inggris?',
-		faqEnglishAnswer:
+		englishQuestion: 'Ada bahasa Inggris?',
+		englishAnswer:
 			'Ada. Bahasa tampilan tersedia dalam Bahasa Indonesia dan English. Bahasa isi CV dapat dipilih terpisah saat membuat CV.',
-		closingTitle: 'Kesempatan berikutnya dimulai dari sini.',
-		closingCopy: 'Bawa ceritamu. Kita bantu menyusunnya.'
+		makerQuestion: 'Siapa yang membuat CV Maker?',
+		makerAnswer: 'CV Maker dibuat oleh Codiosity.',
+		makerLink: 'Kunjungi Codiosity',
+		back: 'Kembali ke beranda'
 	},
 	privacy: {
 		title: 'Privasi — CV Maker',
 		description:
-			'Kenali cara CV Maker menyimpan data di perangkatmu, cara menghapusnya, dan pentingnya backup.',
-		eyebrow: 'PRIVASI TANPA BAHASA RUMIT',
-		heading: 'Datamu, kendalimu.',
-		intro:
-			'CV berisi cerita pribadi. Di versi ini, data CV tetap berada di perangkat yang kamu gunakan.',
+			'Cara CV Maker menyimpan data di perangkatmu dan menghapusnya melalui pengaturan browser.',
+		heading: 'Privasi data CV',
+		intro: 'Data CV dan foto disimpan di browser pada perangkat yang kamu gunakan.',
 		storageTitle: 'Tersimpan di browser, tanpa akun',
 		storageCopy:
-			'Data CV disimpan di penyimpanan browser (IndexedDB). Preferensi bahasa disimpan di localStorage. Tidak ada akun, server penyimpanan CV, atau sinkronisasi antarperangkat pada versi ini.',
+			'Data CV dan preferensi bahasa tersimpan di browser. Versi ini tidak memakai akun atau server penyimpanan CV, dan tidak menyinkronkan data antarperangkat.',
 		trackingTitle: 'Tanpa pelacak pihak ketiga',
 		trackingCopy:
 			'Kami tidak memasang analytics, pixel iklan, script, atau font dari layanan pihak ketiga. Font dimuat dari situs ini. Data CV tidak dikirim ke server.',
 		photoTitle: 'Foto dan metadata lokasi',
 		photoCopy:
-			'Saat fitur unggah foto tersedia, foto diproses di perangkat: ukurannya diperkecil dan dikodekan ulang untuk membuang metadata EXIF, termasuk lokasi GPS. Foto tetap disimpan di browser.',
+			'Foto untuk CV Creative diproses di perangkat: ukurannya diperkecil dan dikodekan ulang untuk membuang metadata EXIF, termasuk lokasi GPS. Foto tetap disimpan di browser.',
 		deleteTitle: 'Menghapus data',
 		deleteCopy:
-			'Saat dashboard tersedia, gunakan “Hapus semua data di perangkat ini” di CV Saya. Kamu juga bisa menghapus data situs melalui pengaturan browser. Penghapusan ini menghilangkan CV dan foto yang tersimpan di browser tersebut.',
-		backupTitle: 'Simpan backup, terutama di komputer bersama',
+			'Hapus data situs melalui pengaturan browser. Ini akan menghapus CV, foto, dan preferensi bahasa yang tersimpan di browser tersebut.',
+		backupTitle: 'Jika data browser terhapus',
 		backupCopy:
-			'Jika data browser dihapus, perangkat rusak, atau browser diganti, CV bisa hilang. Simpan backup JSON secara berkala dan simpan file unduhan di tempat yang kamu kendalikan.',
+			'CV bisa hilang jika data browser dihapus, perangkat rusak, atau browser diganti. Fitur unduh dan backup JSON belum tersedia. Hindari menghapus data situs jika CV masih diperlukan.',
 		sharedCopy:
-			'Di komputer umum, unduh berkas yang diperlukan lalu hapus data situs sebelum meninggalkan perangkat. Hapus juga file unduhan dari komputer tersebut setelah dipindahkan.',
+			'Di komputer umum, hapus data situs setelah selesai agar pengguna berikutnya tidak dapat membuka CV-mu.',
 		back: 'Kembali ke beranda'
 	},
 	about: {
 		title: 'Tentang — CV Maker',
 		description:
-			'CV Maker adalah proyek open source untuk membantu fresh graduate membuat CV ATS dan Creative secara gratis.',
-		eyebrow: 'TENTANG CV MAKER',
-		heading: 'Cerita pertamamu layak mendapat tempat.',
+			'CV Maker dibuat dan dikelola oleh Codiosity untuk membantu fresh graduate menyusun CV ATS atau Creative.',
+		heading: 'Tentang CV Maker',
 		intro:
-			'Belum punya pengalaman kerja bukan berarti belum punya kemampuan. Proyek ini membantu fresh graduate menyusun pendidikan, organisasi, magang, dan proyek menjadi CV yang jelas.',
-		purposeTitle: 'Dibuat untuk langkah karier pertama',
-		purposeCopy:
-			'CV Maker dirancang gratis dan mudah digunakan di HP. Kamu akan dipandu sebelum masuk ke editor yang lebih bebas. Pilih CV ATS untuk struktur sederhana, atau CV Creative untuk kebutuhan visual.',
-		openTitle: 'Terbuka untuk dipelajari bersama',
-		openCopy:
-			'CV Maker adalah proyek open source. Kode sumber dan pengembangan proyek tersedia di GitHub.',
+			'CV Maker membantu fresh graduate menyusun CV ATS atau Creative dengan panduan, tanpa membuat akun.',
+		attribution: 'CV Maker dibuat dan dikelola oleh Codiosity.',
+		codiosityLink: 'Kunjungi Codiosity',
+		openTitle: 'Kode sumber',
+		openCopy: 'Kode sumber CV Maker tersedia di GitHub.',
 		github: 'Lihat kode di GitHub',
-		privacyCopy:
-			'Tidak perlu akun. Data CV tetap di perangkatmu. Simpan backup agar ceritamu tetap aman.',
 		back: 'Kembali ke beranda'
 	}
 };

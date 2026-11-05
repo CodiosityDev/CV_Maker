@@ -5,7 +5,6 @@
 export const appId = {
 	wizard: {
 		pageTitle: 'Buat CV — CV Maker',
-		typeEyebrow: 'MULAI DARI CARA KAMU MELAMAR',
 		localNote: 'Tanpa akun. Isi CV tetap di perangkatmu.',
 		resumeTitle: 'Lanjutkan CV yang belum selesai',
 		resume: 'Lanjutkan',
@@ -145,8 +144,7 @@ export const appId = {
 		steps: {
 			type: {
 				title: 'Pilih jenis CV-mu',
-				description:
-					'Sesuaikan dengan cara melamar dan bidang yang kamu tuju. Kita isi bersama, satu langkah setiap kali.'
+				description: 'Pilih jenis CV sesuai cara melamar dan posisi yang kamu tuju.'
 			},
 			target: {
 				title: 'Arah kariermu',
@@ -183,7 +181,7 @@ export const appId = {
 			summary: {
 				title: 'Ringkasan profil',
 				description:
-					'Rangkai cerita singkat tentang dirimu, kemampuan utama, dan arah kariermu. Contoh di bawah bisa jadi titik awal.'
+					'Tulis 2–4 kalimat tentang pendidikan, keahlian, dan posisi yang kamu tuju. Gunakan contoh jika diperlukan.'
 			},
 			review: {
 				title: 'Tinjau CV-mu',
@@ -192,8 +190,7 @@ export const appId = {
 			},
 			done: {
 				title: 'Selamat, CV-mu sudah tersusun!',
-				description:
-					'Satu langkah penting sudah kamu selesaikan. Kamu bisa meninjau dan memperbaiki isinya kapan saja dari sini.'
+				description: 'Isian CV sudah selesai. Kamu bisa meninjau dan memperbaiki isinya dari sini.'
 			}
 		}
 	},

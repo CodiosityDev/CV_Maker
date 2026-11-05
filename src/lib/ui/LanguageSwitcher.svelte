@@ -38,7 +38,7 @@
 	button {
 		min-width: 44px;
 		min-height: 44px;
-		border: 0;
+		border: 1px solid transparent;
 		border-radius: var(--radius-sm);
 		background: transparent;
 		padding: 8px;
@@ -48,9 +48,9 @@
 		cursor: pointer;
 	}
 	button.active {
-		background: var(--color-surface);
-		color: var(--color-primary-700);
-		box-shadow: var(--shadow-sm);
+		border-color: var(--color-brand-ink);
+		background: var(--color-brand);
+		color: var(--color-ink);
 	}
 	button:disabled {
 		opacity: 0.65;

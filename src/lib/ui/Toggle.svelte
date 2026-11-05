@@ -66,8 +66,8 @@
 		padding: 2px;
 	}
 	.track.checked {
-		border-color: var(--color-primary-600);
-		background: var(--color-primary-600);
+		border-color: var(--color-brand-ink);
+		background: var(--color-brand);
 	}
 	.thumb {
 		width: 18px;
@@ -77,7 +77,7 @@
 		transition: transform 150ms ease;
 	}
 	.checked .thumb {
-		background: white;
+		background: var(--color-ink);
 		transform: translateX(20px);
 	}
 	button:disabled {

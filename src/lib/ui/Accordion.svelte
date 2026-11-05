@@ -83,20 +83,14 @@
 		height: 20px;
 		flex-shrink: 0;
 		color: var(--color-text-muted);
-		transition: transform 150ms ease;
 	}
 	svg.expanded {
-		transform: rotate(180deg);
+		transform: scaleY(-1);
 	}
 	.content {
 		padding: 0 28px 20px 0;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.8;
-	}
-	@media (prefers-reduced-motion: reduce) {
-		svg {
-			transition: none;
-		}
 	}
 </style>

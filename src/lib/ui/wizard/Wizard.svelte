@@ -332,7 +332,7 @@
 		<form novalidate onsubmit={next}>
 			<Card>
 				<header class="step-heading">
-					<p class="eyebrow">
+					<p class="step-count">
 						{t('ui.stepProgress', { current: index, total: 10 })}{#if isStepOptional(index)}
 							· {t('wizard.optional')}{/if}
 					</p>
@@ -556,6 +556,10 @@
 	.step-heading {
 		margin-bottom: 1.5rem;
 	}
+	.step-count {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+	}
 	h1 {
 		margin: 0.75rem 0;
 		font-size: clamp(1.6rem, 3vw, 2rem);
@@ -583,8 +587,8 @@
 		margin-top: 1rem;
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius-md);
-		background: var(--color-primary-50);
-		color: var(--color-primary-800);
+		background: var(--color-mint);
+		color: var(--color-ink);
 		font-size: 0.875rem;
 	}
 	summary {
@@ -611,7 +615,7 @@
 	}
 	.examples article {
 		padding-bottom: 1rem;
-		border-bottom: 1px solid var(--color-primary-200);
+		border-bottom: 1px solid var(--color-border);
 	}
 	.banner {
 		margin: 1rem 0;
@@ -625,7 +629,7 @@
 	.warning {
 		background: var(--color-warning-surface);
 		color: var(--color-warning);
-		border: 1px solid var(--color-accent-400);
+		border: 1px solid var(--color-coral);
 	}
 	.error {
 		color: var(--color-danger);
@@ -684,7 +688,7 @@
 		padding: 1rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		background: var(--color-neutral-100);
+		background: var(--color-surface-muted);
 		max-height: calc(100dvh - 2rem);
 		overflow-y: auto;
 	}

@@ -4,7 +4,7 @@
 		size = 20,
 		class: className = ''
 	}: {
-		name?: 'arrow' | 'check' | 'shield' | 'file' | 'book' | 'download' | 'spark' | 'github';
+		name?: 'arrow' | 'check' | 'shield' | 'file' | 'book' | 'download' | 'github';
 		size?: number;
 		class?: string;
 	} = $props();
@@ -34,9 +34,6 @@
 			d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Zm0 0v15"
 		/>
 	{:else if name === 'download'}<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4" />
-	{:else if name === 'spark'}<path
-			d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"
-		/>
 	{:else}<path
 			d="M9 19c-4 1-4-2-5-2m10 4v-3.4c0-1 .1-1.6-.5-2.1 3-.3 6-1.5 6-6A4.7 4.7 0 0 0 18 6c.2-1 .1-2-.3-3-1.5 0-2.8.7-3.7 1.4a13 13 0 0 0-6 0C7.1 3.7 5.8 3 4.3 3 3.9 4 3.8 5 4 6a4.7 4.7 0 0 0-1.5 3.5c0 4.5 3 5.7 6 6-.6.5-.5 1.1-.5 2.1V21"
 		/>{/if}

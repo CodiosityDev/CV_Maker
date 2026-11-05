@@ -26,22 +26,23 @@ export const id = {
 		present: 'Sekarang'
 	},
 	a11y: {
-		skipToContent: 'Lewati ke konten utama'
+		skipToContent: 'Lewati ke konten utama',
+		opensNewTab: '(membuka tab baru)'
 	},
 	nav: {
 		label: 'Navigasi utama',
-		create: 'Buat CV Gratis',
-		myCvs: 'CV Saya',
+		create: 'Buat CV',
+		menu: 'Menu',
+		faq: 'FAQ',
+		codiosity: 'Codiosity',
 		home: 'Beranda',
 		about: 'Tentang',
 		privacy: 'Privasi'
 	},
 	footer: {
-		description: 'Langkah kecil untuk kesempatan yang lebih besar.',
-		local: 'Dibuat untukmu. Tersimpan di perangkatmu.',
+		madeBy: 'Dibuat oleh',
 		github: 'GitHub',
-		links: 'Tautan situs',
-		openSource: 'Gratis & open source'
+		links: 'Tautan situs'
 	},
 	ui: {
 		loading: 'Memuat…',
@@ -63,7 +64,7 @@ export const id = {
 		moveDown: 'Turunkan item {number}',
 		deleteTitle: 'Hapus item ini?',
 		deleteDescription: 'Item {number} akan dihapus dari daftar ini.',
-		emptyList: 'Belum ada item. Tambahkan satu untuk mulai bercerita.',
+		emptyList: 'Belum ada item. Tambahkan satu untuk mulai mengisi.',
 		itemPosition: 'Item {current} dari {total}',
 		reordered: 'Item dipindahkan dari urutan {from} ke {to}.',
 		removed: 'Item {number} dihapus.',
@@ -109,8 +110,8 @@ export const id = {
 		stepEducation: 'Pendidikan',
 		stepReview: 'Tinjau',
 		cards: 'Kartu',
-		cardTitle: 'Awal yang baik',
-		cardBody: 'Pengalaman organisasi dan proyek kuliah juga layak diceritakan.',
+		cardTitle: 'Contoh pendidikan',
+		cardBody: 'Tambahkan pendidikan, organisasi, atau proyek yang relevan.',
 		cardFooter: 'Tersimpan di perangkat ini ✓',
 		overlays: 'Dialog & bottom sheet',
 		openDialog: 'Buka dialog',

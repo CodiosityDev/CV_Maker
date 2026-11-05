@@ -55,7 +55,7 @@
 	}
 	p {
 		margin: 0;
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 700;
 	}
@@ -70,8 +70,8 @@
 		border: 0;
 		border-radius: 999px;
 		background: var(--color-border);
-		color: var(--color-primary-600);
-		accent-color: var(--color-primary-600);
+		color: var(--color-brand-ink);
+		accent-color: var(--color-brand-ink);
 	}
 	progress::-webkit-progress-bar {
 		border-radius: 999px;
@@ -79,11 +79,11 @@
 	}
 	progress::-webkit-progress-value {
 		border-radius: 999px;
-		background: var(--color-primary-600);
+		background: var(--color-brand-ink);
 	}
 	progress::-moz-progress-bar {
 		border-radius: 999px;
-		background: var(--color-primary-600);
+		background: var(--color-brand-ink);
 	}
 	ol {
 		display: none;
@@ -114,17 +114,17 @@
 		font-weight: 700;
 	}
 	.complete .marker {
-		border-color: var(--color-primary-600);
-		color: var(--color-primary-700);
+		border-color: var(--color-brand);
+		color: var(--color-brand-ink);
 	}
 	.active {
-		color: var(--color-primary-700);
+		color: var(--color-brand-ink);
 		font-weight: 700;
 	}
 	.active .marker {
-		border-color: var(--color-primary-600);
-		background: var(--color-primary-600);
-		color: white;
+		border-color: var(--color-brand-ink);
+		background: var(--color-brand);
+		color: var(--color-ink);
 	}
 	@media (min-width: 768px) {
 		.mobile-progress {
