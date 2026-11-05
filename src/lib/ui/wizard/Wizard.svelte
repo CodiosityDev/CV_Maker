@@ -2,7 +2,7 @@
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { LIMITS, type CVDocument } from '#lib/core/schema/index.ts';
+	import { LIMITS, newId, type CVDocument } from '#lib/core/schema/index.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { assetRepo, storage } from '#lib/core/storage/index.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
@@ -193,6 +193,12 @@
 		await tick();
 		const control =
 			document.getElementById(issue.field) ?? document.getElementById(`${issue.field}-month`);
+		let disclosure = control?.closest('details');
+		while (disclosure) {
+			disclosure.open = true;
+			disclosure = disclosure.parentElement?.closest('details') ?? null;
+		}
+		await tick();
 		control?.focus();
 		control?.scrollIntoView({ block: 'center' });
 	}
@@ -273,7 +279,7 @@
 			(draft) => {
 				draft.summary = pendingSummary;
 			},
-			{ coalesceKey: 'summary' }
+			{ coalesceKey: `summary.example.${newId()}` }
 		);
 		replaceOpen = false;
 	}
@@ -332,14 +338,20 @@
 			<Button
 				variant="secondary"
 				size="sm"
+				class="history-action"
+				title={t('wizard.undo')}
+				aria-label={t('wizard.undo')}
 				disabled={!store.canUndo || store.externalChange === 'removed'}
-				onclick={() => store.undo()}>{t('wizard.undo')}</Button
+				onclick={() => store.undo()}><span aria-hidden="true">↶</span></Button
 			>
 			<Button
 				variant="secondary"
 				size="sm"
+				class="history-action"
+				title={t('wizard.redo')}
+				aria-label={t('wizard.redo')}
 				disabled={!store.canRedo || store.externalChange === 'removed'}
-				onclick={() => store.redo()}>{t('wizard.redo')}</Button
+				onclick={() => store.redo()}><span aria-hidden="true">↷</span></Button
 			>
 		</div>
 	</div>
@@ -347,10 +359,7 @@
 		<form novalidate onsubmit={next}>
 			<Card>
 				<header class="step-heading">
-					<p class="step-count">
-						{t('ui.stepProgress', { current: index, total: 10 })}{#if isStepOptional(index)}
-							· {t('wizard.optional')}{/if}
-					</p>
+					{#if isStepOptional(index)}<span class="optional-chip">{t('wizard.optional')}</span>{/if}
 					<h1 bind:this={heading} tabindex="-1">{t(`wizard.steps.${step}.title`)}</h1>
 					<p>{t(`wizard.steps.${step}.description`)}</p>
 				</header>
@@ -358,11 +367,11 @@
 						{t('wizard.loadError')}
 						<Button variant="ghost" onclick={() => guidanceAttempt++}>{t('wizard.retry')}</Button>
 					</p>{/if}
-				{#if guidance?.stepTips[step].length}
-					<details class="tips" open={step === 'done'}>
+				{#if step !== 'done' && guidance?.stepTips[step].length}
+					<details class="tips">
 						<summary>{t('wizard.tips')}</summary>
 						<ul>
-							{#each guidance.stepTips[step] as tip (tip)}<li>{tip}</li>{/each}
+							{#each guidance.stepTips[step].slice(0, 3) as tip (tip)}<li>{tip}</li>{/each}
 						</ul>
 					</details>
 				{/if}
@@ -421,15 +430,15 @@
 					{:else if step === 'personal'}
 						{#if photoMissing}<p role="alert" class="error">{t('wizard.photoMissing')}</p>{/if}
 						{#if photoLoadError}<p role="alert" class="error">{t('wizard.photoFailed')}</p>{/if}
-						<PersonalStep {store} {issues} {guidance} {photoUrl} />
+						<PersonalStep {store} {issues} {photoUrl} />
 					{:else if collectionSteps.includes(step)}
-						<CollectionSteps {store} {step} {issues} {guidance} {examples} />
+						<CollectionSteps {store} {step} {issues} {examples} />
 					{:else if step === 'summary'}
 						<Textarea
 							id="summary"
 							label={t('wizard.fields.summary')}
+							hideLabel
 							maxlength={LIMITS.summary}
-							hint={guidance?.fieldTips.summary}
 							bind:value={
 								() => store.cv.summary,
 								(value) =>
@@ -486,6 +495,25 @@
 			{#if step !== 'done'}
 				<div class="bottom-actions">
 					<Button variant="secondary" onclick={back}>{t('wizard.back')}</Button>
+					{#if !desktop}<Button
+							variant="ghost"
+							class="preview-action"
+							aria-label={t('preview.open')}
+							title={t('preview.open')}
+							onclick={() => (previewOpen = true)}
+							><svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.75"
+								aria-hidden="true"
+								><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle
+									cx="12"
+									cy="12"
+									r="3"
+								/></svg
+							></Button
+						>{/if}
 					{#if isStepOptional(index)}<Button
 							variant="ghost"
 							disabled={store.externalChange === 'removed'}
@@ -494,11 +522,6 @@
 					<Button type="submit" disabled={store.externalChange === 'removed'}
 						>{t(step === 'review' ? 'wizard.finish' : 'wizard.next')}</Button
 					>
-					{#if !desktop}<Button
-							variant="ghost"
-							class="preview-action"
-							onclick={() => (previewOpen = true)}>{t('preview.open')}</Button
-						>{/if}
 				</div>
 			{/if}
 		</form>
@@ -506,7 +529,6 @@
 			<aside class="preview-panel" aria-label={t('preview.label')}>
 				<div class="preview-heading">
 					<h2>{t('preview.label')}</h2>
-					<p>{t('wizard.previewNotice')}</p>
 				</div>
 				<CvPreview {model} />
 			</aside>
@@ -548,13 +570,18 @@
 	.toolbar,
 	.history {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		align-items: center;
 		gap: 0.5rem;
 	}
 	.toolbar {
-		justify-content: space-between;
+		justify-content: flex-start;
 		margin-bottom: 1rem;
+	}
+	.history :global(.history-action) {
+		width: 44px;
+		padding: 0;
+		font-size: 1.5rem;
 	}
 	.save-status {
 		display: flex;
@@ -583,9 +610,13 @@
 	.step-heading {
 		margin-bottom: 1.5rem;
 	}
-	.step-count {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
+	.optional-chip {
+		display: inline-block;
+		padding: 2px 8px;
+		border-radius: var(--radius-pill);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
+		font-size: 0.75rem;
 	}
 	h1 {
 		margin: 0.75rem 0;
@@ -693,22 +724,34 @@
 		position: sticky;
 		z-index: 5;
 		bottom: 0;
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
-		padding: 0.75rem 0 max(0.75rem, env(safe-area-inset-bottom));
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 		margin-top: 1rem;
 		background: var(--color-canvas);
 		border-top: 1px solid var(--color-border);
 	}
 	.bottom-actions :global(.button) {
-		padding-inline: 0.5rem;
+		min-width: 44px;
+		min-height: 44px;
+		padding: 8px 10px;
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		white-space: nowrap;
 	}
 	.bottom-actions :global(.preview-action) {
-		grid-column: 1 / -1;
+		width: 44px;
+		padding: 8px;
+	}
+	.bottom-actions :global(.preview-action svg) {
+		width: 20px;
+		height: 20px;
 	}
 	.bottom-actions :global(button[type='submit']) {
-		grid-column: 3;
+		margin-left: auto;
+		flex: 1;
+		max-width: 160px;
 	}
 	.preview-panel {
 		position: sticky;
@@ -721,15 +764,16 @@
 		background: var(--color-surface);
 		box-shadow: var(--shadow-card);
 		max-height: calc(100dvh - 2rem);
+		height: calc(100dvh - 2rem);
 		overflow-y: auto;
 	}
 	.preview-heading {
 		margin-bottom: 1rem;
 	}
-	.preview-heading p {
-		margin-top: 0.5rem;
-		color: var(--color-text-muted);
-		font-size: 0.75rem;
+	@media (max-width: 480px) {
+		.workspace form :global(.card-body) {
+			padding: 16px;
+		}
 	}
 	@media (min-width: 1024px) {
 		.wizard {

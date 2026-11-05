@@ -11,7 +11,7 @@ async function advance(page: Page, title: string, skip = false) {
 async function start(page: Page) {
 	await page.goto('/buat');
 	await page.getByRole('button', { name: 'Pilih CV ATS', exact: true }).click();
-	await expect(stepHeading(page)).toHaveText('Arah kariermu');
+	await expect(stepHeading(page)).toHaveText('Bahasa & posisi tujuan');
 }
 
 async function reachExperience(page: Page) {
@@ -39,13 +39,12 @@ async function setMonth(group: Locator, month: string, year: string) {
 
 async function appendOwnAndExampleBullet(page: Page, text: string) {
 	const bullets = page.locator('.bullets');
-	await bullets
-		.getByRole('button', { name: 'Tambah Kontribusi dan pencapaian', exact: true })
-		.click();
+	await bullets.getByRole('button', { name: 'Tambah poin', exact: true }).click();
 	await bullets.getByRole('textbox').fill(text);
-	await bullets.locator('summary').click();
-	const example = await bullets.locator('.examples li p').first().innerText();
-	await bullets.getByRole('button', { name: 'Pakai contoh', exact: true }).first().click();
+	await bullets.locator('.bullet-examples > summary').click();
+	const exampleButton = bullets.locator('.example-chip').first();
+	const example = await exampleButton.innerText();
+	await exampleButton.click();
 	await expect(bullets.getByRole('textbox')).toHaveCount(2);
 	await expect(bullets.getByRole('textbox').nth(0)).toHaveValue(text);
 	await expect(bullets.getByRole('textbox').nth(1)).toHaveValue(example);
@@ -63,8 +62,8 @@ test('collection entries preserve own bullets when examples are appended and dat
 	await page.getByLabel('Lokasi', { exact: true }).fill('Bandung');
 	const ownExperience = 'Mendampingi 30 mahasiswa mengolah data praktikum';
 	const experienceExample = await appendOwnAndExampleBullet(page, ownExperience);
-	const startDate = page.getByRole('group', { name: 'Tanggal mulai', exact: true });
-	const endDate = page.getByRole('group', { name: 'Tanggal selesai', exact: true });
+	const startDate = page.getByRole('group', { name: 'Mulai', exact: true });
+	const endDate = page.getByRole('group', { name: 'Selesai', exact: true });
 	await setMonth(startDate, '05', '2025');
 	await setMonth(endDate, '04', '2024');
 	await page.getByRole('button', { name: 'Lanjut', exact: true }).click();
@@ -80,7 +79,7 @@ test('collection entries preserve own bullets when examples are appended and dat
 	await page.getByRole('button', { name: 'Tambah Organisasi & kepanitiaan', exact: true }).click();
 	await page.getByLabel('Nama', { exact: true }).fill('Himpunan Mahasiswa');
 	await page.getByLabel('Posisi / peran', { exact: true }).fill('Sekretaris');
-	await page.getByLabel('Sampai sekarang', { exact: true }).check();
+	await page.getByLabel('Masih berjalan', { exact: true }).check();
 	const ownOrganisation = 'Menyusun notulen 12 rapat dan mengelola arsip kegiatan';
 	await appendOwnAndExampleBullet(page, ownOrganisation);
 	await advance(page, 'Proyek');
@@ -100,7 +99,7 @@ test('collection entries preserve own bullets when examples are appended and dat
 	await expect(
 		preview.getByRole('link', { name: 'example.com/portofolio', exact: true })
 	).toHaveAttribute('href', 'https://example.com/portofolio');
-	await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 	await page.reload();
 	await expect(stepHeading(page)).toHaveText('Tinjau CV-mu');
 	await expect(page.getByTestId('cv-preview')).toContainText(ownProject);
@@ -142,7 +141,7 @@ test('skill Enter stays on the step and languages, certifications, and awards su
 	await award.getByLabel('Penerbit / penyelenggara', { exact: true }).fill('Universitas Nusantara');
 	await setMonth(award.getByRole('group', { name: 'Tanggal', exact: true }), '02', '2024');
 	await award.getByLabel('Deskripsi', { exact: true }).fill('Kompetisi tingkat universitas');
-	await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 	await page.reload();
 	await expect(stepHeading(page)).toHaveText('Keahlian & pencapaian');
 	for (const label of ['SQL', 'Komunikasi', 'Excel'])
@@ -183,19 +182,15 @@ test('summary replacement can be cancelled, confirmed, and undone', async ({ pag
 	const summary = page.getByLabel('Ringkasan profil', { exact: true });
 	const ownSummary = 'Lulusan baru dengan pengalaman proyek analisis data dan organisasi kampus.';
 	await summary.fill(ownSummary);
-	// A separate field edit creates a clear history boundary before replacing the summary.
-	await page.getByRole('button', { name: 'Kembali', exact: true }).click();
-	await page.getByRole('textbox', { name: 'Keahlian teknis', exact: true }).fill('Analisis data');
-	await page.getByRole('textbox', { name: 'Keahlian teknis', exact: true }).press('Enter');
-	await advance(page, 'Ringkasan profil');
+	// Applying an example must be its own undo step, even immediately after typing.
 	await page
 		.locator('details')
-		.filter({ has: page.locator('summary').filter({ hasText: /^Contoh untuk inspirasi$/ }) })
+		.filter({ has: page.locator('summary').filter({ hasText: /^Contoh$/ }) })
 		.locator('summary')
 		.click();
 	const firstExample = page.locator('.examples article').first();
 	const exampleText = await firstExample.locator('p').innerText();
-	await firstExample.getByRole('button', { name: 'Pakai sebagai awal', exact: true }).click();
+	await firstExample.getByRole('button', { name: 'Pakai contoh', exact: true }).click();
 	const confirmation = page.getByRole('dialog', {
 		name: 'Ganti ringkasanmu dengan contoh?',
 		exact: true
@@ -203,12 +198,12 @@ test('summary replacement can be cancelled, confirmed, and undone', async ({ pag
 	await expect(confirmation).toBeVisible();
 	await confirmation.getByRole('button', { name: 'Batal', exact: true }).click();
 	await expect(summary).toHaveValue(ownSummary);
-	await firstExample.getByRole('button', { name: 'Pakai sebagai awal', exact: true }).click();
+	await firstExample.getByRole('button', { name: 'Pakai contoh', exact: true }).click();
 	await confirmation.getByRole('button', { name: 'Ganti ringkasan', exact: true }).click();
 	await expect(summary).toHaveValue(exampleText);
 	await page.getByRole('button', { name: 'Urungkan', exact: true }).click();
 	await expect(summary).toHaveValue(ownSummary);
-	await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 });
 
 test('two tabs can reload an external update or explicitly keep their local version', async ({
@@ -217,13 +212,13 @@ test('two tabs can reload an external update or explicitly keep their local vers
 }) => {
 	await start(page);
 	await page.getByLabel('Judul CV', { exact: true }).fill('CV versi awal');
-	await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+	await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 	const other = await context.newPage();
 	try {
 		await other.goto(page.url());
 		await expect(other.getByLabel('Judul CV', { exact: true })).toHaveValue('CV versi awal');
 		await page.getByLabel('Judul CV', { exact: true }).fill('CV diperbarui tab pertama');
-		await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+		await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 		await expect(other.getByText('CV ini diubah di tab lain.', { exact: true })).toBeVisible();
 		await other.getByRole('button', { name: 'Muat versi terbaru', exact: true }).click();
 		await expect(other.getByLabel('Judul CV', { exact: true })).toHaveValue(
@@ -231,12 +226,12 @@ test('two tabs can reload an external update or explicitly keep their local vers
 		);
 		await expect(other.getByText('CV ini diubah di tab lain.', { exact: true })).toHaveCount(0);
 		await other.getByLabel('Posisi yang dituju', { exact: true }).fill('Data Analyst');
-		await expect(saveStatus(other)).toHaveText('Tersimpan di perangkat ini ✓');
+		await expect(saveStatus(other)).toHaveText('Tersimpan ✓');
 		await expect(page.getByText('CV ini diubah di tab lain.', { exact: true })).toBeVisible();
 		await expect(page.getByLabel('Posisi yang dituju', { exact: true })).toHaveValue('');
 		await page.getByRole('button', { name: 'Pakai versi ini', exact: true }).click();
 		await expect(page.getByText('CV ini diubah di tab lain.', { exact: true })).toHaveCount(0);
-		await expect(saveStatus(page)).toHaveText('Tersimpan di perangkat ini ✓');
+		await expect(saveStatus(page)).toHaveText('Tersimpan ✓');
 		await other.reload();
 		await expect(other.getByLabel('Posisi yang dituju', { exact: true })).toHaveValue('');
 		await expect(other.getByLabel('Judul CV', { exact: true })).toHaveValue(

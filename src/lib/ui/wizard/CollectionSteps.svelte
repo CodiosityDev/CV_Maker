@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import {
 		EXPERIENCE_TYPES,
 		LANGUAGE_LEVELS,
@@ -11,6 +11,7 @@
 	import type { CvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import type { StepIssue, WizardStepId } from '#lib/core/wizard/index.ts';
 	import type { Guidance } from '#lib/core/content/index.ts';
+	import { formatDateRange } from '#lib/core/render/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Input from '../Input.svelte';
 	import Textarea from '../Textarea.svelte';
@@ -25,13 +26,11 @@
 		store,
 		step,
 		issues,
-		guidance,
 		examples
 	}: {
 		store: CvStore;
 		step: WizardStepId;
 		issues: StepIssue[];
-		guidance?: Guidance;
 		examples?: Guidance;
 	} = $props();
 
@@ -48,14 +47,15 @@
 			(draft) => {
 				draft[section] = items;
 			},
-			{ coalesceKey: section }
+			{ coalesceKey: `${section}.structure.${newId()}` }
 		);
 	}
 	function editItem<K extends ItemSection>(
 		section: K,
 		id: string,
 		field: string,
-		change: (item: CVDocument[K][number]) => void
+		change: (item: CVDocument[K][number]) => void,
+		operation: 'edit' | 'structure' = 'edit'
 	) {
 		store.update(
 			(draft) => {
@@ -63,8 +63,63 @@
 					CVDocument[K][number] | undefined;
 				if (item) change(item);
 			},
-			{ coalesceKey: `${section}.${id}.${field}` }
+			{ coalesceKey: `${section}.${id}.${field}${operation === 'structure' ? `.${newId()}` : ''}` }
 		);
+	}
+	function itemSummary(section: ItemSection, entry: CVDocument[ItemSection][number]) {
+		let title = '';
+		let dates: string | undefined;
+		const join = (...parts: (string | undefined)[]) =>
+			parts
+				.map((part) => part?.trim())
+				.filter(Boolean)
+				.join(' — ');
+		switch (section) {
+			case 'education': {
+				const value = entry as CVDocument['education'][number];
+				title = join(value.institution, [value.degree, value.major].filter(Boolean).join(' '));
+				dates = formatDateRange(value.dates, store.cv.locale);
+				break;
+			}
+			case 'experience': {
+				const value = entry as CVDocument['experience'][number];
+				title = join(value.role, value.company);
+				dates = formatDateRange(value.dates, store.cv.locale);
+				break;
+			}
+			case 'organizations': {
+				const value = entry as CVDocument['organizations'][number];
+				title = join(value.role, value.name);
+				dates = formatDateRange(value.dates, store.cv.locale);
+				break;
+			}
+			case 'projects': {
+				const value = entry as CVDocument['projects'][number];
+				title = join(value.name, value.role);
+				dates = formatDateRange(value.dates, store.cv.locale);
+				break;
+			}
+			case 'languages': {
+				const value = entry as CVDocument['languages'][number];
+				title = value.name.trim()
+					? join(value.name, t(`wizard.languageLevels.${value.level}`), value.score)
+					: '';
+				break;
+			}
+			case 'certifications': {
+				const value = entry as CVDocument['certifications'][number];
+				title = join(value.name, value.issuer);
+				dates = formatDateRange({ start: value.date, current: false }, store.cv.locale);
+				break;
+			}
+			case 'awards': {
+				const value = entry as CVDocument['awards'][number];
+				title = join(value.title, value.issuer);
+				dates = formatDateRange({ start: value.date, current: false }, store.cv.locale);
+				break;
+			}
+		}
+		return [title || t(`wizard.newItems.${section}`), dates].filter(Boolean).join(' · ');
 	}
 	function error(field: string) {
 		const issue = issues.find((item) => item.field === field);
@@ -93,6 +148,12 @@
 			{#if error('education')}<p id="education-error" class="error">{error('education')}</p>{/if}
 			<ListEditor
 				label={t('wizard.steps.education.title')}
+				getKey={(entry) => entry.id}
+				getSummary={(entry) => itemSummary('education', entry)}
+				emptyMessage={t('wizard.emptyLists.education')}
+				onUndo={() => store.undo()}
+				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+				showHeading={false}
 				maxItems={LIMITS.itemsPerSection}
 				bind:items={() => store.cv.education, (items) => replaceItems('education', items)}
 				onAdd={(): CVDocument['education'][number] => ({
@@ -131,7 +192,7 @@
 								label={t('wizard.fields.gpa')}
 								showCounter
 								maxlength={LIMITS.short}
-								hint={guidance?.fieldTips.gpa}
+								hint={t('wizard.hints.gpa')}
 								bind:value={
 									() => entry.gpa ?? '',
 									(value) =>
@@ -181,10 +242,16 @@
 							id={`education.${entry.id}.highlights`}
 							label={t('wizard.fields.highlights')}
 							items={entry.highlights}
-							onChange={(items) =>
-								editItem('education', entry.id, 'highlights', (draft) => {
-									draft.highlights = items;
-								})}
+							onChange={(items, operation) =>
+								editItem(
+									'education',
+									entry.id,
+									'highlights',
+									(draft) => {
+										draft.highlights = items;
+									},
+									operation
+								)}
 						/>
 					</div>
 				{/snippet}
@@ -193,6 +260,12 @@
 	{:else if step === 'experience'}
 		<ListEditor
 			label={t('wizard.steps.experience.title')}
+			getKey={(entry) => entry.id}
+			getSummary={(entry) => itemSummary('experience', entry)}
+			emptyMessage={t('wizard.emptyLists.experience')}
+			onUndo={() => store.undo()}
+			undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+			showHeading={false}
 			maxItems={LIMITS.itemsPerSection}
 			bind:items={() => store.cv.experience, (items) => replaceItems('experience', items)}
 			onAdd={(): CVDocument['experience'][number] => ({
@@ -248,13 +321,18 @@
 					<BulletEditor
 						id={`experience.${entry.id}.bullets`}
 						label={t('wizard.fields.bullets')}
-						hint={guidance?.fieldTips.bullets}
 						items={entry.bullets}
 						examples={experienceExamples(entry.type)}
-						onChange={(items) =>
-							editItem('experience', entry.id, 'bullets', (draft) => {
-								draft.bullets = items;
-							})}
+						onChange={(items, operation) =>
+							editItem(
+								'experience',
+								entry.id,
+								'bullets',
+								(draft) => {
+									draft.bullets = items;
+								},
+								operation
+							)}
 					/>
 				</div>
 			{/snippet}
@@ -262,6 +340,12 @@
 	{:else if step === 'organizations'}
 		<ListEditor
 			label={t('wizard.steps.organizations.title')}
+			getKey={(entry) => entry.id}
+			getSummary={(entry) => itemSummary('organizations', entry)}
+			emptyMessage={t('wizard.emptyLists.organizations')}
+			onUndo={() => store.undo()}
+			undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+			showHeading={false}
 			maxItems={LIMITS.itemsPerSection}
 			bind:items={() => store.cv.organizations, (items) => replaceItems('organizations', items)}
 			onAdd={(): CVDocument['organizations'][number] => ({
@@ -303,16 +387,21 @@
 					<BulletEditor
 						id={`organizations.${entry.id}.bullets`}
 						label={t('wizard.fields.bullets')}
-						hint={guidance?.fieldTips.bullets}
 						items={entry.bullets}
 						examples={[
 							...(examples?.exampleBullets.organization ?? []),
 							...(examples?.exampleBullets.committee ?? [])
 						]}
-						onChange={(items) =>
-							editItem('organizations', entry.id, 'bullets', (draft) => {
-								draft.bullets = items;
-							})}
+						onChange={(items, operation) =>
+							editItem(
+								'organizations',
+								entry.id,
+								'bullets',
+								(draft) => {
+									draft.bullets = items;
+								},
+								operation
+							)}
 					/>
 				</div>
 			{/snippet}
@@ -320,6 +409,12 @@
 	{:else if step === 'projects'}
 		<ListEditor
 			label={t('wizard.steps.projects.title')}
+			getKey={(entry) => entry.id}
+			getSummary={(entry) => itemSummary('projects', entry)}
+			emptyMessage={t('wizard.emptyLists.projects')}
+			onUndo={() => store.undo()}
+			undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+			showHeading={false}
 			maxItems={LIMITS.itemsPerSection}
 			bind:items={() => store.cv.projects, (items) => replaceItems('projects', items)}
 			onAdd={(): CVDocument['projects'][number] => ({
@@ -375,13 +470,18 @@
 					<BulletEditor
 						id={`projects.${entry.id}.bullets`}
 						label={t('wizard.fields.bullets')}
-						hint={guidance?.fieldTips.bullets}
 						items={entry.bullets}
 						examples={examples?.exampleBullets.project}
-						onChange={(items) =>
-							editItem('projects', entry.id, 'bullets', (draft) => {
-								draft.bullets = items;
-							})}
+						onChange={(items, operation) =>
+							editItem(
+								'projects',
+								entry.id,
+								'bullets',
+								(draft) => {
+									draft.bullets = items;
+								},
+								operation
+							)}
 					/>
 				</div>
 			{/snippet}
@@ -394,18 +494,22 @@
 					id={`skills.${group}`}
 					label={t(`wizard.fields.${group}`)}
 					items={store.cv.skills[group]}
-					hint={group === 'hard' ? guidance?.fieldTips.skills : undefined}
 					onChange={(items) =>
 						store.update(
 							(draft) => {
 								draft.skills[group] = items;
 							},
-							{ coalesceKey: `skills.${group}` }
+							{ coalesceKey: `skills.${group}.structure.${newId()}` }
 						)}
 				/>
 			{/each}
 			<ListEditor
 				label={t('wizard.fields.languages')}
+				getKey={(entry) => entry.id}
+				getSummary={(entry) => itemSummary('languages', entry)}
+				emptyMessage={t('wizard.emptyLists.languages')}
+				onUndo={() => store.undo()}
+				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
 				maxItems={LIMITS.itemsPerSection}
 				bind:items={() => store.cv.languages, (items) => replaceItems('languages', items)}
 				onAdd={(): CVDocument['languages'][number] => ({
@@ -460,6 +564,11 @@
 			</ListEditor>
 			<ListEditor
 				label={t('wizard.fields.certifications')}
+				getKey={(entry) => entry.id}
+				getSummary={(entry) => itemSummary('certifications', entry)}
+				emptyMessage={t('wizard.emptyLists.certifications')}
+				onUndo={() => store.undo()}
+				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
 				maxItems={LIMITS.itemsPerSection}
 				bind:items={() => store.cv.certifications, (items) => replaceItems('certifications', items)}
 				onAdd={(): CVDocument['certifications'][number] => ({ id: newId(), name: '', issuer: '' })}
@@ -512,6 +621,11 @@
 			</ListEditor>
 			<ListEditor
 				label={t('wizard.fields.awards')}
+				getKey={(entry) => entry.id}
+				getSummary={(entry) => itemSummary('awards', entry)}
+				emptyMessage={t('wizard.emptyLists.awards')}
+				onUndo={() => store.undo()}
+				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
 				maxItems={LIMITS.itemsPerSection}
 				bind:items={() => store.cv.awards, (items) => replaceItems('awards', items)}
 				onAdd={(): CVDocument['awards'][number] => ({ id: newId(), title: '', issuer: '' })}

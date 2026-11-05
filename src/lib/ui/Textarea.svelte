@@ -4,6 +4,7 @@
 
 	type Props = Omit<HTMLTextareaAttributes, 'value' | 'class' | 'children'> & {
 		label: string;
+		hideLabel?: boolean;
 		value?: string;
 		hint?: string;
 		error?: string;
@@ -13,6 +14,7 @@
 	const generatedId = $props.id();
 	let {
 		label,
+		hideLabel = false,
 		value = $bindable(''),
 		id = generatedId,
 		hint,
@@ -26,14 +28,12 @@
 		'aria-describedby': describedBy,
 		...rest
 	}: Props = $props();
+	const counterVisible = $derived(
+		showCounter && maxlength != null && value.length >= maxlength * 0.8
+	);
 	let element: HTMLTextAreaElement | undefined = $state();
 	let description = $derived(
-		[
-			describedBy,
-			hint && `${id}-hint`,
-			error && `${id}-error`,
-			showCounter && maxlength != null && `${id}-count`
-		]
+		[describedBy, hint && `${id}-hint`, error && `${id}-error`, counterVisible && `${id}-count`]
 			.filter(Boolean)
 			.join(' ') || undefined
 	);
@@ -73,7 +73,7 @@
 </script>
 
 <div class={`field ${className}`}>
-	<label for={id}
+	<label for={id} class:sr-only={hideLabel}
 		>{label}{#if required}<span class="required" aria-hidden="true"> *</span><span class="sr-only">
 				{t('ui.required')}</span
 			>{/if}</label
@@ -91,7 +91,7 @@
 		aria-invalid={error ? true : undefined}></textarea>
 	{#if hint}<p id={`${id}-hint`} class="hint">{hint}</p>{/if}
 	{#if error}<p id={`${id}-error`} class="error">{error}</p>{/if}
-	{#if showCounter && maxlength != null}<p id={`${id}-count`} class="counter">
+	{#if counterVisible && maxlength != null}<p id={`${id}-count`} class="counter">
 			{t('ui.characterCount', { count: value.length, max: maxlength })}
 		</p>{/if}
 </div>

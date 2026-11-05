@@ -25,8 +25,7 @@ export const siteId = {
 		chooseTitle: 'Pilih jenis CV',
 		chooseCopy: 'Pilih ATS untuk portal rekrutmen, atau Creative untuk lamaran langsung.',
 		fillTitle: 'Isi dengan panduan',
-		fillCopy:
-			'Tambahkan data diri, pendidikan, pengalaman, dan keahlian. Tips dan contoh tersedia di tiap langkah.',
+		fillCopy: 'Isi data diri, pendidikan, pengalaman, dan keahlian dengan bantuan tips dan contoh.',
 		reviewTitle: 'Tinjau CV',
 		reviewCopy: 'Periksa isi dan kontakmu di preview. Fitur unduh sedang disiapkan.',
 		typeTitle: 'ATS atau Creative',
@@ -38,8 +37,7 @@ export const siteId = {
 		creativeTitle: 'CV Creative',
 		creativeCopy: 'Untuk lamaran langsung atau portofolio, dengan foto opsional.',
 		creativeWarning: 'Kurang cocok untuk portal ATS',
-		creativeDetail:
-			'Desain Creative sedang disiapkan. Untuk saat ini, kedua jenis CV memakai preview ATS Klasik.',
+		creativeDetail: 'Desain Creative belum tersedia. Preview memakai ATS Klasik.',
 		privacyCopy: 'Data CV tersimpan di browser pada perangkatmu, tanpa dikirim ke server.',
 		privacyLink: 'Baca kebijakan privasi',
 		faqCopy: 'Ada pertanyaan sebelum mulai?',
@@ -64,11 +62,9 @@ export const siteId = {
 		deletedAnswer:
 			'CV yang tersimpan di browser ikut hilang. Fitur backup JSON belum tersedia, jadi hindari menghapus data situs jika CV masih dibutuhkan.',
 		mobileQuestion: 'Bisa digunakan di HP?',
-		mobileAnswer:
-			'Bisa. Tampilan dirancang untuk HP, tablet, dan komputer. Kamu dapat menyusun CV langsung dari browser.',
+		mobileAnswer: 'Bisa, langsung dari browser HP, tablet, atau komputer.',
 		englishQuestion: 'Ada bahasa Inggris?',
-		englishAnswer:
-			'Ada. Bahasa tampilan tersedia dalam Bahasa Indonesia dan English. Bahasa isi CV dapat dipilih terpisah saat membuat CV.',
+		englishAnswer: 'Ada. Pilih ID atau EN untuk tampilan; bahasa isi CV dipilih terpisah.',
 		makerQuestion: 'Siapa yang membuat CV Maker?',
 		makerAnswer: 'CV Maker dibuat oleh Codiosity.',
 		makerLink: 'Kunjungi Codiosity',

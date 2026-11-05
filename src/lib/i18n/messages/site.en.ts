@@ -28,7 +28,7 @@ export const siteEn: SiteMessages = {
 		chooseCopy: 'Choose ATS for recruitment portals, or Creative for direct applications.',
 		fillTitle: 'Follow the guidance',
 		fillCopy:
-			'Add your personal details, education, experience, and skills. Each step includes tips and examples.',
+			'Add your personal details, education, experience, and skills with tips and examples.',
 		reviewTitle: 'Review your CV',
 		reviewCopy:
 			'Check your content and contact details in the preview. Downloads are being prepared.',
@@ -40,8 +40,7 @@ export const siteEn: SiteMessages = {
 		creativeTitle: 'Creative CV',
 		creativeCopy: 'For direct applications or portfolios, with an optional photo.',
 		creativeWarning: 'Less suited to ATS portals',
-		creativeDetail:
-			'Creative designs are being prepared. Both CV types currently use the ATS Classic preview.',
+		creativeDetail: 'Creative designs are not available yet. The preview uses ATS Classic.',
 		privacyCopy: 'Your CV is stored in the browser on your device, without being sent to a server.',
 		privacyLink: 'Read the privacy policy',
 		faqCopy: 'Have a question before you start?',
@@ -67,11 +66,9 @@ export const siteEn: SiteMessages = {
 		deletedAnswer:
 			'CVs stored in that browser will be lost. JSON backup is not available yet, so avoid clearing site data while you still need your CV.',
 		mobileQuestion: 'Can I use it on my phone?',
-		mobileAnswer:
-			'Yes. The layout is designed for phones, tablets, and computers. You can build your CV right in your browser.',
+		mobileAnswer: 'Yes, directly in your phone, tablet, or computer browser.',
 		englishQuestion: 'Is English available?',
-		englishAnswer:
-			'Yes. The interface is available in Indonesian and English. You can choose the CV’s content language separately when creating your CV.',
+		englishAnswer: 'Yes. Choose ID or EN for the interface; choose the CV language separately.',
 		makerQuestion: 'Who makes CV Maker?',
 		makerAnswer: 'CV Maker is created by Codiosity.',
 		makerLink: 'Visit Codiosity',

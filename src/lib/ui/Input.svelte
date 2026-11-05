@@ -27,13 +27,11 @@
 		'aria-describedby': describedBy,
 		...rest
 	}: Props = $props();
+	const counterVisible = $derived(
+		showCounter && maxlength != null && value.length >= maxlength * 0.8
+	);
 	let description = $derived(
-		[
-			describedBy,
-			hint && `${id}-hint`,
-			error && `${id}-error`,
-			showCounter && maxlength != null && `${id}-count`
-		]
+		[describedBy, hint && `${id}-hint`, error && `${id}-error`, counterVisible && `${id}-count`]
 			.filter(Boolean)
 			.join(' ') || undefined
 	);
@@ -58,7 +56,7 @@
 	/>
 	{#if hint}<p id={`${id}-hint`} class="hint">{hint}</p>{/if}
 	{#if error}<p id={`${id}-error`} class="error">{error}</p>{/if}
-	{#if showCounter && maxlength != null}<p id={`${id}-count`} class="counter">
+	{#if counterVisible && maxlength != null}<p id={`${id}-count`} class="counter">
 			{t('ui.characterCount', { count: value.length, max: maxlength })}
 		</p>{/if}
 </div>

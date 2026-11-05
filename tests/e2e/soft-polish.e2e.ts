@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('wizard progress stays on one row with its accessible value at every viewport', async ({
+test('wizard progress uses a full mobile row and retains its accessible value at every viewport', async ({
 	page
 }) => {
 	await page.goto('/buat');
@@ -42,6 +42,9 @@ test('wizard progress stays on one row with its accessible value at every viewpo
 				labelHeight: a.height,
 				lineHeight: parseFloat(getComputedStyle(label).lineHeight),
 				centerDifference: Math.abs(a.y + a.height / 2 - b.y - b.height / 2),
+				barTop: b.top,
+				labelBottom: a.bottom,
+				rowWidth: row.getBoundingClientRect().width,
 				barWidth: b.width,
 				overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
 			};
@@ -50,11 +53,21 @@ test('wizard progress stays on one row with its accessible value at every viewpo
 			geometry.labelHeight,
 			`${width}px: progress label must stay on one line`
 		).toBeLessThanOrEqual(geometry.lineHeight + 1);
-		expect(
-			geometry.centerDifference,
-			`${width}px: label and progress share a row`
-		).toBeLessThanOrEqual(1);
-		expect(geometry.barWidth, `${width}px: progress remains visible`).toBeGreaterThanOrEqual(32);
+		if (width < 768) {
+			expect(geometry.barTop, `${width}px: progress sits below its label`).toBeGreaterThanOrEqual(
+				geometry.labelBottom
+			);
+			expect(
+				Math.abs(geometry.barWidth - geometry.rowWidth),
+				`${width}px: full-width progress`
+			).toBeLessThanOrEqual(1);
+		} else {
+			expect(
+				geometry.centerDifference,
+				`${width}px: label and progress share a row`
+			).toBeLessThanOrEqual(1);
+			expect(geometry.barWidth, `${width}px: progress remains visible`).toBeGreaterThanOrEqual(32);
+		}
 		expect(geometry.overflow, `${width}px: no horizontal scrolling`).toBe(0);
 	}
 	await page.getByRole('button', { name: 'English', exact: true }).click();

@@ -70,7 +70,9 @@
 			{/each}
 		</ul>
 	{/if}
-	<p class="limit">{t('wizard.skillsLimit', { max: LIMITS.skillsPerGroup })}</p>
+	{#if items.length >= LIMITS.skillsPerGroup}<p class="limit">
+			{t('wizard.skillsLimit', { max: LIMITS.skillsPerGroup })}
+		</p>{/if}
 </section>
 
 <style>
