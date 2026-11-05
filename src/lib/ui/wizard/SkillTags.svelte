@@ -96,8 +96,8 @@
 		min-width: 0;
 		max-width: 100%;
 		padding-left: 0.75rem;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border: 1px solid transparent;
+		border-radius: var(--radius-pill);
 		background: var(--color-mint);
 	}
 	li span {
@@ -108,10 +108,18 @@
 		min-width: 44px;
 		min-height: 44px;
 		border: 0;
+		border-radius: var(--radius-pill);
 		background: transparent;
 		color: var(--color-brand-ink);
 		font-size: 1.25rem;
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out;
+	}
+	button:hover {
+		background: var(--color-surface);
+		color: var(--color-ink);
 	}
 	.limit {
 		margin: 0.5rem 0 0;

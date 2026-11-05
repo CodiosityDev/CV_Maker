@@ -46,6 +46,9 @@
 	const index = $derived(store.cv.status.wizardStep);
 	const step = $derived(WIZARD_STEPS[index]?.id ?? 'target');
 	const labels = $derived(WIZARD_STEPS.slice(1).map(({ id }) => t(`wizard.steps.${id}.title`)));
+	const shortLabels = $derived(
+		WIZARD_STEPS.slice(1).map(({ id }) => t(`wizard.steps.${id}.short`))
+	);
 	let attempted = $state(false);
 	const issues = $derived(attempted ? validateStep(step, store.cv) : []);
 	const reviewIssues = $derived(validateAll(store.cv));
@@ -286,7 +289,9 @@
 <svelte:window onkeydown={shortcut} />
 
 <div class="wizard">
-	<div class="progress-panel"><Stepper steps={labels} current={index - 1} /></div>
+	<div class="progress-panel">
+		<Stepper steps={labels} shortSteps={shortLabels} current={index - 1} />
+	</div>
 	{#if memory}<p class="banner warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
 	{#if store.externalChange !== 'none'}
 		<div class="banner warning" role="alert">
@@ -305,7 +310,17 @@
 		</div>
 	{/if}
 	<div class="toolbar">
-		<div class="save-status" role="status" aria-live="polite" data-testid="save-status">
+		<div
+			class="save-status"
+			role="status"
+			aria-live="polite"
+			data-testid="save-status"
+			data-save-state={store.saveState === 'error'
+				? 'error'
+				: store.saveState === 'saving' || pendingSave
+					? 'saving'
+					: 'saved'}
+		>
 			{#if store.saveState === 'error'}<span class="error">{t('wizard.saveError')}</span><Button
 					variant="ghost"
 					onclick={() => store.flush()}>{t('wizard.retry')}</Button
@@ -528,6 +543,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 	}
 	.toolbar,
 	.history {
@@ -545,8 +561,19 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.5rem;
-		color: var(--color-success);
+		color: var(--color-text-muted);
 		font-size: 0.75rem;
+		min-height: 36px;
+		padding: 6px 12px;
+		border-radius: var(--radius-pill);
+		background: var(--color-surface);
+	}
+	.save-status[data-save-state='saved'] {
+		background: var(--color-mint-50);
+		color: var(--color-success);
+	}
+	.save-status[data-save-state='error'] {
+		background: var(--color-coral-50);
 	}
 	.workspace,
 	form,
@@ -563,6 +590,7 @@
 	h1 {
 		margin: 0.75rem 0;
 		font-size: clamp(1.6rem, 3vw, 2rem);
+		font-weight: 650;
 	}
 	.step-heading > p:last-child,
 	.hint {
@@ -587,7 +615,8 @@
 		margin-top: 1rem;
 		padding: 0.75rem 1rem;
 		border-radius: var(--radius-md);
-		background: var(--color-mint);
+		background: var(--color-mint-50);
+		border: 1px solid var(--color-mint);
 		color: var(--color-ink);
 		font-size: 0.875rem;
 	}
@@ -629,13 +658,13 @@
 	.warning {
 		background: var(--color-warning-surface);
 		color: var(--color-warning);
-		border: 1px solid var(--color-coral);
+		border: 1px solid var(--color-border);
 	}
 	.error {
 		color: var(--color-danger);
 	}
 	.ready {
-		border: 1px solid var(--color-success);
+		border: 1px solid var(--color-mint);
 		background: var(--color-success-surface);
 		color: var(--color-success);
 		padding: 1rem;
@@ -643,8 +672,9 @@
 	}
 	.review-issues {
 		padding: 1rem;
-		border: 1px solid var(--color-danger);
-		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-coral-50);
+		border-radius: var(--radius-lg);
 		color: var(--color-danger);
 	}
 	.review-issues ul {
@@ -688,7 +718,8 @@
 		padding: 1rem;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		background: var(--color-surface-muted);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 		max-height: calc(100dvh - 2rem);
 		overflow-y: auto;
 	}

@@ -1,9 +1,23 @@
 <script lang="ts">
 	import { t } from '#lib/i18n/index.svelte.ts';
 
-	type Props = { steps: string[]; current: number; disabled?: boolean; class?: string };
-	let { steps, current, disabled = false, class: className = '' }: Props = $props();
+	type Props = {
+		steps: string[];
+		shortSteps?: string[];
+		current: number;
+		disabled?: boolean;
+		class?: string;
+	};
+	let {
+		steps,
+		shortSteps = [],
+		current,
+		disabled = false,
+		class: className = ''
+	}: Props = $props();
 	let active = $derived(Math.min(Math.max(0, current), Math.max(0, steps.length - 1)));
+	let value = $derived(steps.length ? active + 1 : 0);
+	let progressLabel = $derived(t('ui.stepProgress', { current: value, total: steps.length }));
 </script>
 
 <nav
@@ -11,32 +25,47 @@
 	aria-label={t('ui.steps')}
 	data-disabled={disabled || undefined}
 >
-	<div class="mobile-progress">
-		<p>{t('ui.stepProgress', { current: steps.length ? active + 1 : 0, total: steps.length })}</p>
-		<progress
-			max={Math.max(1, steps.length)}
-			value={steps.length ? active + 1 : 0}
+	<div class="progress-row">
+		<p class="progress-label" title={steps[active]}>
+			<span class="step-count">{progressLabel}</span>
+			{#if steps[active]}
+				<span class="separator" aria-hidden="true">·</span>
+				<span class="step-title">{steps[active]}</span>
+			{/if}
+		</p>
+		<div
+			class="progress-track"
+			role="progressbar"
 			aria-label={t('ui.steps')}
-		></progress>
-		{#if steps[active]}<span>{steps[active]}</span>{/if}
+			aria-valuenow={value}
+			aria-valuemin={0}
+			aria-valuemax={Math.max(1, steps.length)}
+			aria-valuetext={`${progressLabel}${steps[active] ? ` · ${steps[active]}` : ''}`}
+		>
+			<span
+				class="progress-fill"
+				style:transform={`scaleX(${steps.length ? value / steps.length : 0})`}
+			></span>
+		</div>
 	</div>
-	<ol>
+	<ol class="step-dots">
 		{#each steps as step, index (`${index}-${step}`)}
+			{@const label = shortSteps[index] ?? step}
+			{@const status =
+				index < active
+					? t('ui.completed')
+					: index === active
+						? t('ui.currentStep')
+						: t('ui.upcoming')}
 			<li
 				class:complete={index < active}
 				class:active={index === active}
 				aria-current={index === active ? 'step' : undefined}
+				aria-label={`${label}: ${status}`}
+				title={`${label}: ${status}`}
 			>
-				<span class="marker" aria-hidden="true">{index < active ? '✓' : index + 1}</span>
-				<span
-					>{step}<span class="sr-only"
-						>: {index < active
-							? t('ui.completed')
-							: index === active
-								? t('ui.currentStep')
-								: t('ui.upcoming')}</span
-					></span
-				>
+				<span class="dot" aria-hidden="true"></span>
+				<span class="sr-only">{label}: {status}</span>
 			</li>
 		{/each}
 	</ol>
@@ -49,94 +78,110 @@
 	.stepper[data-disabled] {
 		opacity: 0.65;
 	}
-	.mobile-progress {
-		display: grid;
-		gap: 8px;
+	.progress-row {
+		display: flex;
+		min-width: 0;
+		align-items: center;
+		gap: 12px;
 	}
-	p {
+	.progress-label {
+		display: flex;
+		min-width: 0;
+		align-items: center;
+		gap: 5px;
 		margin: 0;
 		color: var(--color-brand-ink);
-		font-size: 0.875rem;
-		font-weight: 700;
+		font-size: 0.75rem;
+		font-weight: 600;
+		line-height: 1.5;
+		white-space: nowrap;
 	}
-	.mobile-progress > span {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
+	.step-count,
+	.separator {
+		flex-shrink: 0;
 	}
-	progress {
-		width: 100%;
-		height: 8px;
+	.step-title {
+		min-width: 0;
 		overflow: hidden;
-		border: 0;
-		border-radius: 999px;
-		background: var(--color-border);
-		color: var(--color-brand-ink);
-		accent-color: var(--color-brand-ink);
+		text-overflow: ellipsis;
 	}
-	progress::-webkit-progress-bar {
-		border-radius: 999px;
-		background: var(--color-border);
+	.progress-track {
+		min-width: 40px;
+		height: 8px;
+		flex: 1 0 40px;
+		overflow: hidden;
+		border-radius: var(--radius-pill);
+		background: var(--color-brand-50);
 	}
-	progress::-webkit-progress-value {
-		border-radius: 999px;
-		background: var(--color-brand-ink);
+	.progress-fill {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--color-progress);
+		transform-origin: left center;
+		transition: transform var(--motion-duration) var(--motion-ease);
 	}
-	progress::-moz-progress-bar {
-		border-radius: 999px;
-		background: var(--color-brand-ink);
-	}
-	ol {
-		display: none;
+	.step-dots {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
-	li {
-		display: flex;
-		min-width: 0;
-		align-items: center;
-		gap: 8px;
-		color: var(--color-text-muted);
-		font-size: 0.75rem;
-		line-height: 1.5;
-	}
-	.marker {
-		display: inline-flex;
-		width: 32px;
-		height: 32px;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid var(--color-border);
-		border-radius: 50%;
-		background: var(--color-surface);
-		font-size: 0.875rem;
-		font-weight: 700;
-	}
-	.complete .marker {
-		border-color: var(--color-brand);
-		color: var(--color-brand-ink);
-	}
-	.active {
-		color: var(--color-brand-ink);
-		font-weight: 700;
-	}
-	.active .marker {
-		border-color: var(--color-brand-ink);
-		background: var(--color-brand);
-		color: var(--color-ink);
-	}
-	@media (min-width: 768px) {
-		.mobile-progress {
-			display: none;
+	@media (min-width: 360px) {
+		.progress-label {
+			font-size: 0.875rem;
 		}
-		ol {
+	}
+	@media (min-width: 1024px) {
+		.stepper {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: 24px;
+		}
+		.step-dots {
+			position: static;
 			display: flex;
-			flex-wrap: wrap;
-			gap: 16px 24px;
+			width: auto;
+			height: auto;
+			align-items: center;
+			gap: 10px;
+			overflow: visible;
+			clip-path: none;
 		}
-		li {
-			flex: 1 1 112px;
+		.step-dots li {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 8px;
+			height: 16px;
+		}
+		.dot {
+			width: 8px;
+			height: 8px;
+			border-radius: var(--radius-pill);
+			background: var(--color-brand-100);
+			transition: background-color var(--motion-duration) var(--motion-ease);
+		}
+		.complete .dot,
+		.active .dot {
+			background: var(--color-progress);
+		}
+		.active .dot {
+			outline: 3px solid var(--color-brand-100);
+			outline-offset: 2px;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.progress-fill,
+		.dot {
+			transition: none;
 		}
 	}
 </style>

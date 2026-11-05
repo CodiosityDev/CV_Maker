@@ -69,18 +69,17 @@
 		gap: 0.75rem;
 		padding: 0.5rem 0.5rem 0.5rem 1rem;
 		border: 1px solid var(--color-border);
-		border-left: 4px solid var(--color-brand-ink);
-		border-radius: var(--radius-md);
-		background: var(--color-surface);
+		border-radius: var(--radius-lg);
+		background: var(--color-brand-50);
 		color: var(--color-text);
 		animation: appear 180ms ease-out;
 		pointer-events: auto;
 	}
 	.notification[data-kind='success'] {
-		border-left-color: var(--color-success);
+		background: var(--color-mint-50);
 	}
 	.notification[data-kind='error'] {
-		border-left-color: var(--color-danger);
+		background: var(--color-coral-50);
 	}
 	.notification > svg {
 		flex-shrink: 0;
@@ -113,9 +112,13 @@
 		background: transparent;
 		color: var(--color-text-muted);
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out;
 	}
 	button:hover {
-		background: var(--color-surface-muted);
+		background: var(--color-surface);
+		color: var(--color-brand-ink);
 	}
 	button:disabled {
 		opacity: 0.5;

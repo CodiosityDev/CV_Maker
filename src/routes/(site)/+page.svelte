@@ -80,7 +80,7 @@
 		max-width: 620px;
 		color: var(--color-ink);
 		font-size: clamp(34px, 4.6vw, 52px);
-		font-weight: 750;
+		font-weight: 650;
 		line-height: 1.14;
 	}
 	.hero-intro {
@@ -92,7 +92,7 @@
 	}
 	h2 {
 		font-size: clamp(25px, 3vw, 32px);
-		font-weight: 700;
+		font-weight: 600;
 	}
 	h3 {
 		font-size: 19px;
@@ -101,7 +101,7 @@
 	.how-section {
 		padding-block: 40px;
 		border-block: 1px solid var(--color-border);
-		background: var(--color-surface);
+		background: var(--color-cream-50);
 	}
 	ol {
 		display: grid;
@@ -143,9 +143,9 @@
 	.type-columns .warning-label {
 		display: inline-block;
 		padding: 4px 8px;
-		border-radius: var(--radius-sm);
-		background: var(--color-coral);
-		color: var(--color-ink);
+		border-radius: var(--radius-pill);
+		background: var(--color-coral-50);
+		color: var(--color-coral-ink);
 		font-size: 13px;
 		font-weight: 600;
 	}

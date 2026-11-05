@@ -60,24 +60,29 @@
 		height: 24px;
 		flex-shrink: 0;
 		align-items: center;
-		border: 1px solid var(--color-text-muted);
-		border-radius: 999px;
-		background: var(--color-surface-muted);
+		border: 1px solid var(--color-control-border);
+		border-radius: var(--radius-pill);
+		background: var(--color-brand-50);
 		padding: 2px;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out;
 	}
 	.track.checked {
 		border-color: var(--color-brand-ink);
-		background: var(--color-brand);
+		background: var(--color-brand-ink);
 	}
 	.thumb {
 		width: 18px;
 		height: 18px;
 		border-radius: 50%;
-		background: var(--color-text-muted);
-		transition: transform 150ms ease;
+		background: var(--color-control-border);
+		transition:
+			background-color var(--motion-duration) ease-out,
+			transform var(--motion-duration) ease-out;
 	}
 	.checked .thumb {
-		background: var(--color-ink);
+		background: var(--color-surface);
 		transform: translateX(20px);
 	}
 	button:disabled {
@@ -91,6 +96,7 @@
 		line-height: 1.5;
 	}
 	@media (prefers-reduced-motion: reduce) {
+		.track,
 		.thumb {
 			transition: none;
 		}

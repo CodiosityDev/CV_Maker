@@ -29,27 +29,19 @@
 
 <header class="site-header">
 	<div class="site-container header-inner">
-		<div class="brand-row">
-			<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
-				>{t('app.name')}</a
-			>
-			<LanguageSwitcher />
-		</div>
-		<div class="header-actions">
-			<button
-				type="button"
-				class="menu-toggle"
-				bind:this={menuButton}
-				aria-expanded={menuOpen}
-				aria-controls={menuId}
-				onclick={() => {
-					menuOpen = !menuOpen;
-				}}>{t('nav.menu')}</button
-			>
-			<Button href="/buat" size="sm" class="header-cta" onclick={closeMenu}
-				>{t('nav.create')}</Button
-			>
-		</div>
+		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
+			>{t('app.name')}</a
+		>
+		<button
+			type="button"
+			class="menu-toggle"
+			bind:this={menuButton}
+			aria-expanded={menuOpen}
+			aria-controls={menuId}
+			onclick={() => {
+				menuOpen = !menuOpen;
+			}}>{t('nav.menu')}</button
+		>
 		<nav id={menuId} class:open={menuOpen} aria-label={t('nav.label')}>
 			<ul>
 				{#each links as link (link.href)}
@@ -74,6 +66,12 @@
 				</li>
 			</ul>
 		</nav>
+		<div class="language-control"><LanguageSwitcher /></div>
+		<div class="create-action">
+			<Button href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+				>{t('nav.create')}</Button
+			>
+		</div>
 	</div>
 </header>
 
@@ -83,52 +81,63 @@
 		border-bottom: 1px solid var(--color-border);
 	}
 	.header-inner {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-areas: 'brand language' 'menu create';
 		align-items: center;
 		gap: 0.75rem 1.5rem;
 		padding-block: 0.75rem;
 	}
-	.brand-row {
-		display: flex;
-		width: 100%;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.75rem;
-	}
 	.brand {
+		grid-area: brand;
 		display: inline-flex;
 		align-items: center;
 		min-height: 44px;
-		margin-right: auto;
+		width: fit-content;
 		color: var(--color-ink);
 		font-size: 1.25rem;
-		font-weight: 750;
+		font-weight: 700;
 		letter-spacing: -0.04em;
 		text-decoration: none;
+		white-space: nowrap;
 	}
-	.header-actions {
-		display: flex;
-		width: 100%;
-		justify-content: space-between;
-		gap: 0.75rem;
-		align-items: center;
+	.language-control {
+		grid-area: language;
+		justify-self: end;
+	}
+	.create-action {
+		grid-area: create;
+		justify-self: end;
 	}
 	.menu-toggle {
+		grid-area: menu;
+		justify-self: start;
 		min-width: 44px;
 		min-height: 44px;
 		width: fit-content;
 		padding: 0.5rem 1rem;
-		border: 1px solid var(--color-control-border);
-		border-radius: var(--radius-sm);
-		background: var(--color-surface);
-		color: var(--color-ink);
+		border: 1px solid transparent;
+		border-radius: var(--radius-md);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
 		font: inherit;
 		font-size: 0.875rem;
 		font-weight: 650;
+		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) var(--motion-ease),
+			transform var(--motion-duration) var(--motion-ease);
+	}
+	.menu-toggle:hover {
+		background: var(--color-brand-100);
+	}
+	.menu-toggle:active {
+		transform: translateY(1px);
 	}
 	nav {
+		grid-column: 1 / -1;
 		display: none;
+		min-width: 0;
 		width: 100%;
 	}
 	nav.open {
@@ -153,27 +162,29 @@
 		min-width: 44px;
 		min-height: 44px;
 		padding: 0.5rem 0.75rem;
-		border-radius: var(--radius-sm);
-		color: var(--color-ink);
+		border-radius: var(--radius-md);
+		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		font-weight: 600;
 		text-decoration: none;
+		white-space: nowrap;
+		transition:
+			background-color var(--motion-duration) var(--motion-ease),
+			color var(--motion-duration) var(--motion-ease);
 	}
 	nav a:hover {
-		background: var(--color-mint);
+		background: var(--color-mint-50);
+		color: var(--color-brand-ink);
 	}
 	nav a[aria-current='page'] {
-		background: var(--color-brand);
-		color: var(--color-ink);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
 	}
 	@media (min-width: 480px) {
-		.brand-row {
-			flex: 1;
-			width: auto;
-		}
-		.header-actions {
-			width: auto;
-			margin-left: auto;
+		.header-inner {
+			grid-template-columns: minmax(0, 1fr) auto auto auto;
+			grid-template-areas: 'brand language menu create';
+			column-gap: 1rem;
 		}
 	}
 	@media (min-width: 768px) {
@@ -181,6 +192,7 @@
 			display: none;
 		}
 		nav {
+			grid-area: nav;
 			display: block;
 		}
 		ul {
@@ -190,7 +202,32 @@
 			padding-top: 0.5rem;
 		}
 		.header-inner {
+			grid-template-columns: minmax(0, 1fr) auto auto;
+			grid-template-areas: 'brand language create' 'nav nav nav';
 			gap: 0.5rem 1.5rem;
+		}
+	}
+	@media (min-width: 1024px) {
+		.header-inner {
+			grid-template-columns: auto minmax(0, 1fr) auto auto;
+			grid-template-areas: 'brand nav language create';
+			gap: 1.25rem;
+		}
+		ul {
+			flex-wrap: nowrap;
+			justify-content: end;
+			gap: 0.25rem;
+			padding: 0;
+			border: 0;
+		}
+		nav a {
+			padding-inline: 0.625rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.menu-toggle,
+		nav a {
+			transition: none;
 		}
 	}
 </style>

@@ -180,12 +180,13 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-surface);
 		color: var(--color-text);
+		box-shadow: var(--shadow-dialog);
 	}
 	.ui-dialog[open] {
 		animation: appear 180ms ease-out;
 	}
 	.ui-dialog::backdrop {
-		background: rgb(31 29 61 / 40%);
+		background: rgb(31 29 61 / 28%);
 	}
 	.dialog-heading {
 		display: flex;
@@ -209,12 +210,15 @@
 		place-items: center;
 		border: 0;
 		border-radius: var(--radius-sm);
-		background: var(--color-surface-muted);
-		color: var(--color-text-muted);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out;
 	}
 	.close-button:hover {
-		color: var(--color-brand-ink);
+		background: var(--color-brand-100);
 	}
 	svg {
 		width: 20px;

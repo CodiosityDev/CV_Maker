@@ -85,6 +85,12 @@
 		color: var(--color-text);
 		font-size: 1rem;
 		line-height: 1.5;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			border-color var(--motion-duration) ease-out;
+	}
+	input:hover:not(:disabled):not([aria-invalid='true']) {
+		border-color: var(--color-focus);
 	}
 	input::placeholder {
 		color: var(--color-text-muted);

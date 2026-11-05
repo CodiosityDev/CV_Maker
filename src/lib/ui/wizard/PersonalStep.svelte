@@ -241,7 +241,8 @@
 	.photo {
 		padding: 1rem;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
+		background: var(--color-mint-50);
 	}
 	.photo img {
 		object-fit: cover;
@@ -251,7 +252,27 @@
 		width: 100%;
 		min-width: 0;
 		min-height: 48px;
-		padding: 0.5rem 0;
+		padding: 0.5rem;
+		border: 1px solid var(--color-control-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+	}
+	input[type='file']::file-selector-button {
+		min-height: 44px;
+		margin-right: 0.75rem;
+		padding: 0.625rem 1rem;
+		border: 0;
+		border-radius: var(--radius-md);
+		background: var(--color-brand-50);
+		color: var(--color-brand-ink);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color var(--motion-duration) ease-out;
+	}
+	input[type='file']::file-selector-button:hover {
+		background: var(--color-secondary-hover);
 	}
 	.error {
 		color: var(--color-danger);

@@ -30,26 +30,35 @@
 		flex-shrink: 0;
 		align-items: center;
 		gap: 4px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		background: var(--color-surface-muted);
+		border: 1px solid transparent;
+		border-radius: var(--radius-pill);
+		background: var(--color-brand-50);
 		padding: 3px;
 	}
 	button {
 		min-width: 44px;
 		min-height: 44px;
 		border: 1px solid transparent;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-pill);
 		background: transparent;
 		padding: 8px;
-		color: var(--color-text-muted);
+		color: var(--color-brand-ink);
 		font-size: 0.75rem;
 		font-weight: 700;
 		cursor: pointer;
+		transition:
+			background-color var(--motion-duration) ease-out,
+			color var(--motion-duration) ease-out,
+			transform var(--motion-duration) ease-out;
+	}
+	button:hover:not(:disabled):not(.active) {
+		background: var(--color-brand-100);
+	}
+	button:active:not(:disabled) {
+		transform: translateY(1px);
 	}
 	button.active {
-		border-color: var(--color-brand-ink);
-		background: var(--color-brand);
+		background: var(--color-mint);
 		color: var(--color-ink);
 	}
 	button:disabled {

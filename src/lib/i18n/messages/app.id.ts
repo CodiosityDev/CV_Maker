@@ -143,52 +143,63 @@ export const appId = {
 		},
 		steps: {
 			type: {
+				short: 'Jenis',
 				title: 'Pilih jenis CV-mu',
 				description: 'Pilih jenis CV sesuai cara melamar dan posisi yang kamu tuju.'
 			},
 			target: {
+				short: 'Arah',
 				title: 'Arah kariermu',
 				description:
 					'Mulai dari bahasa CV dan posisi yang kamu incar. Beri judul agar mudah ditemukan lagi.'
 			},
 			personal: {
+				short: 'Data diri',
 				title: 'Data diri',
 				description: 'Bantu perekrut mengenal dan menghubungimu. Cukup isi informasi yang relevan.'
 			},
 			education: {
+				short: 'Pendidikan',
 				title: 'Pendidikan',
 				description:
 					'Ceritakan latar pendidikanmu. Tugas akhir, mata kuliah, dan beasiswa juga bisa menunjukkan kemampuanmu.'
 			},
 			experience: {
+				short: 'Pengalaman',
 				title: 'Pengalaman kerja / magang',
 				description:
 					'Magang, kerja paruh waktu, dan freelance juga berarti. Belum ada? Kamu boleh melewati langkah ini.'
 			},
 			organizations: {
+				short: 'Organisasi',
 				title: 'Organisasi & kepanitiaan',
 				description: 'Tunjukkan peran dan kontribusimu saat bekerja bersama orang lain.'
 			},
 			projects: {
+				short: 'Proyek',
 				title: 'Proyek',
 				description: 'Proyek kuliah, tugas akhir, dan karya pribadi bisa menjadi bukti kemampuanmu.'
 			},
 			skills: {
+				short: 'Keahlian',
 				title: 'Keahlian & pencapaian',
 				description:
 					'Tambahkan keahlian, bahasa, sertifikasi, atau prestasi yang relevan dengan posisi tujuan.'
 			},
 			summary: {
+				short: 'Ringkasan',
 				title: 'Ringkasan profil',
 				description:
 					'Tulis 2–4 kalimat tentang pendidikan, keahlian, dan posisi yang kamu tuju. Gunakan contoh jika diperlukan.'
 			},
 			review: {
+				short: 'Tinjau',
 				title: 'Tinjau CV-mu',
 				description:
 					'Periksa isi, ejaan, dan kontakmu. Preview menampilkan informasi yang akan dibaca perekrut.'
 			},
 			done: {
+				short: 'Selesai',
 				title: 'Selamat, CV-mu sudah tersusun!',
 				description: 'Isian CV sudah selesai. Kamu bisa meninjau dan memperbaiki isinya dari sini.'
 			}

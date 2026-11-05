@@ -93,8 +93,8 @@
 	}
 	.examples li {
 		padding: 1rem;
-		background: var(--color-surface-muted);
-		border-radius: var(--radius-md);
+		background: var(--color-mint-50);
+		border-radius: var(--radius-lg);
 	}
 	.examples p {
 		margin: 0 0 0.75rem;

@@ -39,12 +39,15 @@
 	}
 	.cv-paper {
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 	}
 	.paper-label {
 		padding: 12px 22px;
 		border-bottom: 1px solid var(--color-border);
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+		background: var(--color-brand-50);
 		color: var(--color-text-muted);
 		font-size: 0.75rem;
 	}

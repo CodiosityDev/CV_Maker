@@ -202,6 +202,7 @@
 	h1 {
 		margin-block: 12px 16px;
 		font-size: clamp(1.875rem, 5vw, 2.75rem);
+		font-weight: 650;
 	}
 	.intro > p {
 		color: var(--color-text-muted);
@@ -222,7 +223,7 @@
 		margin-block: 20px;
 		padding: 16px;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 	}
 	.warning {
 		background: var(--color-warning-surface);
@@ -251,10 +252,17 @@
 		min-width: 0;
 		padding: 16px;
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		background: var(--color-surface);
 		color: var(--color-text);
 		text-decoration: none;
+		box-shadow: var(--shadow-card);
+		transition:
+			background-color var(--motion-duration) var(--motion-ease),
+			transform var(--motion-duration) var(--motion-ease);
+	}
+	.resume-card:hover {
+		background: var(--color-mint-50);
 	}
 	.resume-card > div {
 		min-width: 0;
@@ -284,7 +292,8 @@
 		padding: 20px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		background: var(--color-surface-muted);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 	}
 	.quiz > div > p {
 		margin-top: 8px;
@@ -310,14 +319,21 @@
 		height: 100%;
 	}
 	.type-cards :global(.recommended-card) {
-		border-color: var(--color-brand-ink);
-		background: var(--color-mint);
+		border-color: var(--color-mint);
+		background: var(--color-mint-50);
+	}
+	.type-cards :global(.card:first-child) {
+		background: var(--color-mint-50);
 	}
 	.badge {
 		margin-bottom: 12px;
 		color: var(--color-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
+		width: fit-content;
+		padding: 4px 12px;
+		border-radius: var(--radius-pill);
+		background: var(--color-mint);
 	}
 	.type-cards h2 {
 		font-size: 1.5rem;
@@ -327,8 +343,12 @@
 		gap: 10px;
 		margin-block: 20px 24px;
 		padding-left: 20px;
+		list-style: disc;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
+	}
+	li::marker {
+		color: var(--color-brand-ink);
 	}
 	.type-cards :global(.choose-button) {
 		width: 100%;

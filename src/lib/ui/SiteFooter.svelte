@@ -29,7 +29,7 @@
 <style>
 	footer {
 		border-top: 1px solid var(--color-border);
-		background: var(--color-surface);
+		background: var(--color-cream-50);
 	}
 	.footer-inner {
 		display: flex;
@@ -55,8 +55,10 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		text-decoration: none;
+		transition: color var(--motion-duration) ease-out;
 	}
 	a:hover {
+		color: var(--color-ink);
 		text-decoration: underline;
 	}
 	nav {
