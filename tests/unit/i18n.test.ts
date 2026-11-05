@@ -1,6 +1,20 @@
-import { describe, expect, it } from 'vitest';
-import { getDictionary, monthName, monthNames, translate } from '../../src/lib/i18n/translate';
-import { LOCALES, isLocale } from '../../src/lib/i18n/types';
+import { beforeAll, describe, expect, it } from 'vitest';
+import {
+	isDictionaryLoaded,
+	loadDictionary,
+	monthName,
+	monthNames,
+	registerNamespace,
+	translate,
+	type MessageKey
+} from '../../src/lib/i18n/translate';
+import { id } from '../../src/lib/i18n/messages/id';
+import { en } from '../../src/lib/i18n/messages/en';
+import { siteId } from '../../src/lib/i18n/messages/site.id';
+import { siteEn } from '../../src/lib/i18n/messages/site.en';
+import { appId } from '../../src/lib/i18n/messages/app.id';
+import { appEn } from '../../src/lib/i18n/messages/app.en';
+import { isLocale } from '../../src/lib/i18n/types';
 
 function leafKeys(node: unknown, prefix = ''): string[] {
 	if (typeof node === 'string') return [prefix];
@@ -9,37 +23,69 @@ function leafKeys(node: unknown, prefix = ''): string[] {
 	);
 }
 
-describe('i18n dictionaries', () => {
-	it('every locale has exactly the same keys as the Indonesian source', () => {
-		const source = leafKeys(getDictionary('id')).sort();
-		for (const locale of LOCALES) {
-			expect(leafKeys(getDictionary(locale)).sort()).toEqual(source);
-		}
-	});
+const PARTS = {
+	base: { id, en },
+	site: { id: siteId, en: siteEn },
+	app: { id: appId, en: appEn }
+};
 
-	it('has no empty messages', () => {
-		for (const locale of LOCALES) {
-			const dict = getDictionary(locale);
-			for (const key of leafKeys(dict)) {
-				expect(translate(locale, key as never).trim(), `${locale}:${key}`).not.toBe('');
+describe('i18n dictionaries', () => {
+	for (const [part, dicts] of Object.entries(PARTS)) {
+		it(`${part}: English has exactly the same keys as Indonesian`, () => {
+			expect(leafKeys(dicts.en).sort()).toEqual(leafKeys(dicts.id).sort());
+		});
+
+		it(`${part}: no empty messages and no HTML`, () => {
+			for (const dict of [dicts.id, dicts.en]) {
+				for (const key of leafKeys(dict)) {
+					const value = key
+						.split('.')
+						.reduce<unknown>((node, k) => (node as Record<string, unknown>)[k], dict);
+					expect(String(value).trim(), key).not.toBe('');
+					expect(String(value), key).not.toMatch(/<[a-z/]/i);
+				}
 			}
-		}
+		});
+	}
+
+	it('namespaces never share a top-level key (they are merged)', () => {
+		const tops = Object.values(PARTS).flatMap((p) => Object.keys(p.id));
+		expect(new Set(tops).size).toBe(tops.length);
 	});
 });
 
-describe('translate', () => {
-	it('returns the message for the requested locale', () => {
+describe('translate with namespaces', () => {
+	it('base messages work without any namespace', () => {
 		expect(translate('id', 'common.next')).toBe('Lanjut');
-		expect(translate('en', 'common.next')).toBe('Next');
+	});
+
+	it('namespace keys resolve only after registration', () => {
+		expect(translate('id', 'landing.title')).toBe('landing.title');
+		registerNamespace('site', siteId);
+		expect(translate('id', 'landing.title')).toBe(siteId.landing.title);
+	});
+
+	describe('English', () => {
+		beforeAll(async () => {
+			registerNamespace('app', appId);
+			await loadDictionary('en');
+		});
+
+		it('loads English base and every registered namespace', () => {
+			expect(isDictionaryLoaded('en')).toBe(true);
+			expect(translate('en', 'common.next')).toBe('Next');
+			expect(translate('en', 'landing.title')).toBe(siteEn.landing.title);
+			expect(translate('en', 'preview.retry')).toBe(appEn.preview.retry);
+		});
 	});
 
 	it('returns the key itself when missing', () => {
-		expect(translate('en', 'does.not.exist' as never)).toBe('does.not.exist');
+		expect(translate('en', 'does.not.exist' as MessageKey)).toBe('does.not.exist');
 	});
 
 	it('does not resolve prototype properties as messages', () => {
-		expect(translate('id', 'constructor' as never)).toBe('constructor');
-		expect(translate('id', '__proto__.toString' as never)).toBe('__proto__.toString');
+		expect(translate('id', 'constructor' as MessageKey)).toBe('constructor');
+		expect(translate('id', '__proto__.toString' as MessageKey)).toBe('__proto__.toString');
 	});
 });
 

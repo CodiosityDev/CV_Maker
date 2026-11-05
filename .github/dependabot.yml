@@ -5,10 +5,24 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7 (Go-based) is not yet supported by svelte-check / typescript-eslint.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Keep @types/node on the same major as the Node.js runtime (24).
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
+      # One PR for all dev tooling, one for runtime deps.
       dev-tooling:
         dependency-type: development
+      runtime:
+        dependency-type: production
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      # One PR per month for all workflow action updates.
+      github-actions:
+        patterns: ['*']
