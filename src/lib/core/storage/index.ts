@@ -48,4 +48,4 @@ export type { StorageBackend, StorageMode, StoredAsset } from './backend';
 export { createMemoryBackend } from './memory-backend';
 export { openIdbBackend, DB_NAME } from './idb-backend';
 export { onExternalChange, TAB_ID, type SyncEvent } from './sync';
-export { incognito, INCOGNITO_SESSION_KEY } from './incognito.svelte.ts';
+export { incognito, INCOGNITO_SESSION_KEY, INCOGNITO_IDLE_MS } from './incognito.svelte.ts';
