@@ -66,7 +66,7 @@ export const siteEn: SiteMessages = {
 			'CVs stored in that browser will be lost. Download PDF/Word files for your records before clearing browser data.',
 		incognitoQuestion: 'I use a public or shared computer. Is it safe?',
 		incognitoAnswer:
-			'Turn on Incognito Mode before creating a CV: its content stays only in this tab and disappears when the tab is closed, refreshed, or left unchanged for 3 hours. For maximum privacy, also open an incognito/private browser window (Ctrl+Shift+N / ⌘+Shift+N). Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
+			'On the Create CV page, use the Incognito button at the top to turn on Incognito Mode before creating a CV. Its content stays only in this tab and disappears when the tab is closed, refreshed, or left unchanged for 3 hours. For maximum privacy, also open an incognito/private browser window (Ctrl+Shift+N / ⌘+Shift+N). Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
 		mobileQuestion: 'Can I use it on my phone?',
 		mobileAnswer: 'Yes, directly in your phone, tablet, or computer browser.',
 		englishQuestion: 'Is English available?',
@@ -98,7 +98,7 @@ export const siteEn: SiteMessages = {
 		lossCopy:
 			'Clearing browser data, a broken device, or changing browsers can mean losing your CV. Download PDF/Word files for your records before clearing browser data.',
 		sharedCopy:
-			'On a shared computer, turn on Incognito Mode before creating your CV. Data stays only in this tab, disappears when the tab is closed or refreshed, and is erased automatically after 3 hours without changes. Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
+			'On a shared computer, open the Create CV page and use the Incognito button at the top before creating your CV. Data stays only in this tab, disappears when the tab is closed or refreshed, and is erased automatically after 3 hours without changes. Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
 		back: 'Back to home'
 	},
 	about: {

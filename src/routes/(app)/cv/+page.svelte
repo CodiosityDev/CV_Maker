@@ -8,7 +8,6 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
-	import IncognitoStart from '#lib/ui/IncognitoStart.svelte';
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
@@ -32,7 +31,7 @@
 	let wipeOpen = $state(false);
 	let wipeText = $state('');
 	const wipeInstruction = $derived(t('dashboard.wipeInput').split('{word}'));
-	let active = false;
+	let active = $state(false);
 	let listRequest = 0;
 
 	async function refresh() {
@@ -77,7 +76,6 @@
 
 	onMount(() => {
 		active = true;
-		void refresh();
 		const unsubscribe = onExternalChange(() => void refresh());
 		const visible = () => {
 			if (document.visibilityState === 'visible') void refresh();
@@ -105,21 +103,16 @@
 		wipeText = '';
 	}
 
-	async function sessionStarted() {
+	$effect(() => {
+		void incognito.active;
+		void incognito.expiredAt;
+		if (!active) return;
 		cvs = [];
 		clearDialogs();
 		memory = false;
 		listError = false;
 		loading = true;
-		await refresh();
-	}
-
-	$effect(() => {
-		if (incognito.expiredAt && active) {
-			cvs = [];
-			clearDialogs();
-			void refresh();
-		}
+		void refresh();
 	});
 
 	function more(cv: CVMeta) {
@@ -361,7 +354,6 @@
 			>
 		</section>
 	{:else}
-		<IncognitoStart disabled={busy || loading} onstart={sessionStarted} />
 		<section class="danger-zone" aria-labelledby="wipe-heading">
 			<div>
 				<h2 id="wipe-heading">{t('dashboard.wipeTitle')}</h2>

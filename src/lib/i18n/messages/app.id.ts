@@ -5,8 +5,12 @@
 export const appId = {
 	incognito: {
 		label: 'Mode Incognito',
-		optionTitle: 'Pakai di komputer umum / warnet?',
-		startAction: 'Nyalakan Mode Incognito',
+		headerLabel: 'Incognito',
+		headerActive: 'Incognito aktif',
+		startTitle: 'Nyalakan Mode Incognito?',
+		startConfirm: 'Nyalakan',
+		startFailed: 'CV belum tersimpan. Coba simpan lagi sebelum menyalakan Mode Incognito.',
+		started: 'Mode Incognito aktif',
 		startDescription:
 			'CV hanya tersimpan di tab ini dan hilang saat tab ditutup atau di-refresh. Unduh CV sebelum selesai.',
 		browserTip:
@@ -15,7 +19,6 @@ export const appId = {
 		activeDescription:
 			'Mode Incognito aktif — CV hanya ada di tab ini dan hilang saat tab ditutup atau di-refresh. Unduh CV sebelum selesai.',
 		idleDescription: 'CV juga dihapus otomatis setelah 3 jam tanpa perubahan.',
-		info: 'Info',
 		expires: 'Dihapus otomatis pukul {time} bila tidak ada perubahan.',
 		expiredMessage: 'CV di sesi incognito ini dihapus otomatis karena 3 jam tidak ada perubahan.',
 		expiredStatus: 'CV sesi ini sudah dihapus',

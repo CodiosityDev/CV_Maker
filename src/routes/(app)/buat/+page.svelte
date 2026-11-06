@@ -9,7 +9,6 @@
 	import Card from '#lib/ui/Card.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
-	import IncognitoStart from '#lib/ui/IncognitoStart.svelte';
 
 	let guidance = $state.raw<Guidance | null>(null);
 	let unfinished = $state<CVMeta[]>([]);
@@ -196,7 +195,6 @@
 	{:else}
 		<p class="notice" role="status">{t('wizard.loading')}</p>
 	{/if}
-	<IncognitoStart disabled={creating !== null} />
 </div>
 
 <style>

@@ -5,6 +5,7 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { initIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
+	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import type { LayoutProps } from './$types';
 
@@ -42,6 +43,7 @@
 			<span>{t('app.name')}</span>
 		</a>
 		<LanguageSwitcher />
+		<IncognitoHeader />
 		<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
 			<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
 				<svg
@@ -81,6 +83,11 @@
 		justify-content: space-between;
 		gap: 8px;
 		padding-block: 7px;
+	}
+	@media (max-width: 479px) {
+		.header-inner {
+			gap: 4px;
+		}
 	}
 	.brand {
 		display: inline-flex;

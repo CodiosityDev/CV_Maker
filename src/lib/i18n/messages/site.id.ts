@@ -63,7 +63,7 @@ export const siteId = {
 			'CV yang tersimpan di browser ikut hilang. Unduh PDF/Word sebagai arsip sebelum menghapus data browser.',
 		incognitoQuestion: 'Saya memakai komputer umum/warnet. Apakah aman?',
 		incognitoAnswer:
-			'Nyalakan Mode Incognito sebelum membuat CV: isi hanya ada di tab ini dan hilang saat tab ditutup, di-refresh, atau setelah 3 jam tanpa perubahan. Untuk privasi maksimal, buka juga jendela incognito/private browser (Ctrl+Shift+N / ⌘+Shift+N). Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
+			'Di halaman Buat CV, tekan tombol Incognito di bagian atas untuk menyalakan Mode Incognito sebelum membuat CV. Isi hanya ada di tab ini dan hilang saat tab ditutup, di-refresh, atau setelah 3 jam tanpa perubahan. Untuk privasi maksimal, buka juga jendela incognito/private browser (Ctrl+Shift+N / ⌘+Shift+N). Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
 		mobileQuestion: 'Bisa digunakan di HP?',
 		mobileAnswer: 'Bisa, langsung dari browser HP, tablet, atau komputer.',
 		englishQuestion: 'Ada bahasa Inggris?',
@@ -95,7 +95,7 @@ export const siteId = {
 		lossCopy:
 			'CV bisa hilang jika data browser dihapus, perangkat rusak, atau browser diganti. Unduh PDF/Word sebagai arsip sebelum menghapus data browser.',
 		sharedCopy:
-			'Di komputer umum, nyalakan Mode Incognito sebelum membuat CV. Data hanya ada di tab ini, hilang saat tab ditutup atau di-refresh, dan dihapus otomatis setelah 3 jam tanpa perubahan. Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
+			'Di komputer umum, buka halaman Buat CV lalu tekan tombol Incognito di bagian atas sebelum membuat CV. Data hanya ada di tab ini, hilang saat tab ditutup atau di-refresh, dan dihapus otomatis setelah 3 jam tanpa perubahan. Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
 		back: 'Kembali ke beranda'
 	},
 	about: {

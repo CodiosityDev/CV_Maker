@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import type { CvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { LIMITS, newId, type PersonalInfo } from '#lib/core/schema/index.ts';
 	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
@@ -7,6 +7,7 @@
 	import { normalizePhone, type StepIssue } from '#lib/core/wizard/index.ts';
 	import { suggest, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+	import { getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import Input from '../Input.svelte';
 	import Autocomplete from '../Autocomplete.svelte';
 	import ListEditor from '../ListEditor.svelte';
@@ -25,7 +26,17 @@
 	} = $props();
 	let busy = $state(false);
 	let photoError = $state<MessageKey>();
+	let pendingPhoto: Promise<boolean> | undefined;
+	const incognitoUi = getIncognitoUiContext();
 	let destroyed = false;
+	onMount(() =>
+		incognitoUi?.registerBeforeStart(async () => {
+			// Photo processing may finish after an ordinary store flush.
+			if (pendingPhoto && !(await pendingPhoto)) return false;
+			await store.flush();
+			return store.saveState !== 'error';
+		})
+	);
 	onDestroy(() => {
 		destroyed = true;
 	});
@@ -51,34 +62,53 @@
 		const file = input.files?.[0];
 		input.value = '';
 		if (!file || busy) return;
+		await trackPhoto(savePhoto(file));
+	}
+	async function trackPhoto(operation: Promise<boolean>) {
+		pendingPhoto = operation;
+		try {
+			await operation;
+		} finally {
+			if (pendingPhoto === operation) pendingPhoto = undefined;
+		}
+	}
+	async function savePhoto(file: File): Promise<boolean> {
 		busy = true;
 		photoError = undefined;
 		try {
 			const id = await assetRepo.putPhoto(file);
 			if (destroyed || store.externalChange === 'removed') {
 				await assetRepo.remove(id);
-				return;
+				return false;
 			}
 			// The previous photo is NOT deleted here: undo may restore it.
 			// assetRepo.removeOrphans() (run when the app area opens) cleans it up later.
 			set('photoAssetId', id);
 			await store.flush();
+			return store.saveState !== 'error';
 		} catch (error) {
 			photoError =
 				error instanceof PhotoError ? `wizard.photoErrors.${error.code}` : 'wizard.photoFailed';
+			return false;
 		} finally {
 			busy = false;
 		}
 	}
 	async function removePhoto() {
+		if (busy) return;
+		await trackPhoto(clearPhoto());
+	}
+	async function clearPhoto(): Promise<boolean> {
 		busy = true;
 		photoError = undefined;
 		try {
 			// Kept in storage for undo; cleaned up later by assetRepo.removeOrphans().
 			set('photoAssetId', undefined);
 			await store.flush();
+			return store.saveState !== 'error';
 		} catch {
 			photoError = 'wizard.photoFailed';
+			return false;
 		} finally {
 			busy = false;
 		}
