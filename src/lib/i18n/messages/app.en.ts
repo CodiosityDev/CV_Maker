@@ -7,8 +7,12 @@ import type { AppMessages } from '../translate';
 export const appEn: AppMessages = {
 	incognito: {
 		label: 'Incognito Mode',
-		optionTitle: 'Using a public or shared computer?',
-		startAction: 'Turn on Incognito Mode',
+		headerLabel: 'Incognito',
+		headerActive: 'Incognito active',
+		startTitle: 'Turn on Incognito Mode?',
+		startConfirm: 'Turn on',
+		startFailed: 'Your CV has not been saved. Try saving again before turning on Incognito Mode.',
+		started: 'Incognito Mode is on',
 		startDescription:
 			'Your CV is stored only in this tab and disappears when you close or refresh it. Download your CV before finishing.',
 		browserTip:
@@ -17,7 +21,6 @@ export const appEn: AppMessages = {
 		activeDescription:
 			'Incognito Mode is on — your CV is only in this tab and disappears when you close or refresh it. Download your CV before finishing.',
 		idleDescription: 'Your CV is also erased automatically after 3 hours without changes.',
-		info: 'Info',
 		expires: 'Erased automatically at {time} if there are no changes.',
 		expiredMessage:
 			'The CVs in this incognito session were erased automatically after 3 hours without changes.',

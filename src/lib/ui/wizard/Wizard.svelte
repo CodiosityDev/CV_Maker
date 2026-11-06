@@ -120,6 +120,10 @@
 	});
 
 	onMount(() => {
+		const unregisterBeforeStart = incognitoUi?.registerBeforeStart(async () => {
+			await store.flush();
+			return store.saveState !== 'error';
+		});
 		const unregisterBeforeEnd = incognitoUi?.registerBeforeEnd(() => {
 			store.applyExternalChange({ type: 'wiped' });
 		});
@@ -134,6 +138,7 @@
 			memory = mode === 'memory';
 		});
 		return () => {
+			unregisterBeforeStart?.();
 			unregisterBeforeEnd?.();
 			media.removeEventListener('change', update);
 		};

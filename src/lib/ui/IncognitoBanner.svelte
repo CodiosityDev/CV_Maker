@@ -2,10 +2,8 @@
 	import { incognito } from '#lib/core/storage/index.ts';
 	import { i18n, t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
-	import Dialog from '#lib/ui/Dialog.svelte';
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 
-	let infoOpen = $state(false);
 	let endOpen = $state(false);
 	const expiry = $derived(incognito.expiresAt);
 	const expiryTime = $derived(
@@ -26,15 +24,6 @@
 				<p class="short-title">{t('incognito.activeTitle')}</p>
 				<p class="full-message">{t('incognito.activeDescription')}</p>
 				<Button
-					class="info-action"
-					variant="ghost"
-					size="sm"
-					onclick={(event) => {
-						if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus();
-						infoOpen = true;
-					}}>{t('incognito.info')}</Button
-				>
-				<Button
 					class="end-action"
 					variant="secondary"
 					size="sm"
@@ -51,18 +40,6 @@
 	</section>
 {/if}
 
-<Dialog
-	bind:open={infoOpen}
-	title={t('incognito.activeTitle')}
-	description={t('incognito.startDescription')}
->
-	<p>{t('incognito.idleDescription')}</p>
-	{#if expiry}<p>{t('incognito.expires', { time: expiryTime })}</p>{/if}
-	<p class="info-tip">{t('incognito.browserTip')}</p>
-	{#snippet footer()}<Button variant="secondary" onclick={() => (infoOpen = false)}
-			>{t('ui.close')}</Button
-		>{/snippet}
-</Dialog>
 <IncognitoEndDialog bind:open={endOpen} />
 
 <style>
@@ -74,7 +51,7 @@
 	}
 	.banner-row {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto auto;
+		grid-template-columns: minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 4px;
 	}
@@ -95,10 +72,6 @@
 	.expiry {
 		margin-block: 2px 4px;
 		font-size: 0.75rem;
-	}
-	.info-tip {
-		margin-top: 16px;
-		font-size: 0.875rem;
 	}
 	@media (min-width: 768px) {
 		.short-title {
