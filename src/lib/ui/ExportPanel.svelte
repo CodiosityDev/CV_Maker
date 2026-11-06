@@ -113,6 +113,7 @@
 	data-testid="export-panel"
 >
 	<h2 id="{uid}-title">{t('exportPanel.title')}</h2>
+	{#if cv.kind === 'creative'}<p>{t('exportPanel.simpleLayout')}</p>{/if}
 	<div class="pdf-option">
 		<a
 			class="pdf-link"

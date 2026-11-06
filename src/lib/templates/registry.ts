@@ -35,6 +35,41 @@ export const TEMPLATES: readonly TemplateMeta[] = [
 		supportsPhoto: false,
 		supportsAccentColor: false,
 		load: () => import('./ats/AtsKlasik.svelte')
+	},
+	{
+		id: 'ats-modern',
+		kind: 'ats',
+		supportsPhoto: false,
+		supportsAccentColor: false,
+		load: () => import('./ats/AtsModern.svelte')
+	},
+	{
+		id: 'ats-ringkas',
+		kind: 'ats',
+		supportsPhoto: false,
+		supportsAccentColor: false,
+		load: () => import('./ats/AtsRingkas.svelte')
+	},
+	{
+		id: 'creative-sidebar',
+		kind: 'creative',
+		supportsPhoto: true,
+		supportsAccentColor: true,
+		load: () => import('./creative/CreativeSidebar.svelte')
+	},
+	{
+		id: 'creative-header',
+		kind: 'creative',
+		supportsPhoto: true,
+		supportsAccentColor: true,
+		load: () => import('./creative/CreativeHeader.svelte')
+	},
+	{
+		id: 'creative-timeline',
+		kind: 'creative',
+		supportsPhoto: true,
+		supportsAccentColor: true,
+		load: () => import('./creative/CreativeTimeline.svelte')
 	}
 ];
 

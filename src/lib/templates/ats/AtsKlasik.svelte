@@ -4,7 +4,7 @@
 	let { model }: { model: RenderModel } = $props();
 </script>
 
-<article class="ats-klasik" lang={model.locale}>
+<article class="ats-klasik" data-template="ats-klasik" lang={model.locale}>
 	<h1>{model.personal.fullName}</h1>
 	{#if model.personal.headline}<p class="headline">{model.personal.headline}</p>{/if}
 	<div class="contact">

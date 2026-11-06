@@ -78,7 +78,7 @@ export const appEn: AppMessages = {
 		atsPhotoHint: 'Photos are not shown on ATS CVs.',
 		loading: 'Preparing your guidance…',
 		loadError: 'Guidance could not be loaded. Check your connection and try again.',
-		previewNotice: 'The preview uses ATS Classic. Creative designs are not available yet.',
+		previewNotice: 'The preview follows your selected template.',
 		addSkill: 'Add',
 		removeSkill: 'Remove {skill}',
 		skillsLimit: 'Up to {max} skills per group.',
@@ -245,17 +245,60 @@ export const appEn: AppMessages = {
 			}
 		}
 	},
+	templates: {
+		'ats-klasik': {
+			name: 'ATS Classic',
+			description: 'A simple layout with contact details at the top.'
+		},
+		'ats-modern': { name: 'ATS Modern', description: 'Generous spacing and easily scanned dates.' },
+		'ats-ringkas': { name: 'ATS Compact', description: 'A compact layout that uses fewer pages.' },
+		'creative-sidebar': {
+			name: 'Creative Sidebar',
+			description: 'Contact details and skills in a side panel.'
+		},
+		'creative-header': {
+			name: 'Creative Header',
+			description: 'Your name and photo in a colored top band.'
+		},
+		'creative-timeline': {
+			name: 'Creative Timeline',
+			description: 'Experience and education along a timeline.'
+		}
+	},
+	templatePicker: {
+		title: 'Choose your CV layout',
+		description: 'Your CV content stays the same when you switch type or template.',
+		kind: 'CV type',
+		ats: 'CV ATS',
+		creative: 'CV Creative',
+		templates: 'Template choices',
+		creativeNotice: 'Less suitable for ATS portals',
+		selected: 'Selected',
+		choose: 'Choose template',
+		colorsLabel: 'Accent color',
+		thumbnailLoading: 'Preparing example…',
+		thumbnailError: 'The example could not be loaded.',
+		colors: {
+			periwinkle: 'Periwinkle',
+			mint: 'Mint',
+			peach: 'Peach',
+			coral: 'Soft coral',
+			sky: 'Sky blue',
+			lavender: 'Lavender'
+		}
+	},
 	preview: {
 		empty: 'Add personal details to see a preview.',
 		label: 'CV preview',
 		loading: 'Preparing preview…',
-		caption: 'ATS Classic · A4',
+		caption: '{template} · A4',
 		open: 'View preview',
 		error: 'The preview could not be loaded.',
 		retry: 'Reload preview'
 	},
 	exportPanel: {
 		title: 'Download CV',
+		simpleLayout: 'Word and text use a simple layout that job portals can read easily.',
 		pdf: 'PDF for applications',
 		pdfHint: 'Open the print page, then choose Save as PDF.',
 		pdfAtsHint: 'This PDF contains real text that ATS systems can read.',
