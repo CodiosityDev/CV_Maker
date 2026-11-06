@@ -230,6 +230,7 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 		},
 
 		async requestPersistence() {
+			if ((await getBackend()).mode !== 'indexeddb') return false;
 			try {
 				return (await navigator.storage?.persist?.()) ?? false;
 			} catch {

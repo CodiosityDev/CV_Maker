@@ -128,6 +128,21 @@ describe('backup & restore', () => {
 		expect(await backend.getAllAssetIds()).toEqual([]);
 	});
 
+	it('drops photos whose bytes do not match the declared image type', async () => {
+		const cv = structuredClone(sampleCvCreative);
+		cv.personal.photoAssetId = 'p1';
+		const disguised = btoa('<html><script>steal()</script></html>');
+		const file = jsonFile({
+			format: 'cvmaker-backup',
+			version: 1,
+			cvs: [cv],
+			assets: [{ id: 'p1', type: 'image/jpeg', width: 1, height: 1, data: disguised }]
+		});
+		await backup.import(file);
+		expect((await repos.cvRepo.get(sampleCvCreative.id))?.personal.photoAssetId).toBeUndefined();
+		expect(await backend.getAllAssetIds()).toEqual([]);
+	});
+
 	it('drops photos with invalid base64', async () => {
 		const cv = structuredClone(sampleCvCreative);
 		cv.personal.photoAssetId = 'p1';

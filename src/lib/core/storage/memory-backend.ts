@@ -5,12 +5,12 @@ import type { StorageBackend, StoredAsset } from './backend';
  * Fallback when IndexedDB is unavailable (some private-browsing modes).
  * Data lives only until the tab is closed — the UI must warn the user (storage.getMode() === 'memory').
  */
-export function createMemoryBackend(): StorageBackend {
+export function createMemoryBackend(mode: 'memory' | 'incognito' = 'memory'): StorageBackend {
 	const cvs = new Map<string, CVDocument>();
 	const assets = new Map<string, StoredAsset>();
 
 	return {
-		mode: 'memory',
+		mode,
 		getCv: async (id) => structuredClone(cvs.get(id)),
 		getAllCvs: async () => [...cvs.values()].map((doc) => structuredClone(doc)),
 		putCv: async (doc) => {

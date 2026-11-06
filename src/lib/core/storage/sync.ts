@@ -3,6 +3,7 @@
  * Lets an open editor know that another tab saved or deleted the same CV.
  */
 import { newId } from '../schema/ids';
+import { incognito } from './incognito.svelte.ts';
 
 export type SyncMessage =
 	| { type: 'cv-saved'; id: string; updatedAt: string; from: string }
@@ -28,6 +29,8 @@ function getChannel(): BroadcastChannel | null {
 }
 
 export function broadcast(event: SyncEvent): void {
+	// Incognito data is private to this tab: don't even reveal CV ids to other tabs.
+	if (incognito.active) return;
 	try {
 		getChannel()?.postMessage({ ...event, from: TAB_ID });
 	} catch {
@@ -42,6 +45,8 @@ export function onExternalChange(listener: (event: SyncEvent) => void): () => vo
 	const handler = (message: MessageEvent<unknown>) => {
 		const data = message.data as Partial<SyncMessage> | null;
 		if (!data || typeof data !== 'object' || data.from === TAB_ID) return;
+		// Changes in other tabs concern persistent storage, which an incognito tab doesn't use.
+		if (incognito.active) return;
 		if (
 			data.type === 'cv-saved' &&
 			typeof data.id === 'string' &&

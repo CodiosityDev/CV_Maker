@@ -8,6 +8,7 @@
  */
 import { newId } from '../schema/ids';
 import { loadCvDocument } from '../schema/migrations';
+import { sniffImageType } from '../security/image-type';
 import type { CVDocument } from '../schema/types';
 import type { StorageBackend, StoredAsset } from './backend';
 import { broadcast } from './sync';
@@ -104,6 +105,8 @@ function readAsset(raw: unknown): StoredAsset | undefined {
 	const bytes = fromBase64(data);
 	if (!bytes || bytes.byteLength === 0 || bytes.byteLength > BACKUP_LIMITS.maxPhotoBytes)
 		return undefined;
+	// The declared type must match the actual bytes (no HTML/SVG/script disguised as a photo).
+	if (sniffImageType(bytes) !== type) return undefined;
 	const dim = (n: unknown) =>
 		typeof n === 'number' && Number.isInteger(n) && n > 0 && n <= 4000 ? n : 1;
 	return {

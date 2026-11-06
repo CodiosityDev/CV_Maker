@@ -10,7 +10,11 @@ export interface StoredAsset {
 	createdAt: string;
 }
 
-export type StorageMode = 'indexeddb' | 'memory';
+/**
+ * 'indexeddb' = normal; 'memory' = IndexedDB unavailable (data lost when the tab closes);
+ * 'incognito' = the user chose incognito mode for this tab (see incognito.svelte.ts).
+ */
+export type StorageMode = 'indexeddb' | 'memory' | 'incognito';
 
 /** Low-level persistence. Values read back are UNTRUSTED and must go through `loadCvDocument`. */
 export interface StorageBackend {
