@@ -54,6 +54,8 @@ export const appEn: AppMessages = {
 		reviewInstruction: 'Select a note to edit that field.',
 		issueContext: '{section} — {field}: {message}',
 		editAgain: 'Edit again',
+		goDashboard: 'Go to My CVs',
+		allCvs: 'View all CVs',
 		optional: 'Optional',
 		saved: 'Saved ✓',
 		savedMemory: 'Saved temporarily',
@@ -77,7 +79,6 @@ export const appEn: AppMessages = {
 		loading: 'Preparing your guidance…',
 		loadError: 'Guidance could not be loaded. Check your connection and try again.',
 		previewNotice: 'The preview uses ATS Classic. Creative designs are not available yet.',
-		doneAvailability: 'Other templates, downloads, and the editor are not available yet.',
 		addSkill: 'Add',
 		removeSkill: 'Remove {skill}',
 		skillsLimit: 'Up to {max} skills per group.',
@@ -240,7 +241,7 @@ export const appEn: AppMessages = {
 			done: {
 				short: 'Done',
 				title: 'Your CV is saved',
-				description: 'You can still go back to change the content.'
+				description: 'Download your CV to apply, or go back to change the content.'
 			}
 		}
 	},
@@ -252,5 +253,120 @@ export const appEn: AppMessages = {
 		open: 'View preview',
 		error: 'The preview could not be loaded.',
 		retry: 'Reload preview'
+	},
+	exportPanel: {
+		title: 'Download CV',
+		pdf: 'PDF for applications',
+		pdfHint: 'Open the print page, then choose Save as PDF.',
+		pdfAtsHint: 'This PDF contains real text that ATS systems can read.',
+		docx: 'Word (.docx)',
+		docxHint: 'For job portals that request a Word file.',
+		txt: 'Text (.txt)',
+		txtHint: 'Download your CV as plain text.',
+		copy: 'Copy text',
+		copyHint: 'Paste it into a job portal application form.',
+		preparing: 'Preparing…',
+		copying: 'Copying…',
+		downloadError: 'The file could not be prepared. Try downloading again.',
+		navigationError: 'Your changes have not been saved. Try again before opening another page.',
+		copied: 'Text copied',
+		manualLabel: 'CV text to copy',
+		manualHint:
+			'Your browser did not allow automatic copying. Select the text below, then copy it using your device’s menu.',
+		selectText: 'Select all text',
+		backupReminder: 'Save a backup regularly to keep your CV content safe.',
+		backupLink: 'Back up in My CVs'
+	},
+	printPage: {
+		title: 'Save your CV as PDF',
+		back: 'Back to My CVs',
+		savePdf: 'Save as PDF',
+		guideTitle: 'How to save as PDF',
+		android: 'Android · Chrome',
+		androidGuide:
+			'Open the ⋮ menu → Share → Print. Select “Save as PDF”, then save the file to your device.',
+		iphone: 'iPhone · Safari',
+		iphoneGuide:
+			'Tap Share → Print. Pinch out or enlarge the preview, then choose Share → Save to Files.',
+		desktop: 'Computer',
+		desktopGuide:
+			'Choose “Save as PDF” as the destination and A4 paper. Turn off “Headers and footers” to leave out the page address. Use Default or None for margins.',
+		loading: 'Preparing the print page…',
+		loadError: 'The print page could not be loaded. Please try again.',
+		retry: 'Reload print page',
+		printError: 'The print menu could not be opened. Try again in this browser.',
+		notFound: 'CV not found',
+		notFoundDescription:
+			'This CV is not in this browser or has been deleted. Open My CVs to choose another CV.'
+	},
+	dashboard: {
+		pageTitle: 'My CVs — CV Maker',
+		title: 'My CVs',
+		localNote:
+			'Your CVs are stored only in this browser. Clearing browser data also deletes your CVs. Save a backup regularly.',
+		memoryWarning:
+			'This browser is keeping your CVs temporarily. They will be lost when this tab closes. Download your CV and save a backup before closing the tab.',
+		loading: 'Loading CVs on this device…',
+		loadError: 'Your CV list could not be loaded. Try again.',
+		retry: 'Reload',
+		create: 'Create a CV',
+		empty: 'There are no CVs in this browser yet. Create your first CV or restore a backup file.',
+		untitled: 'Untitled CV',
+		nameMissing: 'Name not added yet',
+		roleMissing: 'Target role not added yet',
+		updatedAt: 'Updated',
+		unfinished: 'Not finished',
+		unfinishedDownload:
+			'This CV is not finished yet. You can still download it and continue filling it in later.',
+		kindAts: 'ATS CV',
+		kindCreative: 'Creative CV',
+		continue: 'Continue',
+		edit: 'Edit',
+		download: 'Download',
+		more: 'More actions for {title}',
+		duplicate: 'Duplicate',
+		duplicated: 'A copy of your CV was created.',
+		rename: 'Rename',
+		renameTitle: 'Rename CV',
+		titleLabel: 'CV title',
+		titleRequired: 'Enter a CV title first.',
+		renamed: 'CV title saved.',
+		backupOne: 'Back up this CV',
+		delete: 'Delete',
+		deleteTitle: 'Delete this CV?',
+		deleteDescription:
+			'The CV “{title}” will be permanently deleted from this browser. This cannot be undone. Save a backup first if you still need it.',
+		deleted: 'CV deleted from this device.',
+		actionError: 'That did not work. Please try again.',
+		missing: 'This CV no longer exists. Your CV list has been refreshed.',
+		backupTitle: 'Back up & restore CVs',
+		backupDescription:
+			'Save a JSON file as a backup or to move your CVs to another browser. It includes CV content and photos.',
+		backupAll: 'Back up all CVs',
+		restore: 'Restore from backup',
+		restoring: 'Restoring…',
+		backupError: 'The backup could not be downloaded. Try again.',
+		restoreImported: '{count} CVs restored',
+		restoreCopied: '{count} as copies',
+		restoreSkipped: '{count} skipped',
+		restoreEmpty: 'This backup file does not contain any CVs.',
+		restoreErrors: {
+			tooLarge: 'This backup file is too large. The maximum size is 5 MB.',
+			invalidJson: 'This file is not readable JSON. Choose a .json backup file.',
+			notBackup: 'This is not a CV Maker backup file.',
+			newerVersion:
+				'This backup was made with a newer app version. Update the app before restoring it.'
+		},
+		wipeTitle: 'Finished using a shared device?',
+		wipeDescription:
+			'Delete all CVs, photos, and preferences from this browser. Save a backup first if you still need them.',
+		wipeAction: 'Delete all data on this device',
+		wipeConfirmTitle: 'Delete all data?',
+		wipeConfirmDescription:
+			'All CVs, photos, and preferences will be permanently deleted from this browser. Backup files you have already downloaded will remain. This cannot be undone.',
+		wipeWord: 'DELETE',
+		wipeInput: 'Type {word} to continue.',
+		wipeInputLabel: 'Confirmation word',
+		wipeDone: 'All CV data on this device was deleted.'
 	}
 };

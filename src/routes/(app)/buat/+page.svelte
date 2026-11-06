@@ -94,6 +94,7 @@
 		<h1>{t('wizard.steps.type.title')}</h1>
 		<p>{t('wizard.steps.type.description')}</p>
 		<p class="local-note">{t('wizard.localNote')}</p>
+		<a class="all-cvs" href={resolve('/(app)/cv')}>{t('wizard.allCvs')}</a>
 	</div>
 
 	{#if memory}<p class="notice warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
@@ -191,6 +192,15 @@
 </div>
 
 <style>
+	.all-cvs {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		margin-top: 8px;
+		color: var(--color-brand-ink);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
 	.type-page {
 		max-width: 960px;
 		padding-block: 40px 64px;

@@ -27,6 +27,7 @@ export const en: BaseMessages = {
 	nav: {
 		label: 'Main navigation',
 		create: 'Create CV',
+		myCvs: 'My CVs',
 		menu: 'Menu',
 		faq: 'FAQ',
 		codiosity: 'Codiosity',

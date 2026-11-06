@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { PathnameWithSearchOrHash } from '$app/types';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
 	type Props = {
@@ -85,7 +84,9 @@
 {:else if href}
 	<a
 		{id}
-		href={blocked ? undefined : resolve(href as PathnameWithSearchOrHash)}
+		href={blocked
+			? undefined
+			: resolve(...([href.replace(/^\//, '')] as Parameters<typeof resolve>))}
 		role={blocked ? 'link' : undefined}
 		{title}
 		{target}

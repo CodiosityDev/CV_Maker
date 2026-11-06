@@ -52,6 +52,8 @@ export const appId = {
 		reviewInstruction: 'Klik catatan untuk memperbaiki isian.',
 		issueContext: '{section} — {field}: {message}',
 		editAgain: 'Ubah lagi',
+		goDashboard: 'Ke CV Saya',
+		allCvs: 'Lihat semua CV',
 		optional: 'Opsional',
 		saved: 'Tersimpan ✓',
 		savedMemory: 'Tersimpan sementara',
@@ -75,7 +77,6 @@ export const appId = {
 		loading: 'Menyiapkan panduan…',
 		loadError: 'Panduan belum bisa dimuat. Periksa koneksi lalu coba lagi.',
 		previewNotice: 'Preview memakai ATS Klasik. Desain Creative belum tersedia.',
-		doneAvailability: 'Template lain, unduhan, dan editor belum tersedia.',
 		addSkill: 'Tambah',
 		removeSkill: 'Hapus {skill}',
 		skillsLimit: 'Maksimal {max} keahlian per kelompok.',
@@ -238,7 +239,7 @@ export const appId = {
 			done: {
 				short: 'Selesai',
 				title: 'CV-mu tersimpan',
-				description: 'Kamu masih bisa kembali untuk memperbaiki isinya.'
+				description: 'Unduh CV untuk melamar, atau kembali untuk memperbaiki isinya.'
 			}
 		}
 	},
@@ -250,5 +251,120 @@ export const appId = {
 		open: 'Lihat Preview',
 		error: 'Preview belum bisa dimuat.',
 		retry: 'Muat ulang preview'
+	},
+	exportPanel: {
+		title: 'Unduh CV',
+		pdf: 'PDF untuk melamar',
+		pdfHint: 'Buka halaman cetak, lalu pilih Simpan sebagai PDF.',
+		pdfAtsHint: 'PDF ini berisi teks asli sehingga terbaca ATS.',
+		docx: 'Word (.docx)',
+		docxHint: 'Untuk portal kerja yang meminta file Word.',
+		txt: 'Teks (.txt)',
+		txtHint: 'Unduh isi CV sebagai teks polos.',
+		copy: 'Salin teks',
+		copyHint: 'Untuk ditempel ke formulir portal kerja.',
+		preparing: 'Menyiapkan…',
+		copying: 'Menyalin…',
+		downloadError: 'File belum bisa disiapkan. Coba unduh lagi.',
+		navigationError: 'Perubahan belum tersimpan. Coba lagi sebelum membuka halaman lain.',
+		copied: 'Teks disalin',
+		manualLabel: 'Teks CV untuk disalin',
+		manualHint:
+			'Browser belum mengizinkan penyalinan otomatis. Pilih teks di bawah, lalu salin lewat menu perangkatmu.',
+		selectText: 'Pilih semua teks',
+		backupReminder: 'Simpan backup secara berkala agar isi CV tetap aman.',
+		backupLink: 'Backup di CV Saya'
+	},
+	printPage: {
+		title: 'Simpan CV sebagai PDF',
+		back: 'Kembali ke CV Saya',
+		savePdf: 'Simpan sebagai PDF',
+		guideTitle: 'Cara menyimpan sebagai PDF',
+		android: 'Android · Chrome',
+		androidGuide:
+			'Buka menu ⋮ → Bagikan → Cetak. Pilih “Simpan sebagai PDF”, lalu simpan file ke perangkat.',
+		iphone: 'iPhone · Safari',
+		iphoneGuide:
+			'Ketuk Bagikan → Cetak. Cubit ke luar atau perbesar pratinjau, lalu pilih Bagikan → Simpan ke File.',
+		desktop: 'Komputer',
+		desktopGuide:
+			'Pilih tujuan “Simpan sebagai PDF” dan kertas A4. Matikan “Header dan footer” agar alamat halaman tidak ikut tercetak. Gunakan margin Default atau Tidak ada.',
+		loading: 'Menyiapkan halaman cetak…',
+		loadError: 'Halaman cetak belum bisa dimuat. Coba lagi.',
+		retry: 'Muat ulang halaman cetak',
+		printError: 'Menu cetak belum bisa dibuka. Coba lagi dari browser ini.',
+		notFound: 'CV tidak ditemukan',
+		notFoundDescription:
+			'CV ini tidak ada di browser ini atau sudah dihapus. Buka CV Saya untuk memilih CV lain.'
+	},
+	dashboard: {
+		pageTitle: 'CV Saya — CV Maker',
+		title: 'CV Saya',
+		localNote:
+			'CV kamu hanya tersimpan di browser ini. Jika data browser dihapus, CV ikut hilang. Simpan backup secara berkala.',
+		memoryWarning:
+			'Browser ini hanya menyimpan CV sementara. Data akan hilang saat tab ditutup. Unduh CV dan simpan backup sebelum menutup tab.',
+		loading: 'Memuat CV di perangkat ini…',
+		loadError: 'Daftar CV belum bisa dimuat. Coba lagi.',
+		retry: 'Muat ulang',
+		create: 'Buat CV',
+		empty: 'Belum ada CV di browser ini. Buat CV pertamamu atau pulihkan file backup.',
+		untitled: 'CV tanpa judul',
+		nameMissing: 'Nama belum diisi',
+		roleMissing: 'Posisi tujuan belum diisi',
+		updatedAt: 'Diubah',
+		unfinished: 'Belum selesai',
+		unfinishedDownload:
+			'CV ini belum selesai diisi. Kamu tetap bisa mengunduhnya dan melanjutkan pengisian nanti.',
+		kindAts: 'CV ATS',
+		kindCreative: 'CV Creative',
+		continue: 'Lanjutkan',
+		edit: 'Ubah',
+		download: 'Unduh',
+		more: 'Aksi lain untuk {title}',
+		duplicate: 'Duplikat',
+		duplicated: 'Salinan CV dibuat.',
+		rename: 'Ganti nama',
+		renameTitle: 'Ganti nama CV',
+		titleLabel: 'Judul CV',
+		titleRequired: 'Isi judul CV terlebih dahulu.',
+		renamed: 'Judul CV disimpan.',
+		backupOne: 'Backup CV ini',
+		delete: 'Hapus',
+		deleteTitle: 'Hapus CV ini?',
+		deleteDescription:
+			'CV “{title}” akan dihapus permanen dari browser ini. Tindakan ini tidak bisa diurungkan. Simpan backup terlebih dahulu bila masih diperlukan.',
+		deleted: 'CV dihapus dari perangkat ini.',
+		actionError: 'Tindakan belum berhasil. Coba lagi.',
+		missing: 'CV ini sudah tidak ada. Daftar CV telah diperbarui.',
+		backupTitle: 'Backup & pulihkan CV',
+		backupDescription:
+			'Simpan file JSON sebagai cadangan atau untuk memindahkan CV ke browser lain. File ini mencakup isi CV dan foto.',
+		backupAll: 'Backup semua CV',
+		restore: 'Pulihkan dari backup',
+		restoring: 'Memulihkan…',
+		backupError: 'Backup belum bisa diunduh. Coba lagi.',
+		restoreImported: '{count} CV dipulihkan',
+		restoreCopied: '{count} sebagai salinan',
+		restoreSkipped: '{count} dilewati',
+		restoreEmpty: 'File backup ini tidak berisi CV.',
+		restoreErrors: {
+			tooLarge: 'File backup terlalu besar. Ukuran maksimal 5 MB.',
+			invalidJson: 'File ini bukan JSON yang bisa dibaca. Pilih file backup berformat .json.',
+			notBackup: 'File ini bukan file backup CV Maker.',
+			newerVersion:
+				'Backup ini dibuat dengan versi aplikasi yang lebih baru. Perbarui aplikasi sebelum memulihkannya.'
+		},
+		wipeTitle: 'Selesai memakai perangkat bersama?',
+		wipeDescription:
+			'Hapus semua CV, foto, dan preferensi di browser ini. Simpan backup lebih dulu jika masih diperlukan.',
+		wipeAction: 'Hapus semua data di perangkat ini',
+		wipeConfirmTitle: 'Hapus semua data?',
+		wipeConfirmDescription:
+			'Semua CV, foto, dan preferensi akan dihapus permanen dari browser ini. File backup yang sudah kamu unduh tetap ada. Tindakan ini tidak bisa diurungkan.',
+		wipeWord: 'HAPUS',
+		wipeInput: 'Ketik {word} untuk melanjutkan.',
+		wipeInputLabel: 'Kata konfirmasi',
+		wipeDone: 'Semua data CV di perangkat ini dihapus.'
 	}
 };

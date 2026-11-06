@@ -47,6 +47,8 @@
 				>
 			</summary>
 			<nav aria-label={t('nav.label')}>
+				<a href={resolve('/(app)/buat')} onclick={() => (menuOpen = false)}>{t('nav.create')}</a>
+				<a href={resolve('/(app)/cv')} onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a>
 				<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
 				<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
 			</nav>
@@ -56,6 +58,11 @@
 <main id="main" tabindex="-1">{@render children()}</main>
 
 <style>
+	@media print {
+		.app-header {
+			display: none;
+		}
+	}
 	.app-header {
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-surface);

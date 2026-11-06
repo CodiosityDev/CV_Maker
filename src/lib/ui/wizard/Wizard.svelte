@@ -34,6 +34,8 @@
 	import Dialog from '../Dialog.svelte';
 	import BottomSheet from '../BottomSheet.svelte';
 	import CvPreview from '../CvPreview.svelte';
+	import ExportPanel from '../ExportPanel.svelte';
+	import { toast } from '../toast.svelte.ts';
 	import PersonalStep from './PersonalStep.svelte';
 	import CollectionSteps from './CollectionSteps.svelte';
 
@@ -47,7 +49,9 @@
 			{ skipHistory: true }
 		);
 	}
+	let mounted = true;
 	onDestroy(() => {
+		mounted = false;
 		void store.destroy();
 	});
 	const index = $derived(store.cv.status.wizardStep);
@@ -251,6 +255,21 @@
 			await store.flush();
 			await goto(resolve('/(app)/buat'));
 		} else await move(previousStepIndex(index));
+	}
+	async function flushBeforeLeave(): Promise<boolean> {
+		if (store.externalChange === 'removed') return false;
+		await store.flush();
+		if (store.saveState === 'error') {
+			toast.error(t('wizard.saveError'));
+			return false;
+		}
+		return true;
+	}
+	async function openDashboard(event: MouseEvent) {
+		if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)
+			return;
+		event.preventDefault();
+		if ((await flushBeforeLeave()) && mounted && step === 'done') await goto(resolve('/(app)/cv'));
 	}
 	async function next(event: SubmitEvent) {
 		event.preventDefault();
@@ -551,8 +570,13 @@
 						<p class="hint">{t('wizard.previewNotice')}</p>
 						<CvPreview {model} />
 					{:else if step === 'done'}
-						<p class="ready">{t('wizard.doneAvailability')}</p>
-						<Button variant="secondary" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
+						<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />
+						<div class="done-actions">
+							<Button href="/cv" variant="secondary" onclick={openDashboard}
+								>{t('wizard.goDashboard')}</Button
+							>
+							<Button variant="ghost" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
+						</div>
 						<p class="hint">{t('wizard.previewNotice')}</p>
 						<CvPreview {model} />
 					{/if}
@@ -620,6 +644,12 @@
 </Dialog>
 
 <style>
+	.done-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-block: 24px;
+	}
 	.wizard {
 		width: min(1200px, calc(100% - 32px));
 		margin: 0 auto;
