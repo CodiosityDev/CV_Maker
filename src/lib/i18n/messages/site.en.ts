@@ -40,7 +40,7 @@ export const siteEn: SiteMessages = {
 		creativeTitle: 'Creative CV',
 		creativeCopy: 'For direct applications or portfolios, with an optional photo.',
 		creativeWarning: 'Less suited to ATS portals',
-		creativeDetail: 'Creative designs are not available yet. The preview uses ATS Classic.',
+		creativeDetail: 'Choose from three Creative designs and accent colors at the review step.',
 		privacyCopy: 'Your CV is stored in the browser on your device, without being sent to a server.',
 		privacyLink: 'Read the privacy policy',
 		faqCopy: 'Have a question before you start?',

@@ -34,6 +34,7 @@
 	import Dialog from '../Dialog.svelte';
 	import BottomSheet from '../BottomSheet.svelte';
 	import CvPreview from '../CvPreview.svelte';
+	import TemplatePicker from '../TemplatePicker.svelte';
 	import ExportPanel from '../ExportPanel.svelte';
 	import { toast } from '../toast.svelte.ts';
 	import PersonalStep from './PersonalStep.svelte';
@@ -567,6 +568,7 @@
 								</ul>
 							</div>
 						{:else}<p class="ready" role="status">{t('wizard.reviewReady')}</p>{/if}
+						<TemplatePicker {store} {model} />
 						<p class="hint">{t('wizard.previewNotice')}</p>
 						<CvPreview {model} />
 					{:else if step === 'done'}

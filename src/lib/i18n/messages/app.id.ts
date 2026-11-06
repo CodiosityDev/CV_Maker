@@ -76,7 +76,7 @@ export const appId = {
 		atsPhotoHint: 'Foto tidak ditampilkan pada CV ATS.',
 		loading: 'Menyiapkan panduan…',
 		loadError: 'Panduan belum bisa dimuat. Periksa koneksi lalu coba lagi.',
-		previewNotice: 'Preview memakai ATS Klasik. Desain Creative belum tersedia.',
+		previewNotice: 'Preview mengikuti template yang kamu pilih.',
 		addSkill: 'Tambah',
 		removeSkill: 'Hapus {skill}',
 		skillsLimit: 'Maksimal {max} keahlian per kelompok.',
@@ -243,17 +243,63 @@ export const appId = {
 			}
 		}
 	},
+	templates: {
+		'ats-klasik': { name: 'ATS Klasik', description: 'Susunan sederhana dengan kontak di atas.' },
+		'ats-modern': {
+			name: 'ATS Modern',
+			description: 'Ruang lega dan tanggal yang mudah dipindai.'
+		},
+		'ats-ringkas': {
+			name: 'ATS Ringkas',
+			description: 'Susunan padat agar isi lebih hemat halaman.'
+		},
+		'creative-sidebar': {
+			name: 'Creative Sidebar',
+			description: 'Kontak dan keahlian dalam panel samping.'
+		},
+		'creative-header': {
+			name: 'Creative Header',
+			description: 'Nama dan foto dalam band warna di atas.'
+		},
+		'creative-timeline': {
+			name: 'Creative Timeline',
+			description: 'Pengalaman dan pendidikan mengikuti garis waktu.'
+		}
+	},
+	templatePicker: {
+		title: 'Pilih tampilan CV',
+		description: 'Isi CV tetap sama saat kamu mengganti jenis atau template.',
+		kind: 'Jenis CV',
+		ats: 'CV ATS',
+		creative: 'CV Creative',
+		templates: 'Pilihan template',
+		creativeNotice: 'Kurang cocok untuk portal ATS',
+		selected: 'Dipilih',
+		choose: 'Pilih template',
+		colorsLabel: 'Warna aksen',
+		thumbnailLoading: 'Menyiapkan contoh…',
+		thumbnailError: 'Contoh belum bisa dimuat.',
+		colors: {
+			periwinkle: 'Periwinkle',
+			mint: 'Mint',
+			peach: 'Peach',
+			coral: 'Coral lembut',
+			sky: 'Biru langit',
+			lavender: 'Lavender'
+		}
+	},
 	preview: {
 		empty: 'Isi data diri untuk melihat preview.',
 		label: 'Preview CV',
 		loading: 'Menyiapkan preview…',
-		caption: 'ATS Klasik · A4',
+		caption: '{template} · A4',
 		open: 'Lihat Preview',
 		error: 'Preview belum bisa dimuat.',
 		retry: 'Muat ulang preview'
 	},
 	exportPanel: {
 		title: 'Unduh CV',
+		simpleLayout: 'Word dan teks memakai tata letak sederhana agar mudah dibaca portal kerja.',
 		pdf: 'PDF untuk melamar',
 		pdfHint: 'Buka halaman cetak, lalu pilih Simpan sebagai PDF.',
 		pdfAtsHint: 'PDF ini berisi teks asli sehingga terbaca ATS.',

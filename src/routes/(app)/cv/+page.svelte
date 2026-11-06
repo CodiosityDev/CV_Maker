@@ -16,6 +16,7 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
+	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
 
 	let cvs = $state<CVMeta[]>([]);
@@ -340,6 +341,11 @@
 					<p class="target-role">{cv.targetRole || t('dashboard.roleMissing')}</p>
 					<div class="cv-meta">
 						<span>{t(cv.kind === 'ats' ? 'dashboard.kindAts' : 'dashboard.kindCreative')}</span>
+						<span
+							>{t(
+								`templates.${resolveTemplate(cv.templateId, cv.kind).id}.name` as MessageKey
+							)}</span
+						>
 						{#if !cv.wizardCompleted}<span class="unfinished">{t('dashboard.unfinished')}</span
 							>{/if}
 					</div>

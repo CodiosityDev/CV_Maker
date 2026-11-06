@@ -37,7 +37,7 @@ export const siteId = {
 		creativeTitle: 'CV Creative',
 		creativeCopy: 'Untuk lamaran langsung atau portofolio, dengan foto opsional.',
 		creativeWarning: 'Kurang cocok untuk portal ATS',
-		creativeDetail: 'Desain Creative belum tersedia. Preview memakai ATS Klasik.',
+		creativeDetail: 'Pilih tiga desain Creative dan warna aksen di langkah tinjau.',
 		privacyCopy: 'Data CV tersimpan di browser pada perangkatmu, tanpa dikirim ke server.',
 		privacyLink: 'Baca kebijakan privasi',
 		faqCopy: 'Ada pertanyaan sebelum mulai?',

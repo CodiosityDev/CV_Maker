@@ -1,41 +1,55 @@
 <script lang="ts">
-	import { onMount, untrack, type Component } from 'svelte';
+	import { untrack } from 'svelte';
 	import type { RenderModel } from '#lib/core/render/index.ts';
-	import { t } from '#lib/i18n/index.svelte.ts';
+	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+	import {
+		resolveTemplate,
+		type TemplateComponent,
+		type TemplateMeta
+	} from '#lib/templates/registry.ts';
 
 	let { model }: { model: RenderModel } = $props();
+	const requestedMeta = $derived(resolveTemplate(model.templateId, model.kind));
 	let renderedModel = $state.raw<RenderModel>(untrack(() => model));
-	let Template = $state<Component<{ model: RenderModel }>>();
+	let displayedMeta = $state.raw<TemplateMeta>(untrack(() => requestedMeta));
+	let Template = $state<TemplateComponent>();
 	let failed = $state(false);
+	let retryVersion = $state(0);
 	let container = $state<HTMLDivElement>();
 	let paper = $state<HTMLDivElement>();
 	let scale = $state(0);
 	let height = $state(0);
-	let mounted = false;
 
 	$effect(() => {
 		const next = model;
+		if (requestedMeta !== displayedMeta || !Template) return;
 		const timer = setTimeout(() => {
 			renderedModel = next;
 		}, 150);
 		return () => clearTimeout(timer);
 	});
 
-	async function loadTemplate() {
+	$effect(() => {
+		const meta = requestedMeta;
+		// Retrying starts a fresh request even when the selected metadata is unchanged.
+		void retryVersion;
+		let cancelled = false;
 		failed = false;
-		try {
-			const module = await import('#lib/templates/ats/AtsKlasik.svelte');
-			if (mounted) Template = module.default;
-		} catch {
-			if (mounted) failed = true;
-		}
-	}
-
-	onMount(() => {
-		mounted = true;
-		void loadTemplate();
+		void (async () => {
+			try {
+				const module = await meta.load();
+				if (cancelled) return;
+				untrack(() => {
+					Template = module.default;
+					displayedMeta = meta;
+					renderedModel = model;
+				});
+			} catch {
+				if (!cancelled) failed = true;
+			}
+		})();
 		return () => {
-			mounted = false;
+			cancelled = true;
 		};
 	});
 
@@ -67,13 +81,15 @@
 </script>
 
 <figure class="cv-preview" aria-label={t('preview.label')} data-testid="cv-preview">
-	{#if !model.personal.fullName && !model.personal.headline && !model.personal.email && !model.personal.phone && !model.sections.length}
+	{#if !renderedModel.personal.fullName && !renderedModel.personal.headline && !renderedModel.personal.email && !renderedModel.personal.phone && !renderedModel.sections.length}
 		<p class="empty">{t('preview.empty')}</p>
 	{/if}
-	{#if !Template}
+	{#if failed || !Template}
 		<div class="loading" role="status">
 			<p>{t(failed ? 'preview.error' : 'preview.loading')}</p>
-			{#if failed}<button type="button" onclick={loadTemplate}>{t('preview.retry')}</button>{/if}
+			{#if failed}
+				<button type="button" onclick={() => (retryVersion += 1)}>{t('preview.retry')}</button>
+			{/if}
 		</div>
 	{/if}
 	<div class="viewport" bind:this={container} style:height="{height}px">
@@ -81,7 +97,11 @@
 			{#if Template}<Template model={renderedModel} />{/if}
 		</div>
 	</div>
-	<figcaption>{t('preview.caption')}</figcaption>
+	<figcaption>
+		{t('preview.caption', {
+			template: t(`templates.${displayedMeta.id}.name` as MessageKey)
+		})}
+	</figcaption>
 </figure>
 
 <style>
