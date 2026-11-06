@@ -10,11 +10,13 @@ import { openIdbBackend } from './idb-backend';
 import { createMemoryBackend } from './memory-backend';
 import { createRepositories } from './repo';
 import { createBackupRepository } from './backup';
+import { incognito, incognitoBackend } from './incognito.svelte.ts';
 
 let backendPromise: Promise<StorageBackend> | undefined;
 
 /** Opens IndexedDB once; falls back to in-memory storage if it is unavailable. */
 function getBackend(): Promise<StorageBackend> {
+	if (incognito.active) return Promise.resolve(incognitoBackend());
 	backendPromise ??= (async () => {
 		if (typeof indexedDB === 'undefined') return createMemoryBackend();
 		try {
@@ -46,3 +48,4 @@ export type { StorageBackend, StorageMode, StoredAsset } from './backend';
 export { createMemoryBackend } from './memory-backend';
 export { openIdbBackend, DB_NAME } from './idb-backend';
 export { onExternalChange, TAB_ID, type SyncEvent } from './sync';
+export { incognito, INCOGNITO_SESSION_KEY } from './incognito.svelte.ts';

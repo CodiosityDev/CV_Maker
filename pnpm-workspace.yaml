@@ -1,0 +1,3 @@
+overrides:
+  # GHSA-g3hv-75wg-m249 (ReDoS): eslint still depends on minimatch 10. Dev tooling only.
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
