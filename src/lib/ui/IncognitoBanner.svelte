@@ -54,7 +54,7 @@
 <Dialog
 	bind:open={infoOpen}
 	title={t('incognito.activeTitle')}
-	description={t('incognito.activeDescription')}
+	description={t('incognito.startDescription')}
 >
 	<p>{t('incognito.idleDescription')}</p>
 	{#if expiry}<p>{t('incognito.expires', { time: expiryTime })}</p>{/if}
