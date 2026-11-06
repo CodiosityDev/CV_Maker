@@ -194,6 +194,9 @@ test('an empty target keeps popular soft skills and a target link, while suggest
 test('a failed suggestion-data download leaves editable fields and autosave working', async ({
 	page
 }) => {
+	// Every chunk is proxied through route.fetch() below, which makes page loads much slower
+	// (especially with mobile emulation) — allow more time than the default 5 s per assertion.
+	const slow = expect.configure({ timeout: 20_000 });
 	let blocked = false;
 	await page.route('**/_app/immutable/chunks/*.js', async (route) => {
 		const response = await route.fetch();
@@ -209,15 +212,17 @@ test('a failed suggestion-data download leaves editable fields and autosave work
 	});
 	try {
 		await start(page);
-		await expect.poll(() => blocked).toBe(true);
+		await slow.poll(() => blocked).toBe(true);
 		const target = page.getByRole('combobox', { name: 'Posisi yang dituju', exact: true });
 		const custom = 'Koordinator Program Pilihan Saya';
 		await target.fill(custom);
-		await expect(target).toHaveValue(custom);
-		await expect(target).toHaveAttribute('aria-expanded', 'false');
-		await expect(page.getByTestId('save-status')).toHaveText('Tersimpan ✓');
+		await slow(target).toHaveValue(custom);
+		await slow(target).toHaveAttribute('aria-expanded', 'false');
+		await slow(page.getByTestId('save-status')).toHaveText('Tersimpan ✓');
+		// Persistence check only: reload without the slow interception.
+		await page.unrouteAll({ behavior: 'wait' });
 		await page.reload();
-		await expect(target).toHaveValue(custom);
+		await slow(target).toHaveValue(custom);
 	} finally {
 		// Drain fetch handlers before Playwright disposes the page and starts the next test.
 		await page.unrouteAll({ behavior: 'wait' });
