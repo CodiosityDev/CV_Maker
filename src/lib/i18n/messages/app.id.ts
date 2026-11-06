@@ -363,7 +363,8 @@ export const appId = {
 		wipeConfirmDescription:
 			'Semua CV, foto, dan preferensi akan dihapus permanen dari browser ini. File backup yang sudah kamu unduh tetap ada. Tindakan ini tidak bisa diurungkan.',
 		wipeWord: 'HAPUS',
-		wipeInput: 'Ketik {word} untuk melanjutkan',
+		wipeInput: 'Ketik {word} untuk melanjutkan.',
+		wipeInputLabel: 'Kata konfirmasi',
 		wipeDone: 'Semua data CV di perangkat ini dihapus.'
 	}
 };

@@ -39,6 +39,7 @@
 	let deleteCv = $state<CVMeta>();
 	let wipeOpen = $state(false);
 	let wipeText = $state('');
+	const wipeInstruction = $derived(t('dashboard.wipeInput').split('{word}'));
 	let active = false;
 	let listRequest = 0;
 	const importErrorKeys: Record<ImportErrorCode, MessageKey> = {
@@ -253,7 +254,7 @@
 
 	async function wipe(event: SubmitEvent) {
 		event.preventDefault();
-		if (busy || wipeText !== t('dashboard.wipeWord')) return;
+		if (busy || wipeText.trim().toUpperCase() !== t('dashboard.wipeWord')) return;
 		busy = true;
 		try {
 			await storage.wipeAll();
@@ -474,11 +475,17 @@
 	description={t('dashboard.wipeConfirmDescription')}
 >
 	<form onsubmit={wipe}>
+		<p id="wipe-instruction" class="wipe-instruction">
+			{wipeInstruction[0]}<strong class="confirm-word">{t('dashboard.wipeWord')}</strong
+			>{wipeInstruction[1]}
+		</p>
 		<Input
-			label={t('dashboard.wipeInput', { word: t('dashboard.wipeWord') })}
+			label={t('dashboard.wipeInputLabel')}
 			bind:value={wipeText}
 			disabled={busy}
+			aria-describedby="wipe-instruction"
 			autocomplete="off"
+			autocapitalize="characters"
 			spellcheck={false}
 		/>
 		<div class="dialog-actions">
@@ -489,13 +496,28 @@
 				type="submit"
 				variant="danger"
 				loading={busy}
-				disabled={wipeText !== t('dashboard.wipeWord')}>{t('dashboard.wipeAction')}</Button
+				disabled={wipeText.trim().toUpperCase() !== t('dashboard.wipeWord')}
+				>{t('dashboard.wipeAction')}</Button
 			>
 		</div>
 	</form>
 </Dialog>
 
 <style>
+	.wipe-instruction {
+		margin-bottom: 16px;
+		font-size: 0.875rem;
+		line-height: 1.8;
+	}
+	.confirm-word {
+		padding: 2px 6px;
+		border-radius: 4px;
+		background: var(--color-coral-50);
+		color: var(--color-ink);
+		font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+		font-weight: 700;
+		white-space: nowrap;
+	}
 	.dashboard {
 		max-width: 1120px;
 		padding-block: 32px 64px;

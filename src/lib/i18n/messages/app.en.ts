@@ -365,7 +365,8 @@ export const appEn: AppMessages = {
 		wipeConfirmDescription:
 			'All CVs, photos, and preferences will be permanently deleted from this browser. Backup files you have already downloaded will remain. This cannot be undone.',
 		wipeWord: 'DELETE',
-		wipeInput: 'Type {word} to continue',
+		wipeInput: 'Type {word} to continue.',
+		wipeInputLabel: 'Confirmation word',
 		wipeDone: 'All CV data on this device was deleted.'
 	}
 };

@@ -108,9 +108,9 @@ test('downloaded backup restores all CVs after typed wipe and malformed JSON cha
 	});
 	await expect(confirm).toBeDisabled();
 	const input = wipe.getByRole('textbox');
-	await input.fill('hapus');
+	await input.fill('HAPU');
 	await expect(confirm).toBeDisabled();
-	await input.fill('HAPUS');
+	await input.fill('hapus ');
 	await expect(confirm).toBeEnabled();
 	await confirm.click();
 	await expect(wipe).not.toBeVisible();
@@ -135,6 +135,56 @@ test('downloaded backup restores all CVs after typed wipe and malformed JSON cha
 	);
 	await page.reload();
 	await expect(cards(page)).toHaveCount(2);
+});
+
+test('wipe confirmation highlights the localized word and accepts keyboard casing and spaces', async ({
+	page
+}) => {
+	await page.goto('/cv');
+	for (const copy of [
+		{
+			locale: 'id',
+			word: 'HAPUS',
+			instruction: 'Ketik HAPUS untuk melanjutkan.',
+			label: 'Kata konfirmasi',
+			action: 'Hapus semua data di perangkat ini',
+			title: 'Hapus semua data?',
+			partial: 'HAPU',
+			accepted: 'hapus '
+		},
+		{
+			locale: 'en',
+			word: 'DELETE',
+			instruction: 'Type DELETE to continue.',
+			label: 'Confirmation word',
+			action: 'Delete all data on this device',
+			title: 'Delete all data?',
+			partial: 'DELET',
+			accepted: 'delete '
+		}
+	]) {
+		if (copy.locale === 'en') {
+			await page.getByRole('button', { name: 'English', exact: true }).click();
+			await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+		}
+		await page.getByRole('button', { name: copy.action, exact: true }).click();
+		const dialog = page.getByRole('dialog', { name: copy.title, exact: true });
+		const instruction = dialog.locator('#wipe-instruction');
+		await expect(instruction).toHaveText(copy.instruction);
+		await expect(instruction.locator('strong')).toHaveCount(1);
+		await expect(instruction.locator('strong.confirm-word')).toHaveText(copy.word);
+		const input = dialog.getByRole('textbox', { name: copy.label, exact: true });
+		await expect(input).toHaveAttribute('aria-describedby', /(^|\s)wipe-instruction(\s|$)/);
+		await expect(input).toHaveAttribute('autocapitalize', 'characters');
+		const confirm = dialog.getByRole('button', { name: copy.action, exact: true });
+		await input.fill(copy.partial);
+		await expect(confirm).toBeDisabled();
+		await input.fill(copy.accepted);
+		await expect(confirm).toBeEnabled();
+		await confirm.click();
+		await expect(dialog).not.toBeVisible();
+		await expect(page.getByTestId('dashboard-empty')).toBeVisible();
+	}
 });
 
 test('dashboard receives actual saves and renames from another tab', async ({ page, context }) => {
