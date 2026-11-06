@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { cvRepo, storage } from '#lib/core/storage/index.ts';
+	import { cvRepo, incognito, storage } from '#lib/core/storage/index.ts';
 	import type { CVKind, CVMeta } from '#lib/core/schema/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { i18n, t } from '#lib/i18n/index.svelte.ts';
@@ -10,6 +9,7 @@
 	import Card from '#lib/ui/Card.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
+	import IncognitoStart from '#lib/ui/IncognitoStart.svelte';
 
 	let guidance = $state.raw<Guidance | null>(null);
 	let unfinished = $state<CVMeta[]>([]);
@@ -51,7 +51,11 @@
 		};
 	});
 
-	onMount(() => {
+	$effect(() => {
+		void incognito.active;
+		void incognito.expiredAt;
+		unfinished = [];
+		listError = false;
 		let active = true;
 		void Promise.all([cvRepo.list(), storage.getMode()]).then(
 			([cvs, mode]) => {
@@ -100,6 +104,9 @@
 	{#if memory}<p class="notice warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
 	{#if listError}<p class="notice warning" role="status">{t('wizard.loadError')}</p>{/if}
 	{#if createError}<p class="notice error" role="alert">{t('wizard.createError')}</p>{/if}
+	{#if incognito.active && incognito.expiredAt}<p class="notice" role="status">
+			{t('incognito.expiredMessage')}
+		</p>{/if}
 
 	{#if unfinished.length}
 		<section class="resume" aria-labelledby="resume-title">
@@ -189,6 +196,7 @@
 	{:else}
 		<p class="notice" role="status">{t('wizard.loading')}</p>
 	{/if}
+	<IncognitoStart disabled={creating !== null} />
 </div>
 
 <style>

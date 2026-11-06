@@ -2,20 +2,14 @@
 	import { onMount, tick } from 'svelte';
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
-	import {
-		cvRepo,
-		backupRepo,
-		storage,
-		onExternalChange,
-		BackupError,
-		type ImportErrorCode
-	} from '#lib/core/storage/index.ts';
-	import { backupFileName, downloadBlob } from '#lib/core/export/index.ts';
+	import { cvRepo, incognito, storage, onExternalChange } from '#lib/core/storage/index.ts';
 	import { i18n, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
+	import IncognitoStart from '#lib/ui/IncognitoStart.svelte';
+	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
 
@@ -24,10 +18,7 @@
 	let listError = $state(false);
 	let memory = $state(false);
 	let busy = $state(false);
-	let restoring = $state(false);
-	let restoreMessage = $state('');
-	let restoreError = $state('');
-	let restoreInput = $state<HTMLInputElement>();
+	let endOpen = $state(false);
 	let menuOpen = $state(false);
 	let menuCv = $state<CVMeta>();
 	let exportOpen = $state(false);
@@ -43,18 +34,20 @@
 	const wipeInstruction = $derived(t('dashboard.wipeInput').split('{word}'));
 	let active = false;
 	let listRequest = 0;
-	const importErrorKeys: Record<ImportErrorCode, MessageKey> = {
-		'too-large': 'dashboard.restoreErrors.tooLarge',
-		'invalid-json': 'dashboard.restoreErrors.invalidJson',
-		'not-a-backup': 'dashboard.restoreErrors.notBackup',
-		'newer-version': 'dashboard.restoreErrors.newerVersion'
-	};
 
 	async function refresh() {
 		const request = ++listRequest;
+		const session = incognito.active;
+		const expiredAt = incognito.expiredAt;
 		try {
 			const [list, mode] = await Promise.all([cvRepo.list(), storage.getMode()]);
-			if (!active || request !== listRequest) return;
+			if (
+				!active ||
+				request !== listRequest ||
+				session !== incognito.active ||
+				expiredAt !== incognito.expiredAt
+			)
+				return;
 			cvs = list;
 			memory = mode === 'memory';
 			listError = false;
@@ -98,6 +91,37 @@
 		};
 	});
 
+	function clearDialogs() {
+		menuOpen = false;
+		menuCv = undefined;
+		renameOpen = false;
+		renameCv = undefined;
+		renameTitle = '';
+		deleteOpen = false;
+		deleteCv = undefined;
+		exportOpen = false;
+		exportCv = undefined;
+		wipeOpen = false;
+		wipeText = '';
+	}
+
+	async function sessionStarted() {
+		cvs = [];
+		clearDialogs();
+		memory = false;
+		listError = false;
+		loading = true;
+		await refresh();
+	}
+
+	$effect(() => {
+		if (incognito.expiredAt && active) {
+			cvs = [];
+			clearDialogs();
+			void refresh();
+		}
+	});
+
 	function more(cv: CVMeta) {
 		menuCv = cv;
 		menuOpen = true;
@@ -105,10 +129,14 @@
 
 	async function showExport(cv: CVMeta, trigger: EventTarget | null) {
 		if (busy) return;
+		const session = incognito.active;
+		const expiredAt = incognito.expiredAt;
+		const sameSession = () =>
+			active && session === incognito.active && expiredAt === incognito.expiredAt;
 		busy = true;
 		try {
 			const doc = await cvRepo.get(cv.id);
-			if (!active) return;
+			if (!sameSession()) return;
 			if (!doc) {
 				toast.info(t('dashboard.missing'));
 				await refresh();
@@ -117,7 +145,7 @@
 			exportCv = doc;
 			busy = false;
 			await tick();
-			if (!active) return;
+			if (!sameSession() || exportCv?.id !== cv.id) return;
 			// Touch activation need not focus buttons; give the dialog a reliable return target.
 			if (trigger instanceof HTMLElement && trigger.isConnected)
 				trigger.focus({ preventScroll: true });
@@ -202,57 +230,6 @@
 		}
 	}
 
-	async function backup(ids?: string[]) {
-		if (busy) return;
-		busy = true;
-		menuOpen = false;
-		try {
-			const blob = await backupRepo.export(ids);
-			if (active) downloadBlob(blob, backupFileName());
-		} catch {
-			if (active) toast.error(t('dashboard.backupError'));
-		} finally {
-			if (active) busy = false;
-		}
-	}
-
-	async function restore(event: Event) {
-		const input = event.currentTarget as HTMLInputElement;
-		const file = input.files?.[0];
-		input.value = '';
-		if (!file || busy) return;
-		busy = true;
-		restoring = true;
-		restoreError = '';
-		restoreMessage = '';
-		try {
-			const result = await backupRepo.import(file);
-			if (!active) return;
-			restoreMessage =
-				[
-					result.imported && t('dashboard.restoreImported', { count: result.imported }),
-					result.copied && t('dashboard.restoreCopied', { count: result.copied }),
-					result.skipped && t('dashboard.restoreSkipped', { count: result.skipped })
-				]
-					.filter(Boolean)
-					.join(' · ') || t('dashboard.restoreEmpty');
-			await refresh();
-		} catch (error) {
-			if (active) {
-				restoreError = t(
-					error instanceof BackupError ? importErrorKeys[error.code] : 'dashboard.actionError'
-				);
-				// A storage failure can occur after some CVs were imported; show the actual list.
-				await refresh();
-			}
-		} finally {
-			if (active) {
-				busy = false;
-				restoring = false;
-			}
-		}
-	}
-
 	async function wipe(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy || wipeText.trim().toUpperCase() !== t('dashboard.wipeWord')) return;
@@ -262,8 +239,6 @@
 			if (!active) return;
 			wipeOpen = false;
 			wipeText = '';
-			restoreMessage = '';
-			restoreError = '';
 			toast.success(t('dashboard.wipeDone'));
 			await refresh();
 		} catch {
@@ -286,9 +261,6 @@
 	<button type="button" disabled={busy} onclick={() => openRename(cv)}
 		>{t('dashboard.rename')}</button
 	>
-	<button type="button" disabled={busy} onclick={() => backup([cv.id])}
-		>{t('dashboard.backupOne')}</button
-	>
 	<button type="button" class="delete-action" disabled={busy} onclick={() => openDelete(cv)}
 		>{t('dashboard.delete')}</button
 	>
@@ -296,11 +268,17 @@
 
 <div class="site-container dashboard">
 	<div class="page-heading">
-		<h1>{t('dashboard.title')}</h1>
+		<div>
+			<h1>{t('dashboard.title')}</h1>
+			{#if incognito.active}<p class="session-label">{t('incognito.sessionLabel')}</p>{/if}
+		</div>
 		<Button href="/buat">{t('dashboard.create')}</Button>
 	</div>
-	<p class="local-note">{t('dashboard.localNote')}</p>
+	{#if !incognito.active}<p class="local-note">{t('dashboard.localNote')}</p>{/if}
 	{#if memory}<p class="memory-warning" role="status">{t('dashboard.memoryWarning')}</p>{/if}
+	{#if incognito.active && incognito.expiredAt}
+		<p class="session-notice" role="status">{t('incognito.expiredMessage')}</p>
+	{/if}
 
 	{#if listError}
 		<div class="list-error" role="alert">
@@ -372,54 +350,36 @@
 		</div>
 	{/if}
 
-	<section class="backup-section" aria-labelledby="backup-heading">
-		<h2 id="backup-heading">{t('dashboard.backupTitle')}</h2>
-		<p>{t('dashboard.backupDescription')}</p>
-		<div class="backup-actions">
-			<Button variant="secondary" disabled={busy || !cvs.length} onclick={() => backup()}
-				>{t('dashboard.backupAll')}</Button
+	{#if incognito.active}
+		<section class="session-end" aria-labelledby="session-end-heading">
+			<div>
+				<h2 id="session-end-heading">{t('incognito.endTitle')}</h2>
+				<p>{t('incognito.endDescription')}</p>
+			</div>
+			<Button variant="secondary" disabled={busy || loading} onclick={() => (endOpen = true)}
+				>{t('incognito.endAction')}</Button
 			>
+		</section>
+	{:else}
+		<IncognitoStart disabled={busy || loading} onstart={sessionStarted} />
+		<section class="danger-zone" aria-labelledby="wipe-heading">
+			<div>
+				<h2 id="wipe-heading">{t('dashboard.wipeTitle')}</h2>
+				<p>{t('dashboard.wipeDescription')}</p>
+			</div>
 			<Button
-				variant="secondary"
-				disabled={busy}
-				loading={restoring}
-				onclick={() => restoreInput?.click()}
-				>{t(restoring ? 'dashboard.restoring' : 'dashboard.restore')}</Button
+				variant="ghost"
+				disabled={busy || loading}
+				onclick={() => {
+					wipeText = '';
+					wipeOpen = true;
+				}}>{t('dashboard.wipeAction')}</Button
 			>
-			<input
-				bind:this={restoreInput}
-				class="sr-only"
-				tabindex="-1"
-				type="file"
-				accept="application/json,.json"
-				aria-label={t('dashboard.restore')}
-				aria-invalid={restoreError ? true : undefined}
-				aria-describedby={restoreError ? 'restore-backup-error' : undefined}
-				disabled={busy}
-				onchange={restore}
-			/>
-		</div>
-		{#if restoreMessage}<p class="restore-result" role="status">{restoreMessage}</p>{/if}
-		{#if restoreError}<p id="restore-backup-error" class="restore-error" role="alert">
-				{restoreError}
-			</p>{/if}
-	</section>
-
-	<section class="danger-zone" aria-labelledby="wipe-heading">
-		<div>
-			<h2 id="wipe-heading">{t('dashboard.wipeTitle')}</h2>
-			<p>{t('dashboard.wipeDescription')}</p>
-		</div>
-		<Button
-			variant="ghost"
-			disabled={busy || loading}
-			onclick={() => {
-				wipeText = '';
-				wipeOpen = true;
-			}}>{t('dashboard.wipeAction')}</Button
-		>
-	</section>
+		</section>
+	{/if}
 </div>
+
+<IncognitoEndDialog bind:open={endOpen} />
 
 <Dialog
 	bind:open={menuOpen}
@@ -446,6 +406,7 @@
 			bind:value={renameTitle}
 			maxlength={LIMITS.cvTitle}
 			showCounter
+			autocomplete={incognito.active ? 'off' : undefined}
 			required
 			disabled={busy}
 			error={renameError ? t('dashboard.titleRequired') : undefined}
@@ -550,6 +511,20 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-mint-50);
 		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		line-height: 1.7;
+	}
+	.session-label {
+		margin-top: 4px;
+		color: var(--color-brand-ink);
+		font-size: 0.875rem;
+	}
+	.session-notice {
+		margin-block: 20px;
+		padding: 16px 20px;
+		border-radius: var(--radius-lg);
+		background: var(--color-brand-50);
+		color: var(--color-ink);
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}
@@ -703,33 +678,15 @@
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}
-	.backup-section {
-		margin-top: 40px;
-		padding-top: 28px;
-		border-top: 1px solid var(--color-border);
-	}
-	.backup-section > p,
-	.danger-zone p {
+	.danger-zone p,
+	.session-end p {
 		margin-top: 8px;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}
-	.backup-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-		margin-top: 20px;
-	}
-	.backup-section .restore-result {
-		margin-top: 20px;
-		color: var(--color-text);
-	}
-	.backup-section .restore-error {
-		margin-top: 20px;
-		color: var(--color-danger);
-	}
-	.danger-zone {
+	.danger-zone,
+	.session-end {
 		display: grid;
 		justify-items: start;
 		gap: 16px;
@@ -738,7 +695,11 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-coral-50);
 	}
-	.danger-zone h2 {
+	.session-end {
+		background: var(--color-brand-50);
+	}
+	.danger-zone h2,
+	.session-end h2 {
 		font-size: 1rem;
 	}
 	.danger-zone :global(.button) {

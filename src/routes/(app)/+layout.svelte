@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { assetRepo } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
+	import { initIncognitoUiContext } from '#lib/ui/incognito-context.ts';
+	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+	initIncognitoUiContext();
 	let menuOpen = $state(false);
 	let menu: HTMLDetailsElement | undefined = $state();
 	function closeMenu(event: KeyboardEvent) {
@@ -24,6 +27,9 @@
 </script>
 
 <svelte:window
+	onbeforeunload={(event) => {
+		if (incognito.active && incognito.hasData) event.preventDefault();
+	}}
 	onkeydown={closeMenu}
 	onclick={(event) => {
 		if (event.target instanceof Node && !menu?.contains(event.target)) menuOpen = false;
@@ -55,6 +61,7 @@
 		</details>
 	</div>
 </header>
+<IncognitoBanner />
 <main id="main" tabindex="-1">{@render children()}</main>
 
 <style>

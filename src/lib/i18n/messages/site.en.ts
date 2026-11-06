@@ -31,7 +31,7 @@ export const siteEn: SiteMessages = {
 			'Add your personal details, education, experience, and skills with tips and examples.',
 		reviewTitle: 'Review your CV',
 		reviewCopy:
-			'Check your content and contact details in the preview. Downloads are being prepared.',
+			'Check your content and contact details in the preview, then download PDF, Word, or text.',
 		typeTitle: 'ATS or Creative',
 		atsTitle: 'ATS CV',
 		atsCopy:
@@ -57,14 +57,16 @@ export const siteEn: SiteMessages = {
 		atsAnswer:
 			'An ATS (Applicant Tracking System) helps companies manage applications. A CV with a simple structure is easier for systems to read, but does not guarantee selection.',
 		freeQuestion: 'Is it really free?',
-		freeAnswer:
-			'Yes. Creating a CV is free and does not require an account. Downloads are being prepared.',
+		freeAnswer: 'Yes. Creating and downloading a CV is free and does not require an account.',
 		storageQuestion: 'Where is my data stored?',
 		storageAnswer:
 			'CV data is stored in your browser on the device you are using. It is not sent to a server and does not automatically move to another device.',
 		deletedQuestion: 'What if my browser data is erased?',
 		deletedAnswer:
-			'CVs stored in that browser will be lost. JSON backup is not available yet, so avoid clearing site data while you still need your CV.',
+			'CVs stored in that browser will be lost. Download PDF/Word files for your records before clearing browser data.',
+		incognitoQuestion: 'I use a public or shared computer. Is it safe?',
+		incognitoAnswer:
+			'Turn on Incognito Mode before creating a CV: its content stays only in this tab and disappears when the tab is closed, refreshed, or left unchanged for 3 hours. For maximum privacy, also open an incognito/private browser window (Ctrl+Shift+N / ⌘+Shift+N). Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
 		mobileQuestion: 'Can I use it on my phone?',
 		mobileAnswer: 'Yes, directly in your phone, tablet, or computer browser.',
 		englishQuestion: 'Is English available?',
@@ -92,11 +94,11 @@ export const siteEn: SiteMessages = {
 		deleteTitle: 'Deleting your data',
 		deleteCopy:
 			'Clear this site’s data through your browser settings. This removes CVs, photos, and the language preference stored in that browser.',
-		backupTitle: 'If browser data is erased',
-		backupCopy:
-			'Clearing browser data, a broken device, or changing browsers can mean losing your CV. Downloads and JSON backup are not available yet. Avoid clearing site data while you still need your CV.',
+		lossTitle: 'If browser data is erased',
+		lossCopy:
+			'Clearing browser data, a broken device, or changing browsers can mean losing your CV. Download PDF/Word files for your records before clearing browser data.',
 		sharedCopy:
-			'On a public computer, clear site data when you finish so the next user cannot open your CV.',
+			'On a shared computer, turn on Incognito Mode before creating your CV. Data stays only in this tab, disappears when the tab is closed or refreshed, and is erased automatically after 3 hours without changes. Download your CV before finishing, delete the files from the Downloads folder, choose End & erase, then close the tab. Do not save passwords or accounts in the browser.',
 		back: 'Back to home'
 	},
 	about: {

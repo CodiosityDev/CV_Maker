@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const cards = (page: Page) => page.getByTestId('cv-card');
@@ -81,22 +80,29 @@ test('dashboard duplicates, renames persistently and confirms permanent removal'
 	expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('downloaded backup restores all CVs after typed wipe and malformed JSON changes nothing', async ({
+test('dashboard has no data backup actions and typed wipe permanently removes CVs', async ({
 	page
 }) => {
-	const title = 'CV Cadangan Nadia';
+	const title = 'CV Arsip Nadia';
 	await createCv(page, title);
 	await cardAction(page, cards(page).first(), 'Duplikat');
 	await expect(cards(page)).toHaveCount(2);
-	const pendingDownload = page.waitForEvent('download');
-	await page.getByRole('button', { name: 'Backup semua CV', exact: true }).click();
-	const download = await pendingDownload;
-	expect(download.suggestedFilename()).toMatch(/^CVMaker_Backup_\d{4}-\d{2}-\d{2}\.json$/);
-	const backupPath = await download.path();
-	expect(backupPath).not.toBeNull();
-	const contents = await readFile(backupPath!, 'utf8');
-	expect(contents).toContain('Nadia Putri');
-	expect(contents).toContain(title);
+	const removedActions = /backup|back up|pulihkan|restore/i;
+	await expect(page.getByRole('button', { name: removedActions })).toHaveCount(0);
+	await expect(page.getByRole('link', { name: removedActions })).toHaveCount(0);
+	await expect(page.locator('input[type="file"]')).toHaveCount(0);
+	const more = cards(page)
+		.first()
+		.getByRole('button', { name: /^Aksi lain untuk / });
+	if (await more.isVisible()) {
+		await more.click();
+		await expect(page.getByRole('dialog')).toBeVisible();
+		await expect(
+			page.getByRole('dialog').getByRole('button', { name: removedActions })
+		).toHaveCount(0);
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('dialog')).not.toBeVisible();
+	}
 
 	await page
 		.getByRole('button', { name: 'Hapus semua data di perangkat ini', exact: true })
@@ -116,25 +122,10 @@ test('downloaded backup restores all CVs after typed wipe and malformed JSON cha
 	await expect(wipe).not.toBeVisible();
 	await expect(page.getByTestId('dashboard-empty')).toBeVisible();
 	await expect(cards(page)).toHaveCount(0);
-	await expect(page.getByRole('button', { name: 'Backup semua CV', exact: true })).toBeDisabled();
-
-	await page.locator('input[type="file"]').setInputFiles(backupPath!);
-	await expect(cards(page)).toHaveCount(2);
-	await expect(page.getByRole('status').filter({ hasText: '2 CV dipulihkan' })).toBeVisible();
-	await expect(cards(page).getByRole('heading', { name: title, exact: true })).toBeVisible();
-	const restoredTitles = await cards(page).getByRole('heading', { level: 2 }).allTextContents();
-	await page.locator('input[type="file"]').setInputFiles({
-		name: 'rusak.json',
-		mimeType: 'application/json',
-		buffer: Buffer.from('bukan json')
-	});
-	await expect(page.getByRole('alert')).toContainText(/JSON/i);
-	await expect(cards(page)).toHaveCount(2);
-	expect(await cards(page).getByRole('heading', { level: 2 }).allTextContents()).toEqual(
-		restoredTitles
-	);
 	await page.reload();
-	await expect(cards(page)).toHaveCount(2);
+	await expect(page.getByTestId('dashboard-empty')).toBeVisible();
+	await expect(cards(page)).toHaveCount(0);
+	await expect(page.getByRole('button', { name: removedActions })).toHaveCount(0);
 });
 
 test('wipe confirmation highlights the localized word and accepts keyboard casing and spaces', async ({

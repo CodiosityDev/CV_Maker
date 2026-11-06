@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import type { CvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { LIMITS, newId, type PersonalInfo } from '#lib/core/schema/index.ts';
-	import { assetRepo } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
 	import { PhotoError } from '#lib/core/security/photo.ts';
 	import { normalizePhone, type StepIssue } from '#lib/core/wizard/index.ts';
 	import { suggest, type SuggestionData } from '#lib/core/suggest/index.ts';
@@ -90,7 +90,7 @@
 		id="personal.fullName"
 		label={t('wizard.fields.fullName')}
 		required
-		autocomplete="name"
+		autocomplete={incognito.active ? 'off' : 'name'}
 		maxlength={LIMITS.fullName}
 		showCounter
 		error={error('personal.fullName')}
@@ -99,6 +99,7 @@
 	<Input
 		id="personal.headline"
 		label={t('wizard.fields.headline')}
+		autocomplete={incognito.active ? 'off' : undefined}
 		maxlength={LIMITS.headline}
 		showCounter
 		bind:value={() => store.cv.personal.headline, (value) => set('headline', value)}
@@ -108,7 +109,7 @@
 		label={t('wizard.fields.email')}
 		required
 		type="email"
-		autocomplete="email"
+		autocomplete={incognito.active ? 'off' : 'email'}
 		maxlength={LIMITS.email}
 		showCounter
 		error={error('personal.email')}
@@ -119,7 +120,7 @@
 		label={t('wizard.fields.phone')}
 		required
 		type="tel"
-		autocomplete="tel"
+		autocomplete={incognito.active ? 'off' : 'tel'}
 		maxlength={LIMITS.short}
 		showCounter
 		error={error('personal.phone')}
@@ -160,6 +161,7 @@
 				<Input
 					id={`personal.links.${link.id}.label`}
 					label={t('wizard.fields.label')}
+					autocomplete={incognito.active ? 'off' : undefined}
 					maxlength={LIMITS.short}
 					showCounter
 					bind:value={
@@ -178,6 +180,7 @@
 					id={`personal.links.${link.id}.url`}
 					label={t('wizard.fields.url')}
 					type="url"
+					autocomplete={incognito.active ? 'off' : undefined}
 					maxlength={LIMITS.url}
 					showCounter
 					bind:value={

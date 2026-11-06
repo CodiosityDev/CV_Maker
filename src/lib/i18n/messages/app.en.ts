@@ -5,6 +5,33 @@
 import type { AppMessages } from '../translate';
 
 export const appEn: AppMessages = {
+	incognito: {
+		label: 'Incognito Mode',
+		optionTitle: 'Using a public or shared computer?',
+		startAction: 'Turn on Incognito Mode',
+		startDescription:
+			'Your CV is stored only in this tab and disappears when you close or refresh it. Download your CV before finishing.',
+		browserTip:
+			'For maximum privacy, also open an incognito/private browser window (Ctrl+Shift+N / ⌘+Shift+N).',
+		activeTitle: 'Incognito Mode is on',
+		activeDescription:
+			'Incognito Mode is on — your CV is only in this tab and disappears when you close or refresh it. Download your CV before finishing.',
+		idleDescription: 'Your CV is also erased automatically after 3 hours without changes.',
+		info: 'Info',
+		expires: 'Erased automatically at {time} if there are no changes.',
+		expiredMessage:
+			'The CVs in this incognito session were erased automatically after 3 hours without changes.',
+		expiredStatus: 'This session’s CV has been erased',
+		endAction: 'End & erase',
+		endTitle: 'End Incognito Mode?',
+		endDescription: 'The CVs in this session will be erased. Have you downloaded your CV?',
+		ended: 'Incognito Mode ended. This session’s CV data has been erased.',
+		actionError: 'That did not work. Please try again.',
+		sessionLabel: '(incognito session)',
+		saved: 'Saved in this tab',
+		downloadSafety:
+			'On a shared computer: after downloading, delete the files from the Downloads folder and do not save passwords or accounts in the browser.'
+	},
 	wizard: {
 		pageTitle: 'Create a CV — CV Maker',
 		localNote: 'No account. Your CV stays on your device.',
@@ -316,9 +343,7 @@ export const appEn: AppMessages = {
 		manualLabel: 'CV text to copy',
 		manualHint:
 			'Your browser did not allow automatic copying. Select the text below, then copy it using your device’s menu.',
-		selectText: 'Select all text',
-		backupReminder: 'Save a backup regularly to keep your CV content safe.',
-		backupLink: 'Back up in My CVs'
+		selectText: 'Select all text'
 	},
 	printPage: {
 		title: 'Save your CV as PDF',
@@ -346,14 +371,14 @@ export const appEn: AppMessages = {
 		pageTitle: 'My CVs — CV Maker',
 		title: 'My CVs',
 		localNote:
-			'Your CVs are stored only in this browser. Clearing browser data also deletes your CVs. Save a backup regularly.',
+			'Your CVs are stored only in this browser. Clearing browser data also deletes your CVs — download PDF/Word files for your records.',
 		memoryWarning:
-			'This browser is keeping your CVs temporarily. They will be lost when this tab closes. Download your CV and save a backup before closing the tab.',
+			'This browser is keeping your CVs temporarily. They will be lost when this tab closes. Download your CV before closing the tab.',
 		loading: 'Loading CVs on this device…',
 		loadError: 'Your CV list could not be loaded. Try again.',
 		retry: 'Reload',
 		create: 'Create a CV',
-		empty: 'There are no CVs in this browser yet. Create your first CV or restore a backup file.',
+		empty: 'There are no CVs in this browser yet. Create your first CV.',
 		untitled: 'Untitled CV',
 		nameMissing: 'Name not added yet',
 		roleMissing: 'Target role not added yet',
@@ -374,39 +399,20 @@ export const appEn: AppMessages = {
 		titleLabel: 'CV title',
 		titleRequired: 'Enter a CV title first.',
 		renamed: 'CV title saved.',
-		backupOne: 'Back up this CV',
 		delete: 'Delete',
 		deleteTitle: 'Delete this CV?',
 		deleteDescription:
-			'The CV “{title}” will be permanently deleted from this browser. This cannot be undone. Save a backup first if you still need it.',
+			'The CV “{title}” will be permanently deleted from this browser. This cannot be undone. Download your CV first if you still need it.',
 		deleted: 'CV deleted from this device.',
 		actionError: 'That did not work. Please try again.',
 		missing: 'This CV no longer exists. Your CV list has been refreshed.',
-		backupTitle: 'Back up & restore CVs',
-		backupDescription:
-			'Save a JSON file as a backup or to move your CVs to another browser. It includes CV content and photos.',
-		backupAll: 'Back up all CVs',
-		restore: 'Restore from backup',
-		restoring: 'Restoring…',
-		backupError: 'The backup could not be downloaded. Try again.',
-		restoreImported: '{count} CVs restored',
-		restoreCopied: '{count} as copies',
-		restoreSkipped: '{count} skipped',
-		restoreEmpty: 'This backup file does not contain any CVs.',
-		restoreErrors: {
-			tooLarge: 'This backup file is too large. The maximum size is 5 MB.',
-			invalidJson: 'This file is not readable JSON. Choose a .json backup file.',
-			notBackup: 'This is not a CV Maker backup file.',
-			newerVersion:
-				'This backup was made with a newer app version. Update the app before restoring it.'
-		},
 		wipeTitle: 'Finished using a shared device?',
 		wipeDescription:
-			'Delete all CVs, photos, and preferences from this browser. Save a backup first if you still need them.',
+			'Delete all CVs, photos, and preferences from this browser. Download PDF/Word files first if you still need them.',
 		wipeAction: 'Delete all data on this device',
 		wipeConfirmTitle: 'Delete all data?',
 		wipeConfirmDescription:
-			'All CVs, photos, and preferences will be permanently deleted from this browser. Backup files you have already downloaded will remain. This cannot be undone.',
+			'All CVs, photos, and preferences will be permanently deleted from this browser. CV files you have already downloaded will remain. This cannot be undone.',
 		wipeWord: 'DELETE',
 		wipeInput: 'Type {word} to continue.',
 		wipeInputLabel: 'Confirmation word',

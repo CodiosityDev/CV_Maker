@@ -30,8 +30,8 @@
 		<p>{t('privacy.deleteCopy')}</p>
 	</section>
 	<section class="notice">
-		<h2>{t('privacy.backupTitle')}</h2>
-		<p>{t('privacy.backupCopy')}</p>
+		<h2>{t('privacy.lossTitle')}</h2>
+		<p>{t('privacy.lossCopy')}</p>
 		<p>{t('privacy.sharedCopy')}</p>
 	</section>
 	<div class="back-link">

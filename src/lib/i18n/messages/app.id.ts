@@ -3,6 +3,32 @@
  * Plain text only. Every key here must also exist in the other language file.
  */
 export const appId = {
+	incognito: {
+		label: 'Mode Incognito',
+		optionTitle: 'Pakai di komputer umum / warnet?',
+		startAction: 'Nyalakan Mode Incognito',
+		startDescription:
+			'CV hanya tersimpan di tab ini dan hilang saat tab ditutup atau di-refresh. Unduh CV sebelum selesai.',
+		browserTip:
+			'Untuk privasi maksimal, buka juga jendela incognito/private browser (Ctrl+Shift+N / ⌘+Shift+N).',
+		activeTitle: 'Mode Incognito aktif',
+		activeDescription:
+			'Mode Incognito aktif — CV hanya ada di tab ini dan hilang saat tab ditutup atau di-refresh. Unduh CV sebelum selesai.',
+		idleDescription: 'CV juga dihapus otomatis setelah 3 jam tanpa perubahan.',
+		info: 'Info',
+		expires: 'Dihapus otomatis pukul {time} bila tidak ada perubahan.',
+		expiredMessage: 'CV di sesi incognito ini dihapus otomatis karena 3 jam tidak ada perubahan.',
+		expiredStatus: 'CV sesi ini sudah dihapus',
+		endAction: 'Akhiri & hapus',
+		endTitle: 'Akhiri Mode Incognito?',
+		endDescription: 'CV di sesi ini akan dihapus. Sudah mengunduh CV kamu?',
+		ended: 'Mode Incognito diakhiri. Data CV sesi ini sudah dihapus.',
+		actionError: 'Tindakan belum berhasil. Coba lagi.',
+		sessionLabel: '(sesi incognito)',
+		saved: 'Tersimpan di tab ini',
+		downloadSafety:
+			'Di komputer umum: setelah mengunduh, hapus file dari folder Download dan jangan simpan password/akun di browser.'
+	},
 	wizard: {
 		pageTitle: 'Buat CV — CV Maker',
 		localNote: 'Tanpa akun. Isi CV tetap di perangkatmu.',
@@ -317,9 +343,7 @@ export const appId = {
 		manualLabel: 'Teks CV untuk disalin',
 		manualHint:
 			'Browser belum mengizinkan penyalinan otomatis. Pilih teks di bawah, lalu salin lewat menu perangkatmu.',
-		selectText: 'Pilih semua teks',
-		backupReminder: 'Simpan backup secara berkala agar isi CV tetap aman.',
-		backupLink: 'Backup di CV Saya'
+		selectText: 'Pilih semua teks'
 	},
 	printPage: {
 		title: 'Simpan CV sebagai PDF',
@@ -347,14 +371,14 @@ export const appId = {
 		pageTitle: 'CV Saya — CV Maker',
 		title: 'CV Saya',
 		localNote:
-			'CV kamu hanya tersimpan di browser ini. Jika data browser dihapus, CV ikut hilang. Simpan backup secara berkala.',
+			'CV kamu hanya tersimpan di browser ini. Jika data browser dihapus, CV ikut hilang — unduh PDF/Word sebagai arsip.',
 		memoryWarning:
-			'Browser ini hanya menyimpan CV sementara. Data akan hilang saat tab ditutup. Unduh CV dan simpan backup sebelum menutup tab.',
+			'Browser ini hanya menyimpan CV sementara. Data akan hilang saat tab ditutup. Unduh CV sebelum menutup tab.',
 		loading: 'Memuat CV di perangkat ini…',
 		loadError: 'Daftar CV belum bisa dimuat. Coba lagi.',
 		retry: 'Muat ulang',
 		create: 'Buat CV',
-		empty: 'Belum ada CV di browser ini. Buat CV pertamamu atau pulihkan file backup.',
+		empty: 'Belum ada CV di browser ini. Buat CV pertamamu.',
 		untitled: 'CV tanpa judul',
 		nameMissing: 'Nama belum diisi',
 		roleMissing: 'Posisi tujuan belum diisi',
@@ -375,39 +399,20 @@ export const appId = {
 		titleLabel: 'Judul CV',
 		titleRequired: 'Isi judul CV terlebih dahulu.',
 		renamed: 'Judul CV disimpan.',
-		backupOne: 'Backup CV ini',
 		delete: 'Hapus',
 		deleteTitle: 'Hapus CV ini?',
 		deleteDescription:
-			'CV “{title}” akan dihapus permanen dari browser ini. Tindakan ini tidak bisa diurungkan. Simpan backup terlebih dahulu bila masih diperlukan.',
+			'CV “{title}” akan dihapus permanen dari browser ini. Tindakan ini tidak bisa diurungkan. Unduh CV terlebih dahulu bila masih diperlukan.',
 		deleted: 'CV dihapus dari perangkat ini.',
 		actionError: 'Tindakan belum berhasil. Coba lagi.',
 		missing: 'CV ini sudah tidak ada. Daftar CV telah diperbarui.',
-		backupTitle: 'Backup & pulihkan CV',
-		backupDescription:
-			'Simpan file JSON sebagai cadangan atau untuk memindahkan CV ke browser lain. File ini mencakup isi CV dan foto.',
-		backupAll: 'Backup semua CV',
-		restore: 'Pulihkan dari backup',
-		restoring: 'Memulihkan…',
-		backupError: 'Backup belum bisa diunduh. Coba lagi.',
-		restoreImported: '{count} CV dipulihkan',
-		restoreCopied: '{count} sebagai salinan',
-		restoreSkipped: '{count} dilewati',
-		restoreEmpty: 'File backup ini tidak berisi CV.',
-		restoreErrors: {
-			tooLarge: 'File backup terlalu besar. Ukuran maksimal 5 MB.',
-			invalidJson: 'File ini bukan JSON yang bisa dibaca. Pilih file backup berformat .json.',
-			notBackup: 'File ini bukan file backup CV Maker.',
-			newerVersion:
-				'Backup ini dibuat dengan versi aplikasi yang lebih baru. Perbarui aplikasi sebelum memulihkannya.'
-		},
 		wipeTitle: 'Selesai memakai perangkat bersama?',
 		wipeDescription:
-			'Hapus semua CV, foto, dan preferensi di browser ini. Simpan backup lebih dulu jika masih diperlukan.',
+			'Hapus semua CV, foto, dan preferensi di browser ini. Unduh PDF/Word lebih dulu jika masih diperlukan.',
 		wipeAction: 'Hapus semua data di perangkat ini',
 		wipeConfirmTitle: 'Hapus semua data?',
 		wipeConfirmDescription:
-			'Semua CV, foto, dan preferensi akan dihapus permanen dari browser ini. File backup yang sudah kamu unduh tetap ada. Tindakan ini tidak bisa diurungkan.',
+			'Semua CV, foto, dan preferensi akan dihapus permanen dari browser ini. File CV yang sudah kamu unduh tetap ada. Tindakan ini tidak bisa diurungkan.',
 		wipeWord: 'HAPUS',
 		wipeInput: 'Ketik {word} untuk melanjutkan.',
 		wipeInputLabel: 'Kata konfirmasi',

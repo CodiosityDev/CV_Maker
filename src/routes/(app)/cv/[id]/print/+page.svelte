@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { exportFileName } from '#lib/core/export/index.ts';
 	import { toRenderModel, type RenderModel } from '#lib/core/render/index.ts';
-	import { assetRepo } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { resolveTemplate, type TemplateComponent } from '#lib/templates/registry.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -20,6 +20,7 @@
 	let scale = $state(0);
 	let height = $state(0);
 	let originalTitle: string | undefined;
+	const expired = $derived(incognito.active && Boolean(incognito.expiredAt));
 
 	function restoreTitle() {
 		if (originalTitle === undefined) return;
@@ -38,7 +39,7 @@
 	});
 
 	$effect(() => {
-		const cv = data.cv;
+		const cv = expired ? undefined : data.cv;
 		void retry;
 		let cancelled = false;
 		let photoUrl: string | undefined;
@@ -106,7 +107,7 @@
 
 	function printCv() {
 		const cv = data.cv;
-		if (!cv || !Template || !model || loading) return;
+		if (!cv || expired || !Template || !model || loading) return;
 		restoreTitle();
 		originalTitle = document.title;
 		document.title = exportFileName(
@@ -125,7 +126,12 @@
 <svelte:head><title>{t('printPage.title')} · {t('app.name')}</title></svelte:head>
 
 <div class="print-page">
-	{#if data.cv}
+	{#if expired}
+		<div class="print-status" role="alert">
+			<p>{t('incognito.expiredMessage')}</p>
+			<Button href="/buat">{t('wizard.startNew')}</Button>
+		</div>
+	{:else if data.cv}
 		<div class="print-toolbar" data-testid="print-toolbar">
 			<Button href="/cv" variant="ghost">{t('printPage.back')}</Button>
 			<Button onclick={printCv} disabled={loading || !Template || !model}>

@@ -27,7 +27,7 @@ export const siteId = {
 		fillTitle: 'Isi dengan panduan',
 		fillCopy: 'Isi data diri, pendidikan, pengalaman, dan keahlian dengan bantuan tips dan contoh.',
 		reviewTitle: 'Tinjau CV',
-		reviewCopy: 'Periksa isi dan kontakmu di preview. Fitur unduh sedang disiapkan.',
+		reviewCopy: 'Periksa isi dan kontakmu di preview, lalu unduh PDF, Word, atau teks.',
 		typeTitle: 'ATS atau Creative',
 		atsTitle: 'CV ATS',
 		atsCopy:
@@ -54,13 +54,16 @@ export const siteId = {
 		atsAnswer:
 			'ATS (Applicant Tracking System) adalah sistem yang membantu perusahaan mengelola lamaran. CV dengan struktur sederhana lebih mudah dibaca sistem, tetapi tidak menjamin lolos seleksi.',
 		freeQuestion: 'Apakah gratis?',
-		freeAnswer: 'Ya. Membuat CV gratis dan tidak memerlukan akun. Fitur unduh sedang disiapkan.',
+		freeAnswer: 'Ya. Membuat dan mengunduh CV gratis dan tidak memerlukan akun.',
 		storageQuestion: 'Di mana data saya disimpan?',
 		storageAnswer:
 			'Data CV disimpan di penyimpanan browser pada perangkat yang kamu gunakan. Data tersebut tidak dikirim ke server dan tidak otomatis berpindah ke perangkat lain.',
 		deletedQuestion: 'Bagaimana jika data browser terhapus?',
 		deletedAnswer:
-			'CV yang tersimpan di browser ikut hilang. Fitur backup JSON belum tersedia, jadi hindari menghapus data situs jika CV masih dibutuhkan.',
+			'CV yang tersimpan di browser ikut hilang. Unduh PDF/Word sebagai arsip sebelum menghapus data browser.',
+		incognitoQuestion: 'Saya memakai komputer umum/warnet. Apakah aman?',
+		incognitoAnswer:
+			'Nyalakan Mode Incognito sebelum membuat CV: isi hanya ada di tab ini dan hilang saat tab ditutup, di-refresh, atau setelah 3 jam tanpa perubahan. Untuk privasi maksimal, buka juga jendela incognito/private browser (Ctrl+Shift+N / ⌘+Shift+N). Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
 		mobileQuestion: 'Bisa digunakan di HP?',
 		mobileAnswer: 'Bisa, langsung dari browser HP, tablet, atau komputer.',
 		englishQuestion: 'Ada bahasa Inggris?',
@@ -88,11 +91,11 @@ export const siteId = {
 		deleteTitle: 'Menghapus data',
 		deleteCopy:
 			'Hapus data situs melalui pengaturan browser. Ini akan menghapus CV, foto, dan preferensi bahasa yang tersimpan di browser tersebut.',
-		backupTitle: 'Jika data browser terhapus',
-		backupCopy:
-			'CV bisa hilang jika data browser dihapus, perangkat rusak, atau browser diganti. Fitur unduh dan backup JSON belum tersedia. Hindari menghapus data situs jika CV masih diperlukan.',
+		lossTitle: 'Jika data browser terhapus',
+		lossCopy:
+			'CV bisa hilang jika data browser dihapus, perangkat rusak, atau browser diganti. Unduh PDF/Word sebagai arsip sebelum menghapus data browser.',
 		sharedCopy:
-			'Di komputer umum, hapus data situs setelah selesai agar pengguna berikutnya tidak dapat membuka CV-mu.',
+			'Di komputer umum, nyalakan Mode Incognito sebelum membuat CV. Data hanya ada di tab ini, hilang saat tab ditutup atau di-refresh, dan dihapus otomatis setelah 3 jam tanpa perubahan. Unduh CV sebelum selesai, hapus file dari folder Download, pilih Akhiri & hapus, lalu tutup tab. Jangan simpan password/akun di browser.',
 		back: 'Kembali ke beranda'
 	},
 	about: {
