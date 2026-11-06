@@ -30,6 +30,7 @@ describe('incognito mode', () => {
 		vi.stubGlobal('sessionStorage', fakeSessionStorage());
 	});
 	afterEach(() => {
+		vi.useRealTimers();
 		vi.unstubAllGlobals();
 	});
 
@@ -118,6 +119,96 @@ describe('incognito mode', () => {
 		await incognito.end();
 		await cvRepo.create({ kind: 'ats', locale: 'id' });
 		expect(posted).toHaveLength(1);
+	});
+});
+
+describe('incognito idle auto-erase', () => {
+	beforeEach(() => {
+		globalThis.indexedDB = new IDBFactory();
+		vi.stubGlobal('sessionStorage', fakeSessionStorage());
+		// Only the clock and the idle interval: fake-indexeddb needs real setTimeout/setImmediate.
+		vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+		vi.unstubAllGlobals();
+	});
+
+	it('erases the data after 3 hours without changes, even with the tab open', async () => {
+		const { cvRepo, incognito, INCOGNITO_IDLE_MS } = await openTab();
+		const persistent = await cvRepo.create({ kind: 'ats', locale: 'id' });
+		incognito.start();
+		const expired = vi.fn();
+		incognito.onExpire(expired);
+		expect(incognito.expiresAt).toBeUndefined();
+
+		const cv = await cvRepo.create({ kind: 'ats', locale: 'id' });
+		expect(incognito.expiresAt).toBe(new Date(Date.now() + INCOGNITO_IDLE_MS).toISOString());
+
+		// A change shortly before the deadline moves it forward.
+		await vi.advanceTimersByTimeAsync(INCOGNITO_IDLE_MS - 5 * 60_000);
+		await cvRepo.save({ ...cv, title: 'Masih dipakai' });
+		await vi.advanceTimersByTimeAsync(INCOGNITO_IDLE_MS - 2 * 60_000);
+		expect(await cvRepo.list()).toHaveLength(1);
+		expect(expired).not.toHaveBeenCalled();
+
+		await vi.advanceTimersByTimeAsync(3 * 60_000);
+		expect(await cvRepo.list()).toEqual([]);
+		expect(incognito.hasData).toBe(false);
+		expect(incognito.active).toBe(true); // still incognito, just empty
+		expect(incognito.expiredAt).toBeDefined();
+		expect(incognito.expiresAt).toBeUndefined();
+		expect(expired).toHaveBeenCalledTimes(1);
+
+		// A new CV starts a new session; the notice clears.
+		await cvRepo.create({ kind: 'ats', locale: 'id' });
+		expect(incognito.expiredAt).toBeUndefined();
+
+		// Persistent data was never touched.
+		await incognito.end();
+		expect((await cvRepo.list()).map((item) => item.id)).toEqual([persistent.id]);
+	});
+
+	it('uses the wall clock, so a computer that slept is caught on the next check', async () => {
+		const { cvRepo, incognito, INCOGNITO_IDLE_MS } = await openTab();
+		incognito.start();
+		await cvRepo.create({ kind: 'ats', locale: 'id' });
+		await incognito.checkIdle(Date.now() + INCOGNITO_IDLE_MS - 1);
+		expect(incognito.hasData).toBe(true);
+		await incognito.checkIdle(Date.now() + INCOGNITO_IDLE_MS + 1);
+		expect(incognito.hasData).toBe(false);
+	});
+
+	it('touch() counts as activity', async () => {
+		const { cvRepo, incognito, INCOGNITO_IDLE_MS } = await openTab();
+		incognito.start();
+		await cvRepo.create({ kind: 'ats', locale: 'id' });
+		await vi.advanceTimersByTimeAsync(INCOGNITO_IDLE_MS - 5 * 60_000);
+		incognito.touch();
+		await vi.advanceTimersByTimeAsync(10 * 60_000);
+		expect(incognito.hasData).toBe(true);
+	});
+
+	it('an open editor stops saving once the data was erased', async () => {
+		const page = Object.assign(new EventTarget(), { visibilityState: 'visible' });
+		vi.stubGlobal('window', new EventTarget());
+		vi.stubGlobal('document', page);
+		const { cvRepo, incognito, INCOGNITO_IDLE_MS } = await openTab();
+		const { createCvStore } = await import('../../src/lib/core/store/cv-store.svelte');
+		incognito.start();
+		const cv = await cvRepo.create({ kind: 'ats', locale: 'id' });
+		const store = createCvStore(cv, { repo: cvRepo });
+
+		await vi.advanceTimersByTimeAsync(INCOGNITO_IDLE_MS + 2 * 60_000);
+		expect(store.externalChange).toBe('removed');
+
+		store.update((draft) => {
+			draft.personal.fullName = 'Tidak boleh tersimpan';
+		});
+		await store.flush();
+		expect(await cvRepo.list()).toEqual([]);
+		await store.destroy();
+		await incognito.end();
 	});
 });
 

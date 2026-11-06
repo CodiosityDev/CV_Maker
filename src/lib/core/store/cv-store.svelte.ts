@@ -12,6 +12,7 @@
 import type { CVDocument } from '../schema/types';
 import {
 	cvRepo as defaultRepo,
+	incognito,
 	onExternalChange,
 	type CvRepository,
 	type SyncEvent
@@ -246,7 +247,13 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 	if (listenToPage) {
 		window.addEventListener('pagehide', onPageHide);
 		document.addEventListener('visibilitychange', onVisibility);
-		stopSync = onExternalChange(applyExternalChange);
+		const stopExternal = onExternalChange(applyExternalChange);
+		// Incognito data erased for inactivity: behave as if the CV was deleted elsewhere.
+		const stopExpire = incognito.onExpire(() => applyExternalChange({ type: 'wiped' }));
+		stopSync = () => {
+			stopExternal();
+			stopExpire();
+		};
 	}
 
 	/** Stop listeners and save pending changes. Call in onDestroy. */
