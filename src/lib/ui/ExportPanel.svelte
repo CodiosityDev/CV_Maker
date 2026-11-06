@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import type { CVDocument } from '#lib/core/schema/types.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
+	import { incognito } from '#lib/core/storage/index.ts';
 	import {
 		downloadBlob,
 		exportDocx,
@@ -25,8 +26,15 @@
 	onDestroy(() => {
 		active = false;
 	});
+	function sameSession(startedInIncognito: boolean) {
+		return (
+			active &&
+			incognito.active === startedInIncognito &&
+			(!startedInIncognito || !incognito.expiredAt)
+		);
+	}
 
-	async function leave(event: MouseEvent, destination: 'pdf' | 'backup') {
+	async function leave(event: MouseEvent) {
 		if (
 			!beforeLeave ||
 			event.defaultPrevented ||
@@ -43,8 +51,7 @@
 		const id = cv.id;
 		try {
 			if ((await beforeLeave()) && active && id === cv.id) {
-				if (destination === 'pdf') await goto(resolve('/(app)/cv/[id]/print', { id }));
-				else await goto(resolve('/(app)/cv'));
+				await goto(resolve('/(app)/cv/[id]/print', { id }));
 			}
 		} catch {
 			if (active) toast.error(t('exportPanel.navigationError'));
@@ -55,12 +62,14 @@
 
 	async function download(format: 'docx' | 'txt') {
 		if (busy) return;
+		const session = incognito.active;
+		if (!sameSession(session)) return;
 		busy = format;
 		const current = $state.snapshot(cv);
 		try {
 			const model = toRenderModel(current);
 			const blob = await (format === 'docx' ? exportDocx(model) : exportTxt(model));
-			if (!active || current.id !== cv.id) return;
+			if (!sameSession(session) || current.id !== cv.id) return;
 			downloadBlob(
 				blob,
 				exportFileName(
@@ -86,20 +95,22 @@
 
 	async function copy() {
 		if (busy) return;
+		const session = incognito.active;
+		if (!sameSession(session)) return;
 		busy = 'copy';
 		const current = $state.snapshot(cv);
 		const text = toPlainText(toRenderModel(current));
 		try {
 			if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
 			await navigator.clipboard.writeText(text);
-			if (!active || current.id !== cv.id) return;
+			if (!sameSession(session) || current.id !== cv.id) return;
 			manualText = undefined;
 			toast.success(t('exportPanel.copied'));
 		} catch {
-			if (!active || current.id !== cv.id) return;
+			if (!sameSession(session) || current.id !== cv.id) return;
 			manualText = text;
 			await tick();
-			if (active) selectText();
+			if (sameSession(session)) selectText();
 		} finally {
 			busy = undefined;
 		}
@@ -115,11 +126,7 @@
 	<h2 id="{uid}-title">{t('exportPanel.title')}</h2>
 	{#if cv.kind === 'creative'}<p>{t('exportPanel.simpleLayout')}</p>{/if}
 	<div class="pdf-option">
-		<a
-			class="pdf-link"
-			href={resolve('/(app)/cv/[id]/print', { id: cv.id })}
-			onclick={(event) => leave(event, 'pdf')}
-		>
+		<a class="pdf-link" href={resolve('/(app)/cv/[id]/print', { id: cv.id })} onclick={leave}>
 			{t('exportPanel.pdf')}
 			<svg
 				viewBox="0 0 24 24"
@@ -178,12 +185,7 @@
 			<Button variant="ghost" onclick={selectText}>{t('exportPanel.selectText')}</Button>
 		</div>
 	{/if}
-	<p class="backup-note">
-		{t('exportPanel.backupReminder')}
-		<a href={resolve('/(app)/cv')} onclick={(event) => leave(event, 'backup')}
-			>{t('exportPanel.backupLink')}</a
-		>
-	</p>
+	{#if incognito.active}<p class="privacy-note">{t('incognito.downloadSafety')}</p>{/if}
 </section>
 
 <style>
@@ -272,18 +274,10 @@
 		line-height: 1.6;
 		resize: vertical;
 	}
-	.backup-note {
+	.privacy-note {
 		padding-top: 1rem;
 		border-top: 1px solid var(--color-border);
 		font-size: 0.75rem;
-	}
-	.backup-note a {
-		display: inline-flex;
-		min-height: 44px;
-		align-items: center;
-		color: var(--color-brand-ink);
-		font-weight: 600;
-		text-underline-offset: 0.2em;
 	}
 	@media (min-width: 480px) {
 		.format-row {

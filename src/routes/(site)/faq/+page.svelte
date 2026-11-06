@@ -2,7 +2,15 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Accordion from '#lib/ui/Accordion.svelte';
 	import Button from '#lib/ui/Button.svelte';
-	const questions = ['ats', 'free', 'storage', 'deleted', 'mobile', 'english'] as const;
+	const questions = [
+		'ats',
+		'free',
+		'storage',
+		'deleted',
+		'incognito',
+		'mobile',
+		'english'
+	] as const;
 </script>
 
 <svelte:head>

@@ -4,7 +4,8 @@
 	import { resolve } from '$app/paths';
 	import { LIMITS, newId, type CVDocument } from '#lib/core/schema/index.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
-	import { assetRepo, storage } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
+	import { getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import {
@@ -42,6 +43,7 @@
 
 	let { initial }: { initial: CVDocument } = $props();
 	const store = untrack(() => createCvStore(initial));
+	const incognitoUi = getIncognitoUiContext();
 	if (store.cv.status.wizardCompleted || store.cv.status.wizardStep === 0) {
 		store.update(
 			(draft) => {
@@ -102,6 +104,7 @@
 	let requestedPersistence = untrack(() => initial.status.wizardCompleted);
 	let heading: HTMLHeadingElement | undefined = $state();
 	const model = $derived(toRenderModel(store.cv, { photoUrl }));
+	const sessionExpired = $derived(incognito.active && Boolean(incognito.expiredAt));
 	const collectionSteps: WizardStepId[] = [
 		'education',
 		'experience',
@@ -109,8 +112,17 @@
 		'projects',
 		'skills'
 	];
+	$effect(() => {
+		if (store.externalChange !== 'removed') return;
+		previewOpen = false;
+		replaceOpen = false;
+		pendingSummary = '';
+	});
 
 	onMount(() => {
+		const unregisterBeforeEnd = incognitoUi?.registerBeforeEnd(() => {
+			store.applyExternalChange({ type: 'wiped' });
+		});
 		const media = matchMedia('(min-width: 1024px)');
 		const update = () => {
 			desktop = media.matches;
@@ -121,7 +133,10 @@
 		void storage.getMode().then((mode) => {
 			memory = mode === 'memory';
 		});
-		return () => media.removeEventListener('change', update);
+		return () => {
+			unregisterBeforeEnd?.();
+			media.removeEventListener('change', update);
+		};
 	});
 	$effect(() => {
 		const locale = i18n.locale;
@@ -182,7 +197,7 @@
 		photoUrl = undefined;
 		photoLoadError = false;
 		photoMissing = false;
-		if (id)
+		if (id && !sessionExpired)
 			void assetRepo.getPhotoUrl(id).then(
 				(loaded) => {
 					if (!current) {
@@ -363,7 +378,11 @@
 		<div class="banner warning" role="alert">
 			<p>
 				{t(
-					store.externalChange === 'removed' ? 'wizard.externalRemoved' : 'wizard.externalUpdated'
+					store.externalChange === 'removed'
+						? incognito.active && incognito.expiredAt
+							? 'incognito.expiredMessage'
+							: 'wizard.externalRemoved'
+						: 'wizard.externalUpdated'
 				)}
 			</p>
 			<div class="button-row">
@@ -387,12 +406,14 @@
 					? 'saving'
 					: 'saved'}
 		>
-			{#if store.saveState === 'error'}<span class="error">{t('wizard.saveError')}</span><Button
-					variant="ghost"
-					onclick={() => store.flush()}>{t('wizard.retry')}</Button
-				>
+			{#if store.externalChange === 'removed' && incognito.active && incognito.expiredAt}
+				{t('incognito.expiredStatus')}
+			{:else if store.saveState === 'error'}<span class="error">{t('wizard.saveError')}</span
+				><Button variant="ghost" onclick={() => store.flush()}>{t('wizard.retry')}</Button>
 			{:else if store.saveState === 'saving' || pendingSave}{t('wizard.saving')}
-			{:else}{t(memory ? 'wizard.savedMemory' : 'wizard.saved')}{/if}
+			{:else}{t(
+					incognito.active ? 'incognito.saved' : memory ? 'wizard.savedMemory' : 'wizard.saved'
+				)}{/if}
 		</div>
 		<div class="history">
 			<Button
@@ -416,7 +437,7 @@
 		</div>
 	</div>
 	<div class="workspace" class:full={step === 'review' || step === 'done'}>
-		<form novalidate onsubmit={next}>
+		<form novalidate autocomplete={incognito.active ? 'off' : undefined} onsubmit={next}>
 			<Card>
 				<header class="step-heading">
 					{#if isStepOptional(index)}<span class="optional-chip">{t('wizard.optional')}</span>{/if}
@@ -568,19 +589,23 @@
 								</ul>
 							</div>
 						{:else}<p class="ready" role="status">{t('wizard.reviewReady')}</p>{/if}
-						<TemplatePicker {store} {model} />
-						<p class="hint">{t('wizard.previewNotice')}</p>
-						<CvPreview {model} />
+						{#if !sessionExpired}
+							<TemplatePicker {store} {model} />
+							<p class="hint">{t('wizard.previewNotice')}</p>
+							<CvPreview {model} />
+						{/if}
 					{:else if step === 'done'}
-						<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />
+						{#if !sessionExpired}<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />{/if}
 						<div class="done-actions">
 							<Button href="/cv" variant="secondary" onclick={openDashboard}
 								>{t('wizard.goDashboard')}</Button
 							>
 							<Button variant="ghost" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
 						</div>
-						<p class="hint">{t('wizard.previewNotice')}</p>
-						<CvPreview {model} />
+						{#if !sessionExpired}
+							<p class="hint">{t('wizard.previewNotice')}</p>
+							<CvPreview {model} />
+						{/if}
 					{/if}
 				</fieldset>
 			</Card>
@@ -590,6 +615,7 @@
 					{#if !desktop}<Button
 							variant="ghost"
 							class="preview-action"
+							disabled={store.externalChange === 'removed'}
 							aria-label={t('preview.open')}
 							title={t('preview.open')}
 							onclick={() => (previewOpen = true)}
@@ -617,7 +643,7 @@
 				</div>
 			{/if}
 		</form>
-		{#if desktop && step !== 'review' && step !== 'done'}
+		{#if desktop && step !== 'review' && step !== 'done' && !sessionExpired}
 			<aside class="preview-panel" aria-label={t('preview.label')}>
 				<div class="preview-heading">
 					<h2>{t('preview.label')}</h2>
@@ -633,7 +659,7 @@
 	title={t('preview.label')}
 	description={t('wizard.previewNotice')}
 >
-	{#if previewOpen}<CvPreview {model} />{/if}
+	{#if previewOpen && !sessionExpired}<CvPreview {model} />{/if}
 </BottomSheet>
 <Dialog
 	bind:open={replaceOpen}
