@@ -45,7 +45,12 @@ test('site navigation marks only the current page and links to existing routes',
 	await page.locator('.app-menu > summary').click();
 	await expect(page.locator('header nav a[href="/"]')).toBeVisible();
 	await expect(page.locator('header nav a[href="/faq"]')).toBeVisible();
-	await expect(page.locator('a[href="/cv"]')).toHaveCount(0);
+	const myCvs = page.locator('header nav a[href="/cv"]');
+	await expect(myCvs).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Lihat semua CV', exact: true })).toBeVisible();
+	await myCvs.click();
+	await expect(page).toHaveURL(/\/cv$/);
+	await expect(page.getByRole('heading', { level: 1, name: 'CV Saya', exact: true })).toBeVisible();
 });
 
 test('Codiosity attribution and external navigation have safe, explicit links', async ({

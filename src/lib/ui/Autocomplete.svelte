@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
@@ -51,6 +51,7 @@
 	let dismissed = $state(false);
 	let above = $state(false);
 	let listHeight = $state(0);
+	let ready = $state(false);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let revealFrame: number | undefined;
 	let mounted = false;
@@ -88,23 +89,33 @@
 		query = value;
 		results = options(value);
 		active = -1;
+		ready = true;
 		measure(true);
 		void revealAfterUpdate();
 	}
 	$effect(() => {
 		const search = value;
-		const provider = suggestions;
-		const popular = popularWhenEmpty;
-		void disabled;
-		void maxlength;
 		query = search;
 		results = [];
 		active = -1;
+		ready = false;
 		const pending = setTimeout(() => {
-			results = options(search, provider, popular);
+			ready = true;
 		}, 80);
 		timer = pending;
 		return () => clearTimeout(pending);
+	});
+	$effect(() => {
+		if (!ready) return;
+		// Keep provider reads inside the effect so data loaded after the debounce is tracked.
+		const next = options(query);
+		untrack(() => {
+			// An immediate keyboard refresh already has this list and may have an active option.
+			if (next.length === results.length && next.every((item, index) => item === results[index]))
+				return;
+			results = next;
+			active = -1;
+		});
 	});
 	$effect(() => {
 		void value;

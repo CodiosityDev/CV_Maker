@@ -32,6 +32,7 @@ export const id = {
 	nav: {
 		label: 'Navigasi utama',
 		create: 'Buat CV',
+		myCvs: 'CV Saya',
 		menu: 'Menu',
 		faq: 'FAQ',
 		codiosity: 'Codiosity',
