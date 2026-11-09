@@ -24,6 +24,7 @@ import {
 	type AiProfile,
 	type AiQuota,
 	type AiResult,
+	type AiRewardStart,
 	type AiTask
 } from './types';
 
@@ -155,6 +156,8 @@ function writeToken(token: string | undefined): void {
 export interface AiClientOptions {
 	fetch?: typeof fetch;
 	baseUrl?: string;
+	/** For tests; defaults to `window.open`. */
+	openWindow?: (url: string, target: string) => Window | null;
 }
 
 export interface AiClient {
@@ -162,6 +165,14 @@ export interface AiClient {
 	quota(): Promise<AiQuota>;
 	/** Runs one task (uses 1 of today's quota on success only). Throws AiError. */
 	run(task: AiTask, cv: CVDocument): Promise<{ result: AiResult; quota: AiQuota }>;
+	/**
+	 * Watch an ad for one more use (only when `quota.rewards.remaining > 0`). Opens the ad page
+	 * (separate origin: ad scripts never see CV data) in a NEW TAB. Call it DIRECTLY in the click
+	 * handler — the tab is opened before any `await`, otherwise browsers block it. The reward is
+	 * added by the ad page; refresh `quota()` when this tab becomes visible again.
+	 * Throws AiError ('busy' when the browser blocked the tab, 'quota' when today's ads are used up).
+	 */
+	openRewardAd(locale: CVDocument['locale']): Promise<void>;
 }
 
 interface ErrorBody {
@@ -175,6 +186,8 @@ function isErrorCode(value: unknown): value is AiErrorCode {
 
 export function createAiClient(options: AiClientOptions = {}): AiClient {
 	const base = options.baseUrl ?? API_BASE;
+	const openWindow =
+		options.openWindow ?? ((url: string, target: string) => window.open(url, target));
 	const doFetch = (input: string, init?: RequestInit) =>
 		(options.fetch ?? globalThis.fetch)(input, init);
 
@@ -239,6 +252,26 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 					return send();
 				}
 				throw error;
+			}
+		},
+		async openRewardAd(locale) {
+			// Synchronously, inside the user's click: an empty tab is never blocked.
+			const tab = openWindow('about:blank', '_blank');
+			if (!tab) throw new AiError('busy');
+			// The ad page must not be able to reach back into this tab.
+			tab.opener = null;
+			try {
+				const { adUrl } = await request<AiRewardStart>('/reward/start', {
+					method: 'POST',
+					headers: { 'X-Device-Token': await deviceToken() }
+				});
+				const url = new URL(adUrl);
+				if (url.protocol !== 'https:' && url.hostname !== 'localhost') throw new AiError('failed');
+				url.searchParams.set('lang', locale);
+				tab.location.replace(url.href);
+			} catch (error) {
+				tab.close();
+				throw error instanceof AiError ? error : new AiError('failed');
 			}
 		}
 	};

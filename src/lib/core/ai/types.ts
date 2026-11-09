@@ -51,11 +51,21 @@ export interface SkillsResult {
 export type AiResult = HeadlineResult | SummaryResult | SkillsResult;
 
 export interface AiQuota {
-	/** Free uses per device per day. */
+	/** Uses per device today: the free uses plus extra uses earned by watching ads. */
 	limit: number;
 	remaining: number;
 	/** ISO time of the next reset (00:00 WIB). */
 	resetsAt: string;
+	/**
+	 * Watch-an-ad-for-one-more-use. Absent when ads are switched off on the server; otherwise
+	 * how many ads this device may still watch today (0 → hide the button).
+	 */
+	rewards?: { limit: number; remaining: number };
+}
+
+/** Answer of `POST /api/ai/reward/start`: open `adUrl` in a new tab (top-level, not an iframe). */
+export interface AiRewardStart {
+	adUrl: string;
 }
 
 /**

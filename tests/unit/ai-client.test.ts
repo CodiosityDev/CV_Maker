@@ -165,6 +165,60 @@ describe('AI client', () => {
 	});
 });
 
+describe('rewarded ad', () => {
+	it('opens the tab before the request, cuts the opener and adds the language', async () => {
+		localStorage.setItem(AI_DEVICE_STORAGE_KEY, 'v1.token');
+		const order: string[] = [];
+		const tab = {
+			opener: {} as unknown,
+			replaced: '',
+			closed: false,
+			location: { replace: (url: string) => void (tab.replaced = url) },
+			close: () => void (tab.closed = true)
+		};
+		const client = createAiClient({
+			openWindow: (url) => {
+				order.push(`open ${url}`);
+				return tab as unknown as Window;
+			},
+			fetch: (async (url: string) => {
+				order.push(`fetch ${url}`);
+				return Response.json({ adUrl: 'https://iklan.codiosity.com/#r1.ticket' });
+			}) as typeof fetch
+		});
+		await client.openRewardAd('en');
+		expect(order).toEqual(['open about:blank', 'fetch /api/ai/reward/start']);
+		expect(tab.opener).toBeNull();
+		expect(tab.replaced).toBe('https://iklan.codiosity.com/?lang=en#r1.ticket');
+	});
+
+	it('closes the empty tab when no ad can be started', async () => {
+		localStorage.setItem(AI_DEVICE_STORAGE_KEY, 'v1.token');
+		const tab = {
+			opener: {},
+			closed: false,
+			location: { replace() {} },
+			close: () => void (tab.closed = true)
+		};
+		const client = createAiClient({
+			openWindow: () => tab as unknown as Window,
+			fetch: (async () => Response.json({ error: 'quota' }, { status: 429 })) as typeof fetch
+		});
+		const error = await client.openRewardAd('id').catch((e: unknown) => e);
+		expect((error as AiError).code).toBe('quota');
+		expect(tab.closed).toBe(true);
+	});
+
+	it('reports a blocked tab as busy', async () => {
+		const client = createAiClient({
+			openWindow: () => null,
+			fetch: (async () => Response.json({})) as typeof fetch
+		});
+		const error = await client.openRewardAd('id').catch((e: unknown) => e);
+		expect((error as AiError).code).toBe('busy');
+	});
+});
+
 describe('AI messages and wipe', () => {
 	it('has a message for every error code in both languages', () => {
 		for (const code of ['quota', 'busy', 'offline', 'unavailable', 'invalid', 'failed'] as const) {

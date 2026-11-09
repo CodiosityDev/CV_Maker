@@ -1,10 +1,16 @@
 /**
  * HTTP API (behind nginx at https://cvmaker.codiosity.com/api/…):
- *   GET  /api/health      → { ok: true } (503 when the quota database cannot be reached)
- *   GET  /api/ai/quota    → AiQuota            (header X-Device-Token optional)
- *   POST /api/ai/device   → { token }          (anonymous device token)
- *   POST /api/ai/run      → { result, quota }  (body AiRequest, header X-Device-Token)
+ *   GET  /api/health          → { ok: true } (503 when the quota database cannot be reached)
+ *   GET  /api/ai/quota        → AiQuota            (header X-Device-Token optional)
+ *   POST /api/ai/device       → { token }          (anonymous device token)
+ *   POST /api/ai/run          → { result, quota }  (body AiRequest, header X-Device-Token)
+ *   POST /api/ai/reward/start → { adUrl }          (header X-Device-Token; open adUrl in a new tab)
+ *   POST /api/ai/reward/claim → { quota }          (body { ticket }; called by the AD PAGE origin)
  * Errors: { error: AiErrorCode, quota? } with 400/401/403/413/429/502/503.
+ *
+ * Rewarded ads (owner: +1 use per ad, max 10 ads per device per day): Google gives no server-side
+ * confirmation on the web, so a claim needs a signed, single-use ticket bound to the device, at
+ * least `ads.minSeconds` after the start, within the daily caps. Cheating can at most reach the cap.
  *
  * The server stores counters only (no CV content) and logs metadata only (task, model, ms, status).
  */
@@ -14,8 +20,10 @@ import type { ServerConfig } from './config';
 import {
 	ipSubject,
 	issueDeviceToken,
+	issueRewardTicket,
 	nextWibMidnight,
 	verifyDeviceToken,
+	verifyRewardTicket,
 	wibDay
 } from './identity';
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
@@ -24,11 +32,14 @@ import { parseAiRequest } from '../../src/lib/core/ai/schema';
 import type { AiErrorCode, AiQuota } from '../../src/lib/core/ai/types';
 
 const MAX_BODY_BYTES = 32 * 1024;
+/** A ticket older than this cannot be claimed (the ad tab was left open too long). */
+const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
 const BURST = { run: 6, other: 30 } as const;
+const CLAIM_PATH = '/api/ai/reward/claim';
 
 export interface AppDeps {
-	config: Pick<ServerConfig, 'appOrigin' | 'appSecret' | 'limits'>;
+	config: Pick<ServerConfig, 'appOrigin' | 'appSecret' | 'limits' | 'ads'>;
 	store: QuotaStore;
 	provider: ChatProvider;
 	now?: () => number;
@@ -45,13 +56,19 @@ class HttpError extends Error {
 	}
 }
 
-function send(res: ServerResponse, status: number, body: unknown): void {
+function send(
+	res: ServerResponse,
+	status: number,
+	body: unknown,
+	headers: Record<string, string> = {}
+): void {
 	const json = JSON.stringify(body);
 	res.writeHead(status, {
 		'Content-Type': 'application/json; charset=utf-8',
 		'Content-Length': Buffer.byteLength(json),
 		'Cache-Control': 'no-store',
-		'X-Content-Type-Options': 'nosniff'
+		'X-Content-Type-Options': 'nosniff',
+		...headers
 	});
 	res.end(json);
 }
@@ -63,9 +80,14 @@ function clientIp(req: IncomingMessage): string {
 	return value?.trim() || req.socket.remoteAddress || 'unknown';
 }
 
-async function readJson(req: IncomingMessage): Promise<unknown> {
-	const type = req.headers['content-type'] ?? '';
-	if (!type.toLowerCase().startsWith('application/json')) throw new HttpError(400, 'invalid');
+/**
+ * `allowText`: the ad page posts `text/plain` (a CORS "simple" request: no preflight, no cookies).
+ */
+async function readJson(req: IncomingMessage, allowText = false): Promise<unknown> {
+	const type = (req.headers['content-type'] ?? '').toLowerCase();
+	const accepted =
+		type.startsWith('application/json') || (allowText && type.startsWith('text/plain'));
+	if (!accepted) throw new HttpError(400, 'invalid');
 	const length = Number(req.headers['content-length'] ?? 0);
 	if (length > MAX_BODY_BYTES) throw new HttpError(413, 'invalid');
 	const chunks: Buffer[] = [];
@@ -110,12 +132,22 @@ export function createApp(deps: AppDeps) {
 	}
 
 	async function quotaFor(device: string | undefined): Promise<AiQuota> {
-		const used = device ? await store.used('device', device, wibDay(now())) : 0;
-		return {
-			limit: config.limits.device,
-			remaining: Math.max(0, config.limits.device - used),
+		const day = wibDay(now());
+		const bonus = device ? await store.used('bonus', device, day) : 0;
+		const used = device ? await store.used('device', device, day) : 0;
+		const limit = config.limits.device + bonus;
+		const quota: AiQuota = {
+			limit,
+			remaining: Math.max(0, limit - used),
 			resetsAt: nextWibMidnight(now())
 		};
+		if (config.ads.enabled) {
+			quota.rewards = {
+				limit: config.ads.perDevice,
+				remaining: Math.max(0, config.ads.perDevice - bonus)
+			};
+		}
+		return quota;
 	}
 
 	function deviceFrom(req: IncomingMessage): string | undefined {
@@ -132,8 +164,10 @@ export function createApp(deps: AppDeps) {
 		if (!request) throw new HttpError(400, 'invalid');
 
 		const day = wibDay(now());
+		// Free uses + uses earned from ads today.
+		const deviceLimit = config.limits.device + (await store.used('bonus', device, day));
 		const keys: QuotaKey[] = [
-			{ scope: 'device', subject: device, limit: config.limits.device },
+			{ scope: 'device', subject: device, limit: deviceLimit },
 			{ scope: 'ip', subject: ipSubject(config.appSecret, ip), limit: config.limits.ip },
 			{ scope: 'global', subject: 'all', limit: config.limits.global }
 		];
@@ -177,10 +211,71 @@ export function createApp(deps: AppDeps) {
 		return { token: issueDeviceToken(config.appSecret) };
 	}
 
+	async function rewardStart(req: IncomingMessage, ip: string): Promise<unknown> {
+		sameOrigin(req);
+		burst(ip, 'other');
+		if (!config.ads.enabled) throw new HttpError(503, 'unavailable');
+		const device = deviceFrom(req);
+		if (!device) throw new HttpError(401, 'invalid');
+		if ((await store.used('bonus', device, wibDay(now()))) >= config.ads.perDevice) {
+			throw new HttpError(429, 'quota', await quotaFor(device));
+		}
+		// The ticket travels in the URL fragment, which browsers never send to any server.
+		return { adUrl: `${config.ads.origin}/#${issueRewardTicket(config.appSecret, device, now())}` };
+	}
+
+	async function rewardClaim(req: IncomingMessage, ip: string): Promise<unknown> {
+		const origin = req.headers.origin;
+		if (origin && origin !== config.ads.origin) throw new HttpError(403, 'invalid');
+		burst(ip, 'other');
+		if (!config.ads.enabled) throw new HttpError(503, 'unavailable');
+		const body = (await readJson(req, true)) as { ticket?: unknown } | null;
+		const ticket = verifyRewardTicket(config.appSecret, body?.ticket);
+		if (!ticket) throw new HttpError(400, 'invalid');
+		const age = now() - ticket.issuedAt;
+		if (age < config.ads.minSeconds * 1000 || age > TICKET_MAX_AGE_MS) {
+			throw new HttpError(400, 'invalid');
+		}
+		const day = wibDay(now());
+		// Single use: the nonce is remembered for the day.
+		if (await consume(store, [{ scope: 'ticket', subject: ticket.nonce, limit: 1 }], day)) {
+			throw new HttpError(400, 'invalid');
+		}
+		const full = await consume(
+			store,
+			[
+				{ scope: 'bonus', subject: ticket.device, limit: config.ads.perDevice },
+				{ scope: 'bonusip', subject: ipSubject(config.appSecret, ip), limit: config.ads.perIp }
+			],
+			day
+		);
+		if (full) throw new HttpError(429, 'quota', await quotaFor(ticket.device));
+		log({ event: 'ai.reward' });
+		return { quota: await quotaFor(ticket.device) };
+	}
+
+	/** CORS only for the claim endpoint and only for the ad page's origin (no credentials). */
+	function corsHeaders(req: IncomingMessage, path: string): Record<string, string> {
+		if (path !== CLAIM_PATH || req.headers.origin !== config.ads.origin) return {};
+		return {
+			'Access-Control-Allow-Origin': config.ads.origin,
+			'Access-Control-Allow-Methods': 'POST',
+			'Access-Control-Allow-Headers': 'Content-Type',
+			'Access-Control-Max-Age': '600',
+			Vary: 'Origin'
+		};
+	}
+
 	return async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
 		const ip = clientIp(req);
-		const path = (req.url ?? '/').split('?')[0];
+		const path = (req.url ?? '/').split('?')[0] ?? '/';
+		const cors = corsHeaders(req, path);
 		try {
+			if (req.method === 'OPTIONS') {
+				res.writeHead(cors['Access-Control-Allow-Origin'] ? 204 : 403, cors);
+				res.end();
+				return;
+			}
 			if (req.method === 'GET' && path === '/api/health') {
 				// Also proves the database and its table work (the deploy checks this endpoint).
 				try {
@@ -195,21 +290,28 @@ export function createApp(deps: AppDeps) {
 				burst(ip, 'other');
 				return send(res, 200, await quotaFor(deviceFrom(req)));
 			}
-			if (req.method === 'POST' && path === '/api/ai/device')
+			if (req.method === 'POST' && path === '/api/ai/device') {
 				return send(res, 200, await issue(req, ip));
-			if (req.method === 'POST' && path === '/api/ai/run')
+			}
+			if (req.method === 'POST' && path === '/api/ai/run') {
 				return send(res, 200, await run(req, ip));
+			}
+			if (req.method === 'POST' && path === '/api/ai/reward/start') {
+				return send(res, 200, await rewardStart(req, ip));
+			}
+			if (req.method === 'POST' && path === CLAIM_PATH) {
+				return send(res, 200, await rewardClaim(req, ip), cors);
+			}
 			return send(res, 404, { error: 'invalid' });
 		} catch (error) {
 			if (error instanceof HttpError) {
-				return send(
-					res,
-					error.status,
-					error.quota ? { error: error.code, quota: error.quota } : { error: error.code }
-				);
+				const body = error.quota
+					? { error: error.code, quota: error.quota }
+					: { error: error.code };
+				return send(res, error.status, body, cors);
 			}
 			log({ event: 'error', path, message: error instanceof Error ? error.message : 'unknown' });
-			return send(res, 500, { error: 'failed' });
+			return send(res, 500, { error: 'failed' }, cors);
 		}
 	};
 }

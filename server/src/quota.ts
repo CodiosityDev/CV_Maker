@@ -3,7 +3,11 @@
  * rolls back if any scope is full; `refund` gives units back when the AI call fails, so users
  * only pay for answers they actually received.
  */
-export type QuotaScope = 'device' | 'ip' | 'issue' | 'global';
+/**
+ * device/ip/global: AI uses · issue: new device tokens per IP · bonus: extra uses earned from ads
+ * per device · bonusip: the same per IP · ticket: single-use ad tickets (replay protection).
+ */
+export type QuotaScope = 'device' | 'ip' | 'issue' | 'global' | 'bonus' | 'bonusip' | 'ticket';
 
 export interface QuotaKey {
 	scope: QuotaScope;

@@ -193,15 +193,26 @@ afterEach(
 	() => new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()))
 );
 
+const ADS_ORIGIN = 'https://iklan.codiosity.com';
+
 async function startApi(
 	provider: ChatProvider,
-	limits = { device: 3, ip: 30, devicesPerIp: 10, global: 100 }
+	options: { now?: () => number; adsEnabled?: boolean } = {}
 ) {
 	const store = memoryQuotaStore();
+	const limits = { device: 3, ip: 100, devicesPerIp: 10, global: 100 };
+	const ads = {
+		enabled: options.adsEnabled ?? false,
+		origin: ADS_ORIGIN,
+		perDevice: 10,
+		perIp: 100,
+		minSeconds: 15
+	};
 	const handle = createApp({
-		config: { appOrigin: ORIGIN, appSecret: SECRET, limits },
+		config: { appOrigin: ORIGIN, appSecret: SECRET, limits, ads },
 		store,
-		provider
+		provider,
+		now: options.now
 	});
 	server = createServer((req, res) => void handle(req, res));
 	await new Promise<void>((resolve) => server?.listen(0, '127.0.0.1', resolve));
@@ -304,5 +315,92 @@ describe('HTTP API', () => {
 		expect(
 			(await post(JSON.stringify({ task: 'headline', profile, pad: 'x'.repeat(40_000) }))).status
 		).toBe(413);
+	});
+});
+
+describe('rewarded ads (+1 use per ad, max 10 per day)', () => {
+	async function setup() {
+		let clock = Date.UTC(2026, 10, 9, 5, 0);
+		const api = await startApi(goodProvider(), { now: () => clock, adsEnabled: true });
+		const { token } = (await (await api.call('/api/ai/device', { method: 'POST' })).json()) as {
+			token: string;
+		};
+		const start = async () => {
+			const response = await api.call('/api/ai/reward/start', {
+				method: 'POST',
+				headers: { 'X-Device-Token': token }
+			});
+			return { status: response.status, body: (await response.json()) as { adUrl?: string } };
+		};
+		const claim = (ticket: string, origin = ADS_ORIGIN) =>
+			api.call('/api/ai/reward/claim', {
+				method: 'POST',
+				headers: { Origin: origin, 'Content-Type': 'text/plain' },
+				body: JSON.stringify({ ticket })
+			});
+		const quota = async () =>
+			(await (
+				await api.call('/api/ai/quota', { headers: { 'X-Device-Token': token } })
+			).json()) as { limit: number; remaining: number; rewards?: { remaining: number } };
+		return { ...api, token, start, claim, quota, wait: (s: number) => (clock += s * 1000) };
+	}
+	const ticketOf = (adUrl: string | undefined) => (adUrl ?? '').split('#')[1] ?? '';
+
+	it('adds one use per watched ad and reports rewards left', async () => {
+		const t = await setup();
+		expect(await t.quota()).toMatchObject({ limit: 3, remaining: 3, rewards: { remaining: 10 } });
+		const { body } = await t.start();
+		expect(body.adUrl?.startsWith(`${ADS_ORIGIN}/#r1.`)).toBe(true);
+		t.wait(20);
+		const claimed = await t.claim(ticketOf(body.adUrl));
+		expect(claimed.status).toBe(200);
+		expect(claimed.headers.get('access-control-allow-origin')).toBe(ADS_ORIGIN);
+		expect(await t.quota()).toMatchObject({ limit: 4, remaining: 4, rewards: { remaining: 9 } });
+	});
+
+	it('refuses claims that are too fast, replayed, forged or from another site', async () => {
+		const t = await setup();
+		const ticket = ticketOf((await t.start()).body.adUrl);
+		expect((await t.claim(ticket)).status).toBe(400); // 0 s: no ad is that short
+		t.wait(20);
+		expect((await t.claim(ticket, 'https://evil.example')).status).toBe(403);
+		expect((await t.claim(ticket.slice(0, -2) + 'xx')).status).toBe(400);
+		expect((await t.claim(ticket)).status).toBe(200);
+		expect((await t.claim(ticket)).status).toBe(400); // single use
+		t.wait(31 * 60);
+		const old = ticketOf((await t.start()).body.adUrl);
+		t.wait(31 * 60);
+		expect((await t.claim(old)).status).toBe(400); // expired
+		expect(await t.quota()).toMatchObject({ limit: 4 });
+	});
+
+	it('stops at 10 ads per device per day and resets the next day', async () => {
+		const t = await setup();
+		for (let i = 0; i < 10; i += 1) {
+			const ticket = ticketOf((await t.start()).body.adUrl);
+			t.wait(20);
+			expect((await t.claim(ticket)).status).toBe(200);
+		}
+		expect(await t.quota()).toMatchObject({ limit: 13, rewards: { remaining: 0 } });
+		const refused = await t.start();
+		expect(refused.status).toBe(429);
+		t.wait(24 * 60 * 60);
+		expect(await t.quota()).toMatchObject({ limit: 3, remaining: 3, rewards: { remaining: 10 } });
+	});
+
+	it('is invisible and refused while ads are switched off', async () => {
+		const api = await startApi(goodProvider());
+		const { token } = (await (await api.call('/api/ai/device', { method: 'POST' })).json()) as {
+			token: string;
+		};
+		const quota = await (
+			await api.call('/api/ai/quota', { headers: { 'X-Device-Token': token } })
+		).json();
+		expect(quota).not.toHaveProperty('rewards');
+		const start = await api.call('/api/ai/reward/start', {
+			method: 'POST',
+			headers: { 'X-Device-Token': token }
+		});
+		expect(start.status).toBe(503);
 	});
 });

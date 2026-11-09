@@ -20,12 +20,25 @@ export interface ServerConfig {
 	limits: {
 		/** Free uses per device per day (owner: 3). */
 		device: number;
-		/** Per IP per day: a warnet/campus lab shares one IP. */
+		/** Per IP per day: a warnet/campus lab shares one IP (each device up to 3 + 10 from ads). */
 		ip: number;
 		/** New device tokens per IP per day. */
 		devicesPerIp: number;
 		/** All users together per day: a cost ceiling. */
 		global: number;
+	};
+	/** Watch an ad for one more AI use (Google Ad Manager rewarded ad on a separate origin). */
+	ads: {
+		/** Off until the ad page and the Ad Manager unit are live (ADS_ENABLED=true). */
+		enabled: boolean;
+		/** Origin of the ad page, never the app's origin (ad scripts must not see CV data). */
+		origin: string;
+		/** Ads per device per day (each = +1 use). Owner: max 10. */
+		perDevice: number;
+		/** Ads per IP per day. */
+		perIp: number;
+		/** Earliest claim after starting: an ad cannot be watched faster than this. */
+		minSeconds: number;
 	};
 	/** Unset → in-memory quota (development only: resets on restart). */
 	db?: { host: string; port: number; user: string; password: string; database: string };
@@ -60,9 +73,10 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 	if (!models.length) throw new Error('AI_MODELS is empty');
 
 	const dbName = env.DB_NAME?.trim();
+	const appOrigin = (env.APP_ORIGIN ?? 'https://cvmaker.codiosity.com').replace(/\/+$/, '');
 	return {
 		port: int(env, 'PORT', 8787, 1),
-		appOrigin: (env.APP_ORIGIN ?? 'https://cvmaker.codiosity.com').replace(/\/+$/, ''),
+		appOrigin,
 		appSecret,
 		ai: {
 			baseUrl,
@@ -72,9 +86,16 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 		},
 		limits: {
 			device: int(env, 'AI_LIMIT_DEVICE', 3),
-			ip: int(env, 'AI_LIMIT_IP', 30),
+			ip: int(env, 'AI_LIMIT_IP', 100),
 			devicesPerIp: int(env, 'AI_LIMIT_DEVICES_PER_IP', 10),
 			global: int(env, 'AI_LIMIT_GLOBAL', 1500)
+		},
+		ads: {
+			enabled: env.ADS_ENABLED?.trim() === 'true',
+			origin: (env.ADS_ORIGIN ?? 'https://iklan.codiosity.com').replace(/\/+$/, ''),
+			perDevice: int(env, 'AI_LIMIT_REWARDS', 10),
+			perIp: int(env, 'AI_LIMIT_REWARDS_IP', 100),
+			minSeconds: int(env, 'AI_REWARD_MIN_SECONDS', 15)
 		},
 		db: dbName
 			? {

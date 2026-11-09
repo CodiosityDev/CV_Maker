@@ -48,3 +48,23 @@ Tanpa `DB_NAME`, kuota disimpan di memori (hanya untuk pengembangan). Test: `tes
 | POST   | `/api/ai/run`    | body `{ task, profile }` → `{ result, quota }`                      |
 
 Error: `{ error: 'quota' | 'busy' | 'offline' | 'unavailable' | 'invalid' | 'failed', quota? }`.
+
+## Iklan reward (+1 bantuan AI per iklan, maks. 10 per hari)
+
+Jatah habis → user **memilih** "Tonton iklan" → tab baru `https://iklan.codiosity.com` (folder
+`adsite/`, origin terpisah sehingga script iklan tidak bisa membaca data CV) → iklan rewarded
+Google Ad Manager → halaman iklan menukar tiket ke `/api/ai/reward/claim` → jatah +1.
+
+Google tidak memberi konfirmasi server-ke-server untuk iklan web, jadi klaim butuh tiket yang
+ditandatangani, terikat ke perangkat, sekali pakai, minimal `AI_REWARD_MIN_SECONDS` setelah mulai,
+dan dibatasi per perangkat (`AI_LIMIT_REWARDS`) serta per IP. Kecurangan paling jauh hanya sampai
+batas harian.
+
+Menyalakan (owner):
+
+1. Google Ad Manager → unit iklan format **Rewarded** → isi `adUnitPath` di `adsite/config.js`
+   (`'/<network code>/<ad unit code>'`, bukan rahasia) lewat PR.
+2. Hestia → Add Web Domain `iklan.codiosity.com` + SSL; DNS `iklan` → IP VPS. Deploy mengisi
+   folder `public_html`-nya.
+3. `ads.txt` di `codiosity.com` (baris dari AdSense/Ad Manager).
+4. File env: `ADS_ENABLED=true`, lalu deploy ulang.

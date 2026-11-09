@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<meta name="referrer" content="strict-origin-when-cross-origin" />
+		<title>Tonton iklan — CV Maker</title>
+		<style>
+			:root {
+				--ink: #1f1d3d;
+				--muted: #5b5975;
+				--brand: #9c9aff;
+				--brand-50: #f1f0ff;
+				--mint: #d5e8e6;
+				--cream: #fff1e1;
+				--border: #e4e2f3;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				min-height: 100vh;
+				display: grid;
+				place-items: center;
+				padding: 16px;
+				background: var(--cream);
+				color: var(--ink);
+				font:
+					16px/1.5 system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
+			}
+			main {
+				width: 100%;
+				max-width: 420px;
+				padding: 24px;
+				border: 1px solid var(--border);
+				border-radius: 16px;
+				background: #fff;
+			}
+			h1 {
+				margin: 0 0 8px;
+				font-size: 1.25rem;
+			}
+			p {
+				margin: 0 0 16px;
+				color: var(--muted);
+			}
+			button,
+			a.button {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 44px;
+				padding: 10px 18px;
+				border: 0;
+				border-radius: 999px;
+				background: var(--brand);
+				color: var(--ink);
+				font: inherit;
+				font-weight: 600;
+				text-decoration: none;
+				cursor: pointer;
+			}
+			button[disabled] {
+				opacity: 0.6;
+				cursor: default;
+			}
+			.done {
+				background: var(--mint);
+			}
+			[hidden] {
+				display: none !important;
+			}
+			small {
+				display: block;
+				margin-top: 16px;
+				color: var(--muted);
+				font-size: 0.8125rem;
+			}
+		</style>
+	</head>
+	<body>
+		<main aria-live="polite">
+			<h1 id="title">Menyiapkan iklan…</h1>
+			<p id="message">Tunggu sebentar.</p>
+			<button id="start" type="button" hidden>Mulai iklan</button>
+			<button id="retry" type="button" hidden>Coba lagi</button>
+			<a id="back" class="button done" href="https://cvmaker.codiosity.com/cv" hidden
+				>Kembali ke CV Maker</a
+			>
+			<small id="note"
+				>Halaman iklan ini terpisah dari CV Maker dan tidak bisa melihat isi CV-mu.</small
+			>
+		</main>
+		<script src="config.js"></script>
+		<script src="ad.js"></script>
+	</body>
+</html>
