@@ -3,6 +3,7 @@
 	import type { RenderModel } from '#lib/core/render/index.ts';
 	import type { TemplateComponent, TemplateMeta } from '#lib/templates/registry.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
+	import { preventPreviewNavigation } from './prevent-preview-navigation.ts';
 
 	let { meta, model }: { meta: TemplateMeta; model: RenderModel } = $props();
 	let frame = $state<HTMLDivElement>();
@@ -57,7 +58,14 @@
 	});
 </script>
 
-<div class="thumbnail" bind:this={frame} aria-hidden="true" inert data-testid="template-thumbnail">
+<div
+	class="thumbnail"
+	bind:this={frame}
+	use:preventPreviewNavigation
+	aria-hidden="true"
+	inert
+	data-testid="template-thumbnail"
+>
 	{#if Template}
 		<div class="thumbnail-paper" style:transform="scale({scale})">
 			<Template model={thumbnailModel} />

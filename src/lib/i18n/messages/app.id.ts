@@ -376,6 +376,7 @@ export const appId = {
 	},
 	printPage: {
 		title: 'Simpan CV sebagai PDF',
+		incognitoTitle: 'CV',
 		back: 'Kembali ke CV Saya',
 		savePdf: 'Simpan sebagai PDF',
 		guideTitle: 'Cara menyimpan sebagai PDF',

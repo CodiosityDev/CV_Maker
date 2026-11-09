@@ -376,6 +376,7 @@ export const appEn: AppMessages = {
 	},
 	printPage: {
 		title: 'Save your CV as PDF',
+		incognitoTitle: 'CV',
 		back: 'Back to My CVs',
 		savePdf: 'Save as PDF',
 		guideTitle: 'How to save as PDF',
