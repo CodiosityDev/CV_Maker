@@ -200,7 +200,7 @@ async function startApi(
 	options: { now?: () => number; adsEnabled?: boolean } = {}
 ) {
 	const store = memoryQuotaStore();
-	const limits = { device: 3, ip: 100, devicesPerIp: 10, global: 100 };
+	const limits = { device: 3, ip: 100, devicesPerIp: 10, global: 100, visitorsPerIp: 3 };
 	const ads = {
 		enabled: options.adsEnabled ?? false,
 		origin: ADS_ORIGIN,
@@ -402,5 +402,73 @@ describe('rewarded ads (+1 use per ad, max 10 per day)', () => {
 			headers: { 'X-Device-Token': token }
 		});
 		expect(start.status).toBe(503);
+	});
+});
+
+describe('visitor counter (from 0, never resets)', () => {
+	const visitor = (n: number) => `visitor-${String(n).padStart(14, '0')}`;
+	const hello = (
+		call: (path: string, init?: RequestInit) => Promise<Response>,
+		id: string,
+		ip = '198.51.100.1'
+	) =>
+		call('/api/hello', {
+			method: 'POST',
+			headers: { 'X-Real-IP': ip },
+			body: JSON.stringify({ visitor: id })
+		});
+
+	it('starts at 0 and counts each visitor once per day, adding up across days', async () => {
+		let time = Date.UTC(2026, 10, 9, 3, 0);
+		const { call } = await startApi(goodProvider(), { now: () => time });
+		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 0 });
+		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 1 });
+		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 1 });
+		expect(await (await hello(call, visitor(2))).json()).toEqual({ visitors: 2 });
+		time += 24 * 60 * 60 * 1000;
+		// Next day: the same visitor counts again; the total keeps growing.
+		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 3 });
+		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 3 });
+	});
+
+	it('never stores the visitor id or the IP', async () => {
+		const { call, store } = await startApi(goodProvider());
+		const subjects: string[] = [];
+		const increment = store.increment.bind(store);
+		store.increment = async (scope, subject, day, limit) => {
+			subjects.push(subject);
+			return increment(scope, subject, day, limit);
+		};
+		await hello(call, visitor(7), '203.0.113.9');
+		expect(subjects).toHaveLength(2);
+		expect(subjects.join(' ')).not.toContain(visitor(7));
+		expect(subjects.join(' ')).not.toContain('203.0.113.9');
+	});
+
+	it('caps new visitors per IP so a script cannot inflate the count', async () => {
+		const { call } = await startApi(goodProvider());
+		for (let n = 1; n <= 5; n++) await hello(call, visitor(n), '198.51.100.20');
+		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 3 });
+		expect(await (await hello(call, visitor(9), '198.51.100.21')).json()).toEqual({
+			visitors: 4
+		});
+	});
+
+	it('rejects other websites and malformed ids', async () => {
+		const { call } = await startApi(goodProvider());
+		const other = await call('/api/hello', {
+			method: 'POST',
+			headers: { Origin: 'https://evil.example' },
+			body: JSON.stringify({ visitor: visitor(1) })
+		});
+		expect(other.status).toBe(403);
+		for (const id of ['short', `${visitor(1)}x`, 'a/b/c/d/e/f/g/h/i/j/k/', 42]) {
+			const response = await call('/api/hello', {
+				method: 'POST',
+				body: JSON.stringify({ visitor: id })
+			});
+			expect(response.status).toBe(400);
+		}
+		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 0 });
 	});
 });

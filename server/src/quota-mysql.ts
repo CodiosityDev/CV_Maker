@@ -1,12 +1,14 @@
 /**
  * Quota counters in MySQL/MariaDB (the database created in the Hestia panel). The table is created
- * on start. One row per (scope, subject, day); old days are pruned. No CV content is ever stored.
+ * on start. One row per (scope, subject, day); old days are pruned. All-time counters (visitors)
+ * live in a second table that is never pruned. No CV content is ever stored.
  */
 import mysql from 'mysql2/promise';
 import type { QuotaStore } from './quota';
 import type { ServerConfig } from './config';
 
 const TABLE = 'cvmaker_ai_usage';
+const TOTALS = 'cvmaker_totals';
 
 export async function mysqlQuotaStore(db: NonNullable<ServerConfig['db']>): Promise<QuotaStore> {
 	const pool = mysql.createPool({
@@ -30,6 +32,19 @@ export async function mysqlQuotaStore(db: NonNullable<ServerConfig['db']>): Prom
 			KEY day_idx (day)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
 	);
+	await pool.query(
+		`CREATE TABLE IF NOT EXISTS ${TOTALS} (
+			name VARCHAR(32) NOT NULL PRIMARY KEY,
+			value BIGINT UNSIGNED NOT NULL DEFAULT 0
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+	);
+	const total = async (name: string): Promise<number> => {
+		const [rows] = await pool.execute<mysql.RowDataPacket[]>(
+			`SELECT value FROM ${TOTALS} WHERE name = ?`,
+			[name]
+		);
+		return Number(rows[0]?.value ?? 0);
+	};
 
 	return {
 		async increment(scope, subject, day, limit) {
@@ -60,6 +75,14 @@ export async function mysqlQuotaStore(db: NonNullable<ServerConfig['db']>): Prom
 		async prune(beforeDay) {
 			await pool.execute(`DELETE FROM ${TABLE} WHERE day < ?`, [beforeDay]);
 		},
+		async addTotal(name) {
+			await pool.execute(
+				`INSERT INTO ${TOTALS} (name, value) VALUES (?, 1) ON DUPLICATE KEY UPDATE value = value + 1`,
+				[name]
+			);
+			return total(name);
+		},
+		total,
 		async close() {
 			await pool.end();
 		}
