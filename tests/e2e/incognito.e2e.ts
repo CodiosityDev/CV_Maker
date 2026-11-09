@@ -162,7 +162,16 @@ test('three idle hours erase an open CV, stop edits and leave the tab incognito'
 	await expect(name).toBeDisabled();
 	await expect(page.getByRole('button', { name: 'Lanjut', exact: true })).toBeDisabled();
 	await page.keyboard.type('Tidak boleh tersimpan');
-	await expect(name).toHaveValue(secretName);
+	// The erased CV is purged from memory too: no personal data left on screen (security review).
+	await expect(name).toHaveValue('');
+	await expect(page.getByText(secretName)).toHaveCount(0);
+	expect(
+		await page
+			.locator('input, textarea')
+			.evaluateAll((fields) =>
+				fields.some((field) => (field as HTMLInputElement).value.includes('Rahasia'))
+			)
+	).toBe(false);
 	await expect(banner(page)).toBeVisible();
 	await expect(banner(page)).not.toContainText(/Dihapus otomatis pukul/);
 	await page.getByRole('link', { name: 'Buat CV baru', exact: true }).click();
