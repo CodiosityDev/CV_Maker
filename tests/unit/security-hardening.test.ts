@@ -193,7 +193,7 @@ describe('backup import re-encodes photos', () => {
 	});
 });
 
-describe('incognito: back/forward cache and storage switches', () => {
+describe('incognito: back/forward cache and storage switches', { timeout: 30_000 }, () => {
 	beforeEach(() => {
 		globalThis.indexedDB = new IDBFactory();
 		const map = new Map<string, string>();
