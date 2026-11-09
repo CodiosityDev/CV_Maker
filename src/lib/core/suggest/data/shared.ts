@@ -166,5 +166,3 @@ export const CITIES: string[] = [
 	'Palangka Raya',
 	'Tarakan'
 ];
-
-export const DEGREES: string[] = ['S1', 'D3', 'D4', 'SMK', 'SMA', 'S2', 'D1', 'D2', 'S3'];

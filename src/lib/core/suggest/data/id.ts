@@ -1,5 +1,6 @@
 import type { SuggestionData } from '../types';
-import { CITIES, DEGREES, INSTITUTIONS, PROVINCES } from './shared';
+import { degreeOptions } from '../../education/index';
+import { CITIES, INSTITUTIONS, PROVINCES } from './shared';
 
 const SOFT_SKILLS = [
 	'Komunikasi',
@@ -487,7 +488,7 @@ export const suggestionsId: SuggestionData = {
 		'Otomatisasi dan Tata Kelola Perkantoran'
 	],
 	institutions: INSTITUTIONS,
-	degrees: DEGREES,
+	degrees: degreeOptions('id'),
 	orgRoles: [
 		'Ketua',
 		'Wakil Ketua',
