@@ -132,6 +132,8 @@
 	const doneAtsScore = $derived(
 		step === 'done' && !sessionExpired ? analyzeCv($state.snapshot(store.cv)).score : undefined
 	);
+	const removed = $derived(store.externalChange === 'removed');
+	let removalNotice = $state<HTMLDivElement>();
 	const collectionSteps: WizardStepId[] = [
 		'education',
 		'experience',
@@ -140,13 +142,16 @@
 		'skills'
 	];
 	$effect(() => {
-		if (store.externalChange !== 'removed') return;
+		if (!removed) return;
 		previewOpen = false;
 		replaceOpen = false;
 		pendingSummary = '';
 		jobPost = '';
 		atsReport = undefined;
 		atsKeywords = undefined;
+		void tick().then(() => {
+			if (mounted && removed) removalNotice?.focus({ preventScroll: true });
+		});
 	});
 
 	onMount(() => {
@@ -285,7 +290,7 @@
 		photoUrl = undefined;
 		photoLoadError = false;
 		photoMissing = false;
-		if (id && !sessionExpired)
+		if (id && !removed && !sessionExpired)
 			void assetRepo.getPhotoUrl(id).then(
 				(loaded) => {
 					if (!current) {
@@ -306,7 +311,7 @@
 		};
 	});
 	$effect(() => {
-		if (step !== 'done') return;
+		if (step !== 'done' || removed) return;
 		if (!store.cv.status.wizardCompleted)
 			store.update(
 				(draft) => {
@@ -546,324 +551,347 @@
 <svelte:window onkeydown={shortcut} />
 
 <div class="wizard">
-	<div class="progress-panel">
-		<Stepper steps={labels} shortSteps={shortLabels} current={index - 1} />
-	</div>
-	{#if memory}<p class="banner warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
-	{#if store.externalChange !== 'none'}
-		<div class="banner warning" role="alert">
-			<p>
-				{t(
-					store.externalChange === 'removed'
-						? incognito.active && incognito.expiredAt
-							? 'incognito.expiredMessage'
-							: 'wizard.externalRemoved'
-						: 'wizard.externalUpdated'
-				)}
-			</p>
-			<div class="button-row">
-				{#if store.externalChange === 'removed'}<Button href="/buat">{t('wizard.startNew')}</Button>
-				{:else}<Button variant="secondary" onclick={reload}>{t('wizard.reload')}</Button><Button
-						variant="ghost"
-						onclick={() => store.keepLocalVersion()}>{t('wizard.keepLocal')}</Button
-					>{/if}
+	{#if removed}
+		<Card>
+			<div
+				class="removed-notice"
+				role="alert"
+				tabindex="-1"
+				bind:this={removalNotice}
+				data-testid="removed-cv"
+			>
+				<p>{t(sessionExpired ? 'incognito.expiredMessage' : 'wizard.externalRemoved')}</p>
+				<div class="button-row">
+					<Button href="/buat">{t('wizard.startNew')}</Button>
+					<Button href="/cv" variant="secondary">{t('nav.myCvs')}</Button>
+				</div>
+			</div>
+		</Card>
+	{:else}
+		<div class="progress-panel">
+			<Stepper steps={labels} shortSteps={shortLabels} current={index - 1} />
+		</div>
+		{#if memory}<p class="banner warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
+		{#if store.externalChange !== 'none'}
+			<div class="banner warning" role="alert">
+				<p>
+					{t(
+						store.externalChange === 'removed'
+							? incognito.active && incognito.expiredAt
+								? 'incognito.expiredMessage'
+								: 'wizard.externalRemoved'
+							: 'wizard.externalUpdated'
+					)}
+				</p>
+				<div class="button-row">
+					{#if store.externalChange === 'removed'}<Button href="/buat"
+							>{t('wizard.startNew')}</Button
+						>
+					{:else}<Button variant="secondary" onclick={reload}>{t('wizard.reload')}</Button><Button
+							variant="ghost"
+							onclick={() => store.keepLocalVersion()}>{t('wizard.keepLocal')}</Button
+						>{/if}
+				</div>
+			</div>
+		{/if}
+		<div class="toolbar">
+			<div
+				class="save-status"
+				role="status"
+				aria-live="polite"
+				data-testid="save-status"
+				data-save-state={store.saveState === 'error'
+					? 'error'
+					: store.saveState === 'saving' || pendingSave
+						? 'saving'
+						: 'saved'}
+			>
+				{#if store.externalChange === 'removed' && incognito.active && incognito.expiredAt}
+					{t('incognito.expiredStatus')}
+				{:else if store.saveState === 'error'}<span class="error">{t('wizard.saveError')}</span
+					><Button variant="ghost" onclick={() => store.flush()}>{t('wizard.retry')}</Button>
+				{:else if store.saveState === 'saving' || pendingSave}{t('wizard.saving')}
+				{:else}{t(
+						incognito.active ? 'incognito.saved' : memory ? 'wizard.savedMemory' : 'wizard.saved'
+					)}{/if}
+			</div>
+			<div class="history">
+				<Button
+					variant="secondary"
+					size="sm"
+					class="history-action"
+					title={t('wizard.undo')}
+					aria-label={t('wizard.undo')}
+					disabled={!store.canUndo || store.externalChange === 'removed'}
+					onclick={() => store.undo()}><span aria-hidden="true">↶</span></Button
+				>
+				<Button
+					variant="secondary"
+					size="sm"
+					class="history-action"
+					title={t('wizard.redo')}
+					aria-label={t('wizard.redo')}
+					disabled={!store.canRedo || store.externalChange === 'removed'}
+					onclick={() => store.redo()}><span aria-hidden="true">↷</span></Button
+				>
 			</div>
 		</div>
-	{/if}
-	<div class="toolbar">
-		<div
-			class="save-status"
-			role="status"
-			aria-live="polite"
-			data-testid="save-status"
-			data-save-state={store.saveState === 'error'
-				? 'error'
-				: store.saveState === 'saving' || pendingSave
-					? 'saving'
-					: 'saved'}
-		>
-			{#if store.externalChange === 'removed' && incognito.active && incognito.expiredAt}
-				{t('incognito.expiredStatus')}
-			{:else if store.saveState === 'error'}<span class="error">{t('wizard.saveError')}</span
-				><Button variant="ghost" onclick={() => store.flush()}>{t('wizard.retry')}</Button>
-			{:else if store.saveState === 'saving' || pendingSave}{t('wizard.saving')}
-			{:else}{t(
-					incognito.active ? 'incognito.saved' : memory ? 'wizard.savedMemory' : 'wizard.saved'
-				)}{/if}
-		</div>
-		<div class="history">
-			<Button
-				variant="secondary"
-				size="sm"
-				class="history-action"
-				title={t('wizard.undo')}
-				aria-label={t('wizard.undo')}
-				disabled={!store.canUndo || store.externalChange === 'removed'}
-				onclick={() => store.undo()}><span aria-hidden="true">↶</span></Button
-			>
-			<Button
-				variant="secondary"
-				size="sm"
-				class="history-action"
-				title={t('wizard.redo')}
-				aria-label={t('wizard.redo')}
-				disabled={!store.canRedo || store.externalChange === 'removed'}
-				onclick={() => store.redo()}><span aria-hidden="true">↷</span></Button
-			>
-		</div>
-	</div>
-	<div class="workspace" class:full={step === 'review' || step === 'done'}>
-		<form novalidate autocomplete={incognito.active ? 'off' : undefined} onsubmit={next}>
-			<Card>
-				<header class="step-heading">
-					{#if isStepOptional(index)}<span class="optional-chip">{t('wizard.optional')}</span>{/if}
-					<h1 bind:this={heading} tabindex="-1">{t(`wizard.steps.${step}.title`)}</h1>
-					<p>{t(`wizard.steps.${step}.description`)}</p>
-				</header>
-				{#if guidanceError || exampleError}<p class="banner warning">
-						{t('wizard.loadError')}
-						<Button variant="ghost" onclick={() => guidanceAttempt++}>{t('wizard.retry')}</Button>
-					</p>{/if}
-				{#if step !== 'done' && guidance?.stepTips[step].length}
-					<details class="tips">
-						<summary>{t('wizard.tips')}</summary>
-						<ul>
-							{#each guidance.stepTips[step].slice(0, 3) as tip (tip)}<li>{tip}</li>{/each}
-						</ul>
-					</details>
-				{/if}
-				<fieldset class="step-fields" disabled={store.externalChange === 'removed'}>
-					{#if step === 'target'}
-						<Select
-							id="locale"
-							label={t('wizard.fields.locale')}
-							options={[
-								{ value: 'id', label: t('locale.id') },
-								{ value: 'en', label: t('locale.en') }
-							]}
-							bind:value={
-								() => store.cv.locale,
-								(value) =>
-									store.update(
-										(draft) => {
-											draft.locale = value === 'en' ? 'en' : 'id';
-										},
-										{ coalesceKey: 'locale' }
-									)
-							}
-						/>
-						<Autocomplete
-							id="targetRole"
-							label={t('wizard.fields.targetRole')}
-							popularWhenEmpty
-							suggestions={(query) =>
-								suggestionsData
-									? suggest(suggestionsData, 'jobTitle', query, { popularWhenEmpty: true })
-									: []}
-							maxlength={LIMITS.title}
-							showCounter
-							bind:value={
-								() => store.cv.targetRole ?? '',
-								(value) =>
-									store.update(
-										(draft) => {
-											draft.targetRole = value;
-										},
-										{ coalesceKey: 'targetRole' }
-									)
-							}
-						/>
-						<Input
-							id="title"
-							label={t('wizard.fields.title')}
-							maxlength={LIMITS.cvTitle}
-							showCounter
-							bind:value={
-								() => store.cv.title,
-								(value) =>
-									store.update(
-										(draft) => {
-											draft.title = value;
-										},
-										{ coalesceKey: 'title' }
-									)
-							}
-						/>
-					{:else if step === 'personal'}
-						{#if photoMissing}<p role="alert" class="error">{t('wizard.photoMissing')}</p>{/if}
-						{#if photoLoadError}<p role="alert" class="error">{t('wizard.photoFailed')}</p>{/if}
-						<PersonalStep {store} {issues} {photoUrl} {suggestionsData} />
-					{:else if collectionSteps.includes(step)}
-						<CollectionSteps
-							{store}
-							{step}
-							{issues}
-							{examples}
-							{suggestionsData}
-							onTarget={() => move(1)}
-						/>
-					{:else if step === 'summary'}
-						<Textarea
-							id="summary"
-							label={t('wizard.fields.summary')}
-							hideLabel
-							maxlength={LIMITS.summary}
-							bind:value={
-								() => store.cv.summary,
-								(value) =>
-									store.update(
-										(draft) => {
-											draft.summary = value;
-										},
-										{ coalesceKey: 'summary' }
-									)
-							}
-						/>
-						{#if examples}
-							<details class="tips">
-								<summary>{t('wizard.actionVerbs')}</summary>
-								<p>{examples.actionVerbs.join(', ')}</p>
-							</details>
-							<details class="tips summary-examples">
-								<summary>{t('wizard.examples')}</summary>
-								<div class="examples">
-									{#each summaryExamples.slice(0, 1) as example (example.field)}<article>
-											<h2>{example.label}</h2>
-											<p>{example.text}</p>
-											<Button variant="secondary" onclick={() => useSummary(example.text)}
-												>{t('wizard.useSummary')}</Button
-											>
-										</article>{/each}
-								</div>
-								{#if summaryExamples.length > 1}
-									<details class="other-examples">
-										<summary>{t('wizard.otherExamples')}</summary>
-										<div class="examples">
-											{#each summaryExamples.slice(1) as example (example.field)}<article>
-													<h2>{example.label}</h2>
-													<p>{example.text}</p>
-													<Button variant="secondary" onclick={() => useSummary(example.text)}
-														>{t('wizard.useSummary')}</Button
-													>
-												</article>{/each}
-										</div>
-									</details>
-								{/if}
-							</details>
-						{/if}
-					{:else if step === 'review'}
-						{#if reviewIssues.length}
-							<div class="review-issues" role="status">
-								<h2>{t('wizard.reviewIssues')}</h2>
-								<p>{t('wizard.reviewInstruction')}</p>
-								<ul>
-									{#each reviewIssues as issue (`${issue.field}-${issue.messageKey}`)}<li>
-											<button type="button" onclick={() => jumpToIssue(issue)}
-												>{issueText(issue)}</button
-											>
-										</li>{/each}
-								</ul>
-							</div>
-						{:else}<p class="ready" role="status">{t('wizard.reviewReady')}</p>{/if}
-						{#if !sessionExpired}
-							<AtsPanel
-								report={atsReport}
-								keywords={atsKeywords}
-								loading={atsLoading}
-								failed={atsFailed}
-								bind:jobPost
-								onjump={jumpToIssue}
-								onadd={addAtsKeyword}
-								canAdd={canAddAtsKeyword}
-								onretry={() => (atsRetry += 1)}
-							/>
-							<TemplatePicker {store} {model} />
-							<p class="hint">{t('wizard.previewNotice')}</p>
-							<CvPreview {model} />
-						{/if}
-					{:else if step === 'done'}
-						{#if doneAtsScore !== undefined}<p
-								class="ats-done-summary"
-								data-testid="ats-done-summary"
-							>
-								{t('atsPanel.doneScore', { score: doneAtsScore })} ·
-								<a href="#ats-panel" onclick={checkAtsAgain}>{t('atsPanel.checkAgain')}</a>
-							</p>{/if}
-						{#if !sessionExpired}<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />{/if}
-						<div class="done-actions">
-							<Button href="/cv" variant="secondary" onclick={openDashboard}
-								>{t('wizard.goDashboard')}</Button
-							>
-							<Button variant="ghost" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
-						</div>
-						{#if !sessionExpired}
-							<p class="hint">{t('wizard.previewNotice')}</p>
-							<CvPreview {model} />
-						{/if}
+		<div class="workspace" class:full={step === 'review' || step === 'done'}>
+			<form novalidate autocomplete={incognito.active ? 'off' : undefined} onsubmit={next}>
+				<Card>
+					<header class="step-heading">
+						{#if isStepOptional(index)}<span class="optional-chip">{t('wizard.optional')}</span
+							>{/if}
+						<h1 bind:this={heading} tabindex="-1">{t(`wizard.steps.${step}.title`)}</h1>
+						<p>{t(`wizard.steps.${step}.description`)}</p>
+					</header>
+					{#if guidanceError || exampleError}<p class="banner warning">
+							{t('wizard.loadError')}
+							<Button variant="ghost" onclick={() => guidanceAttempt++}>{t('wizard.retry')}</Button>
+						</p>{/if}
+					{#if step !== 'done' && guidance?.stepTips[step].length}
+						<details class="tips">
+							<summary>{t('wizard.tips')}</summary>
+							<ul>
+								{#each guidance.stepTips[step].slice(0, 3) as tip (tip)}<li>{tip}</li>{/each}
+							</ul>
+						</details>
 					{/if}
-				</fieldset>
-			</Card>
-			{#if step !== 'done'}
-				<div class="bottom-actions">
-					<Button variant="secondary" onclick={back}>{t('wizard.back')}</Button>
-					{#if !desktop}<Button
-							variant="ghost"
-							class="preview-action"
-							disabled={store.externalChange === 'removed'}
-							aria-label={t('preview.open')}
-							title={t('preview.open')}
-							onclick={() => (previewOpen = true)}
-							><svg
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1.75"
-								aria-hidden="true"
-								><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle
-									cx="12"
-									cy="12"
-									r="3"
-								/></svg
-							></Button
-						>{/if}
-					{#if isStepOptional(index)}<Button
-							variant="ghost"
-							disabled={store.externalChange === 'removed'}
-							onclick={() => move(nextStepIndex(index))}>{t('wizard.skip')}</Button
-						>{/if}
-					<Button type="submit" disabled={store.externalChange === 'removed'}
-						>{t(step === 'review' ? 'wizard.finish' : 'wizard.next')}</Button
-					>
-				</div>
+					<fieldset class="step-fields" disabled={store.externalChange === 'removed'}>
+						{#if step === 'target'}
+							<Select
+								id="locale"
+								label={t('wizard.fields.locale')}
+								options={[
+									{ value: 'id', label: t('locale.id') },
+									{ value: 'en', label: t('locale.en') }
+								]}
+								bind:value={
+									() => store.cv.locale,
+									(value) =>
+										store.update(
+											(draft) => {
+												draft.locale = value === 'en' ? 'en' : 'id';
+											},
+											{ coalesceKey: 'locale' }
+										)
+								}
+							/>
+							<Autocomplete
+								id="targetRole"
+								label={t('wizard.fields.targetRole')}
+								popularWhenEmpty
+								suggestions={(query) =>
+									suggestionsData
+										? suggest(suggestionsData, 'jobTitle', query, { popularWhenEmpty: true })
+										: []}
+								maxlength={LIMITS.title}
+								showCounter
+								bind:value={
+									() => store.cv.targetRole ?? '',
+									(value) =>
+										store.update(
+											(draft) => {
+												draft.targetRole = value;
+											},
+											{ coalesceKey: 'targetRole' }
+										)
+								}
+							/>
+							<Input
+								id="title"
+								label={t('wizard.fields.title')}
+								maxlength={LIMITS.cvTitle}
+								showCounter
+								bind:value={
+									() => store.cv.title,
+									(value) =>
+										store.update(
+											(draft) => {
+												draft.title = value;
+											},
+											{ coalesceKey: 'title' }
+										)
+								}
+							/>
+						{:else if step === 'personal'}
+							{#if photoMissing}<p role="alert" class="error">{t('wizard.photoMissing')}</p>{/if}
+							{#if photoLoadError}<p role="alert" class="error">{t('wizard.photoFailed')}</p>{/if}
+							<PersonalStep {store} {issues} {photoUrl} {suggestionsData} />
+						{:else if collectionSteps.includes(step)}
+							<CollectionSteps
+								{store}
+								{step}
+								{issues}
+								{examples}
+								{suggestionsData}
+								onTarget={() => move(1)}
+							/>
+						{:else if step === 'summary'}
+							<Textarea
+								id="summary"
+								label={t('wizard.fields.summary')}
+								hideLabel
+								maxlength={LIMITS.summary}
+								bind:value={
+									() => store.cv.summary,
+									(value) =>
+										store.update(
+											(draft) => {
+												draft.summary = value;
+											},
+											{ coalesceKey: 'summary' }
+										)
+								}
+							/>
+							{#if examples}
+								<details class="tips">
+									<summary>{t('wizard.actionVerbs')}</summary>
+									<p>{examples.actionVerbs.join(', ')}</p>
+								</details>
+								<details class="tips summary-examples">
+									<summary>{t('wizard.examples')}</summary>
+									<div class="examples">
+										{#each summaryExamples.slice(0, 1) as example (example.field)}<article>
+												<h2>{example.label}</h2>
+												<p>{example.text}</p>
+												<Button variant="secondary" onclick={() => useSummary(example.text)}
+													>{t('wizard.useSummary')}</Button
+												>
+											</article>{/each}
+									</div>
+									{#if summaryExamples.length > 1}
+										<details class="other-examples">
+											<summary>{t('wizard.otherExamples')}</summary>
+											<div class="examples">
+												{#each summaryExamples.slice(1) as example (example.field)}<article>
+														<h2>{example.label}</h2>
+														<p>{example.text}</p>
+														<Button variant="secondary" onclick={() => useSummary(example.text)}
+															>{t('wizard.useSummary')}</Button
+														>
+													</article>{/each}
+											</div>
+										</details>
+									{/if}
+								</details>
+							{/if}
+						{:else if step === 'review'}
+							{#if reviewIssues.length}
+								<div class="review-issues" role="status">
+									<h2>{t('wizard.reviewIssues')}</h2>
+									<p>{t('wizard.reviewInstruction')}</p>
+									<ul>
+										{#each reviewIssues as issue (`${issue.field}-${issue.messageKey}`)}<li>
+												<button type="button" onclick={() => jumpToIssue(issue)}
+													>{issueText(issue)}</button
+												>
+											</li>{/each}
+									</ul>
+								</div>
+							{:else}<p class="ready" role="status">{t('wizard.reviewReady')}</p>{/if}
+							{#if !sessionExpired}
+								<AtsPanel
+									report={atsReport}
+									keywords={atsKeywords}
+									loading={atsLoading}
+									failed={atsFailed}
+									bind:jobPost
+									onjump={jumpToIssue}
+									onadd={addAtsKeyword}
+									canAdd={canAddAtsKeyword}
+									onretry={() => (atsRetry += 1)}
+								/>
+								<TemplatePicker {store} {model} />
+								<p class="hint">{t('wizard.previewNotice')}</p>
+								<CvPreview {model} />
+							{/if}
+						{:else if step === 'done'}
+							{#if doneAtsScore !== undefined}<p
+									class="ats-done-summary"
+									data-testid="ats-done-summary"
+								>
+									{t('atsPanel.doneScore', { score: doneAtsScore })} ·
+									<a href="#ats-panel" onclick={checkAtsAgain}>{t('atsPanel.checkAgain')}</a>
+								</p>{/if}
+							{#if !sessionExpired}<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />{/if}
+							<div class="done-actions">
+								<Button href="/cv" variant="secondary" onclick={openDashboard}
+									>{t('wizard.goDashboard')}</Button
+								>
+								<Button variant="ghost" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
+							</div>
+							{#if !sessionExpired}
+								<p class="hint">{t('wizard.previewNotice')}</p>
+								<CvPreview {model} />
+							{/if}
+						{/if}
+					</fieldset>
+				</Card>
+				{#if step !== 'done'}
+					<div class="bottom-actions">
+						<Button variant="secondary" onclick={back}>{t('wizard.back')}</Button>
+						{#if !desktop}<Button
+								variant="ghost"
+								class="preview-action"
+								disabled={store.externalChange === 'removed'}
+								aria-label={t('preview.open')}
+								title={t('preview.open')}
+								onclick={() => (previewOpen = true)}
+								><svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.75"
+									aria-hidden="true"
+									><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle
+										cx="12"
+										cy="12"
+										r="3"
+									/></svg
+								></Button
+							>{/if}
+						{#if isStepOptional(index)}<Button
+								variant="ghost"
+								disabled={store.externalChange === 'removed'}
+								onclick={() => move(nextStepIndex(index))}>{t('wizard.skip')}</Button
+							>{/if}
+						<Button type="submit" disabled={store.externalChange === 'removed'}
+							>{t(step === 'review' ? 'wizard.finish' : 'wizard.next')}</Button
+						>
+					</div>
+				{/if}
+			</form>
+			{#if desktop && step !== 'review' && step !== 'done' && !sessionExpired}
+				<aside class="preview-panel" aria-label={t('preview.label')}>
+					<div class="preview-heading">
+						<h2>{t('preview.label')}</h2>
+					</div>
+					<CvPreview {model} />
+				</aside>
 			{/if}
-		</form>
-		{#if desktop && step !== 'review' && step !== 'done' && !sessionExpired}
-			<aside class="preview-panel" aria-label={t('preview.label')}>
-				<div class="preview-heading">
-					<h2>{t('preview.label')}</h2>
-				</div>
-				<CvPreview {model} />
-			</aside>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
-<BottomSheet
-	bind:open={previewOpen}
-	title={t('preview.label')}
-	description={t('wizard.previewNotice')}
->
-	{#if previewOpen && !sessionExpired}<CvPreview {model} />{/if}
-</BottomSheet>
-<Dialog
-	bind:open={replaceOpen}
-	title={t('wizard.replaceTitle')}
-	description={t('wizard.replaceDescription')}
->
-	{#snippet footer()}<Button variant="secondary" onclick={() => (replaceOpen = false)}
-			>{t('common.cancel')}</Button
-		><Button onclick={applySummary}>{t('wizard.replace')}</Button>{/snippet}
-</Dialog>
+{#if !removed}
+	<BottomSheet
+		bind:open={previewOpen}
+		title={t('preview.label')}
+		description={t('wizard.previewNotice')}
+	>
+		{#if previewOpen && !sessionExpired}<CvPreview {model} />{/if}
+	</BottomSheet>
+	<Dialog
+		bind:open={replaceOpen}
+		title={t('wizard.replaceTitle')}
+		description={t('wizard.replaceDescription')}
+	>
+		{#snippet footer()}<Button variant="secondary" onclick={() => (replaceOpen = false)}
+				>{t('common.cancel')}</Button
+			><Button onclick={applySummary}>{t('wizard.replace')}</Button>{/snippet}
+	</Dialog>
+{/if}
 
 <style>
 	.ats-done-summary {
@@ -875,6 +903,9 @@
 		align-items: center;
 		min-height: 44px;
 		color: var(--color-brand-ink);
+	}
+	.removed-notice p {
+		margin-bottom: 16px;
 	}
 	.done-actions {
 		display: flex;

@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { exportFileName } from '#lib/core/export/index.ts';
 	import { toRenderModel, type RenderModel } from '#lib/core/render/index.ts';
-	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { resolveTemplate, type TemplateComponent } from '#lib/templates/registry.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -20,9 +20,14 @@
 	let scale = $state(0);
 	let height = $state(0);
 	let originalTitle: string | undefined;
+	let titleTimer: ReturnType<typeof setTimeout> | undefined;
+	let removedId = $state<string>();
 	const expired = $derived(incognito.active && Boolean(incognito.expiredAt));
+	const unavailable = $derived(expired || Boolean(data.cv && removedId === data.cv.id));
 
 	function restoreTitle() {
+		clearTimeout(titleTimer);
+		titleTimer = undefined;
 		if (originalTitle === undefined) return;
 		document.title = originalTitle;
 		originalTitle = undefined;
@@ -30,8 +35,18 @@
 
 	onMount(() => {
 		document.documentElement.classList.add('cv-print-route');
+		window.addEventListener('beforeprint', preparePrintTitle);
 		window.addEventListener('afterprint', restoreTitle);
+		const unsubscribe = onExternalChange((event) => {
+			const id = data.cv?.id;
+			if (id && (event.type === 'wiped' || (event.type === 'cv-removed' && event.id === id))) {
+				removedId = id;
+				restoreTitle();
+			}
+		});
 		return () => {
+			unsubscribe();
+			window.removeEventListener('beforeprint', preparePrintTitle);
 			window.removeEventListener('afterprint', restoreTitle);
 			restoreTitle();
 			document.documentElement.classList.remove('cv-print-route');
@@ -39,7 +54,8 @@
 	});
 
 	$effect(() => {
-		const cv = expired ? undefined : data.cv;
+		const cv = unavailable ? undefined : data.cv;
+		if (unavailable) restoreTitle();
 		void retry;
 		let cancelled = false;
 		let photoUrl: string | undefined;
@@ -105,15 +121,24 @@
 		};
 	});
 
-	function printCv() {
+	function preparePrintTitle() {
 		const cv = data.cv;
-		if (!cv || expired || !Template || !model || loading) return;
+		if (!cv || unavailable) return;
+		originalTitle ??= document.title;
+		document.title = incognito.active
+			? t('printPage.incognitoTitle')
+			: exportFileName(
+					{ fullName: cv.personal.fullName, targetRole: cv.targetRole, title: cv.title },
+					'pdf'
+				).replace(/\.pdf$/, '');
+		clearTimeout(titleTimer);
+		titleTimer = setTimeout(restoreTitle, 1000);
+	}
+
+	function printCv() {
+		if (!data.cv || unavailable || !Template || !model || loading) return;
 		restoreTitle();
-		originalTitle = document.title;
-		document.title = exportFileName(
-			{ fullName: cv.personal.fullName, targetRole: cv.targetRole, title: cv.title },
-			'pdf'
-		).replace(/\.pdf$/, '');
+		preparePrintTitle();
 		try {
 			window.print();
 		} catch {
@@ -126,10 +151,13 @@
 <svelte:head><title>{t('printPage.title')} · {t('app.name')}</title></svelte:head>
 
 <div class="print-page">
-	{#if expired}
-		<div class="print-status" role="alert">
-			<p>{t('incognito.expiredMessage')}</p>
-			<Button href="/buat">{t('wizard.startNew')}</Button>
+	{#if unavailable}
+		<div class="print-status" role="alert" data-testid="removed-cv">
+			<p>{t(expired ? 'incognito.expiredMessage' : 'wizard.externalRemoved')}</p>
+			<div class="print-recovery-actions">
+				<Button href="/buat">{t('wizard.startNew')}</Button>
+				<Button href="/cv" variant="secondary">{t('dashboard.title')}</Button>
+			</div>
 		</div>
 	{:else if data.cv}
 		<div class="print-toolbar" data-testid="print-toolbar">
@@ -194,6 +222,11 @@
 		justify-content: space-between;
 		gap: 8px;
 		margin-bottom: 16px;
+	}
+	.print-recovery-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
 	}
 	.print-guide {
 		margin-bottom: 24px;

@@ -53,20 +53,22 @@
 			memory = mode === 'memory';
 			listError = false;
 			const ids = new Set(list.map((cv) => cv.id));
-			if (menuCv && !ids.has(menuCv.id)) menuOpen = false;
-			if (renameCv && !ids.has(renameCv.id)) renameOpen = false;
-			if (deleteCv && !ids.has(deleteCv.id)) deleteOpen = false;
+			for (const cv of [menuCv, renameCv, deleteCv, exportCv]) {
+				if (cv && !ids.has(cv.id)) clearDialogs(cv.id);
+			}
 			if (exportOpen && exportCv) {
 				const id = exportCv.id;
-				if (!ids.has(id)) {
-					exportOpen = false;
-					exportCv = undefined;
-				} else {
-					const doc = await cvRepo.get(id);
-					if (active && request === listRequest && exportOpen && exportCv?.id === id) {
-						exportCv = doc ?? undefined;
-						if (!doc) exportOpen = false;
-					}
+				const doc = await cvRepo.get(id);
+				if (
+					active &&
+					request === listRequest &&
+					session === incognito.active &&
+					expiredAt === incognito.expiredAt &&
+					exportOpen &&
+					exportCv?.id === id
+				) {
+					exportCv = doc ?? undefined;
+					if (!doc) exportOpen = false;
 				}
 			}
 		} catch {
@@ -78,7 +80,11 @@
 
 	onMount(() => {
 		active = true;
-		const unsubscribe = onExternalChange(() => void refresh());
+		const unsubscribe = onExternalChange((event) => {
+			if (event.type === 'cv-removed') forgetCv(event.id);
+			else if (event.type === 'wiped') forgetCv();
+			void refresh();
+		});
 		const visible = () => {
 			if (document.visibilityState === 'visible') void refresh();
 		};
@@ -91,18 +97,34 @@
 		};
 	});
 
-	function clearDialogs() {
-		menuOpen = false;
-		menuCv = undefined;
-		renameOpen = false;
-		renameCv = undefined;
-		renameTitle = '';
-		deleteOpen = false;
-		deleteCv = undefined;
-		exportOpen = false;
-		exportCv = undefined;
-		wipeOpen = false;
-		wipeText = '';
+	function clearDialogs(id?: string) {
+		if (id === undefined || menuCv?.id === id) {
+			menuOpen = false;
+			menuCv = undefined;
+		}
+		if (id === undefined || renameCv?.id === id) {
+			renameOpen = false;
+			renameCv = undefined;
+			renameTitle = '';
+			renameError = false;
+		}
+		if (id === undefined || deleteCv?.id === id) {
+			deleteOpen = false;
+			deleteCv = undefined;
+		}
+		if (id === undefined || exportCv?.id === id) {
+			exportOpen = false;
+			exportCv = undefined;
+		}
+		if (id === undefined) {
+			wipeOpen = false;
+			wipeText = '';
+		}
+	}
+
+	function forgetCv(id?: string) {
+		cvs = id === undefined ? [] : cvs.filter((cv) => cv.id !== id);
+		clearDialogs(id);
 	}
 
 	$effect(() => {
@@ -140,7 +162,10 @@
 		const session = incognito.active;
 		const expiredAt = incognito.expiredAt;
 		const sameSession = () =>
-			active && session === incognito.active && expiredAt === incognito.expiredAt;
+			active &&
+			session === incognito.active &&
+			expiredAt === incognito.expiredAt &&
+			cvs.some((item) => item.id === cv.id);
 		busy = true;
 		try {
 			const doc = await cvRepo.get(cv.id);
@@ -228,7 +253,7 @@
 		try {
 			await cvRepo.remove(id);
 			if (!active) return;
-			if (deleteCv?.id === id) deleteOpen = false;
+			forgetCv(id);
 			toast.success(t('dashboard.deleted'));
 			await refresh();
 		} catch {
@@ -245,8 +270,7 @@
 		try {
 			await storage.wipeAll();
 			if (!active) return;
-			wipeOpen = false;
-			wipeText = '';
+			forgetCv();
 			toast.success(t('dashboard.wipeDone'));
 			await refresh();
 		} catch {

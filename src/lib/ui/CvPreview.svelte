@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import type { RenderModel } from '#lib/core/render/index.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
+	import { preventPreviewNavigation } from './prevent-preview-navigation.ts';
 	import {
 		resolveTemplate,
 		type TemplateComponent,
@@ -93,7 +94,12 @@
 		</div>
 	{/if}
 	<div class="viewport" bind:this={container} style:height="{height}px">
-		<div class="paper" bind:this={paper} style:transform="scale({scale})">
+		<div
+			class="paper"
+			bind:this={paper}
+			use:preventPreviewNavigation
+			style:transform="scale({scale})"
+		>
 			{#if Template}<Template model={renderedModel} />{/if}
 		</div>
 	</div>

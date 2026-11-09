@@ -12,6 +12,17 @@ const secretName = 'Rahasia Warnet';
 const normalTitle = 'CV Normal Nadia';
 const expiredMessage = 'CV di sesi incognito ini dihapus otomatis karena 3 jam tidak ada perubahan';
 
+async function expectSecretErased(page: Page) {
+	await expect(page.getByText(secretName)).toHaveCount(0);
+	expect(
+		await page
+			.locator('input, textarea')
+			.evaluateAll((fields) =>
+				fields.some((field) => (field as HTMLInputElement).value.includes('Rahasia'))
+			)
+	).toBe(false);
+}
+
 async function createPersonal(page: Page, title: string, kind: 'ats' | 'creative' = 'ats') {
 	await page
 		.getByRole('button', {
@@ -159,19 +170,15 @@ test('three idle hours erase an open CV, stop edits and leave the tab incognito'
 	await expect(page.getByTestId('cv-preview')).toHaveCount(0);
 	await expect(page.getByRole('alert').filter({ hasText: expiredMessage })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Buat CV baru', exact: true })).toBeVisible();
-	await expect(name).toBeDisabled();
-	await expect(page.getByRole('button', { name: 'Lanjut', exact: true })).toBeDisabled();
+	await expect(page.getByTestId('removed-cv')).toBeVisible();
+	await expect(
+		page.getByTestId('removed-cv').getByRole('link', { name: 'CV Saya', exact: true })
+	).toBeVisible();
+	await expect(name).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Lanjut', exact: true })).toHaveCount(0);
+	await expect(page.locator('.toolbar, .workspace, .bottom-actions')).toHaveCount(0);
 	await page.keyboard.type('Tidak boleh tersimpan');
-	// The erased CV is purged from memory too: no personal data left on screen (security review).
-	await expect(name).toHaveValue('');
-	await expect(page.getByText(secretName)).toHaveCount(0);
-	expect(
-		await page
-			.locator('input, textarea')
-			.evaluateAll((fields) =>
-				fields.some((field) => (field as HTMLInputElement).value.includes('Rahasia'))
-			)
-	).toBe(false);
+	await expectSecretErased(page);
 	await expect(banner(page)).toBeVisible();
 	await expect(banner(page)).not.toContainText(/Dihapus otomatis pukul/);
 	await page.getByRole('link', { name: 'Buat CV baru', exact: true }).click();
@@ -180,6 +187,7 @@ test('three idle hours erase an open CV, stop edits and leave the tab incognito'
 	await expect(page.getByTestId('dashboard-empty')).toBeVisible();
 	await expect(cards(page)).toHaveCount(0);
 	await expect(page.getByRole('status').filter({ hasText: expiredMessage })).toBeVisible();
+	await expectSecretErased(page);
 	await expect(banner(page)).toBeVisible();
 });
 
@@ -237,6 +245,7 @@ test('edits move the deadline and idle expiry refreshes an already open dashboar
 	await expect(page.getByTestId('dashboard-empty')).toBeVisible();
 	await expect(cards(page)).toHaveCount(0);
 	await expect(page.getByRole('status').filter({ hasText: expiredMessage })).toBeVisible();
+	await expectSecretErased(page);
 	await expect(banner(page)).toBeVisible();
 	await expect(deadline).toHaveCount(0);
 
@@ -273,6 +282,8 @@ test('idle expiry removes the CV and PDF action from an already open print page'
 	await expect(page.getByRole('alert').filter({ hasText: expiredMessage })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Buat CV baru', exact: true })).toBeVisible();
 	await expect(paper.locator('[data-template]')).toHaveCount(0);
+	await expect(page.getByTestId('removed-cv')).toBeVisible();
+	await expectSecretErased(page);
 	await expect(page.getByRole('button', { name: 'Simpan sebagai PDF', exact: true })).toHaveCount(
 		0
 	);
