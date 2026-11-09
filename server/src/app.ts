@@ -1,6 +1,6 @@
 /**
  * HTTP API (behind nginx at https://cvmaker.codiosity.com/api/…):
- *   GET  /api/health      → { ok: true }
+ *   GET  /api/health      → { ok: true } (503 when the quota database cannot be reached)
  *   GET  /api/ai/quota    → AiQuota            (header X-Device-Token optional)
  *   POST /api/ai/device   → { token }          (anonymous device token)
  *   POST /api/ai/run      → { result, quota }  (body AiRequest, header X-Device-Token)
@@ -181,7 +181,16 @@ export function createApp(deps: AppDeps) {
 		const ip = clientIp(req);
 		const path = (req.url ?? '/').split('?')[0];
 		try {
-			if (req.method === 'GET' && path === '/api/health') return send(res, 200, { ok: true });
+			if (req.method === 'GET' && path === '/api/health') {
+				// Also proves the database and its table work (the deploy checks this endpoint).
+				try {
+					await store.used('global', 'all', wibDay(now()));
+				} catch {
+					log({ event: 'error', path, message: 'quota database unreachable' });
+					return send(res, 503, { ok: false });
+				}
+				return send(res, 200, { ok: true });
+			}
 			if (req.method === 'GET' && path === '/api/ai/quota') {
 				burst(ip, 'other');
 				return send(res, 200, await quotaFor(deviceFrom(req)));

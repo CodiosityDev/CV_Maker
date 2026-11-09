@@ -269,6 +269,17 @@ describe('HTTP API', () => {
 		expect(await quota.json()).toMatchObject({ remaining: 3 });
 	});
 
+	it('health reports the quota database, so a deploy with a broken DB fails', async () => {
+		const { call, store } = await startApi(goodProvider());
+		expect((await call('/api/health')).status).toBe(200);
+		store.used = async () => {
+			throw new Error('ECONNREFUSED');
+		};
+		const broken = await call('/api/health');
+		expect(broken.status).toBe(503);
+		expect(await broken.json()).toEqual({ ok: false });
+	});
+
 	it('rejects other websites, forged tokens, unknown fields and huge bodies', async () => {
 		const { call } = await startApi(goodProvider());
 		const { token } = (await (await call('/api/ai/device', { method: 'POST' })).json()) as {
