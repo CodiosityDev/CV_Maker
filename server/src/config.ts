@@ -53,7 +53,7 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 	if (appSecret.length < 32) throw new Error('APP_SECRET must be at least 32 characters');
 	const baseUrl = required(env, 'AI_BASE_URL').replace(/\/+$/, '');
 	if (!/^https?:\/\//.test(baseUrl)) throw new Error('AI_BASE_URL must start with http(s)://');
-	const models = (env.AI_MODELS ?? 'kr/glm-5,ollama/gpt-oss:120b')
+	const models = (env.AI_MODELS ?? 'cx/gpt-6.1-terra')
 		.split(',')
 		.map((model) => model.trim())
 		.filter(Boolean);
