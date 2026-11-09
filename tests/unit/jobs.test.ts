@@ -4,10 +4,19 @@ import {
 	JOB_SITES,
 	jobSearchLinks,
 	jobSearchQueryFromCv,
-	relatedJobTitles
+	relatedJobTitles,
+	type JobSearchLink,
+	type JobSiteId
 } from '../../src/lib/core/jobs/index';
 import { loadSuggestions } from '../../src/lib/core/suggest/index';
 import { sampleCvAts } from '../../src/lib/core/fixtures/index';
+
+/** The link for one site (fails the test when it is missing). */
+function linkFor(links: JobSearchLink[], site: JobSiteId): JobSearchLink {
+	const link = links.find((item) => item.site === site);
+	if (!link) throw new Error(`no ${site} link`);
+	return link;
+}
 
 const ALLOWED_HOSTS = new Set([
 	'www.linkedin.com',
@@ -21,29 +30,32 @@ describe('job search links', () => {
 	it('builds one https link per site with the keyword and city', () => {
 		const links = jobSearchLinks({ keyword: 'Web Developer', city: 'Bandung' });
 		expect(links.map((link) => link.site)).toEqual(JOB_SITES.map((site) => site.id));
-		const byId = Object.fromEntries(links.map((link) => [link.site, link]));
 
-		expect(byId.linkedin.url).toBe(
+		expect(linkFor(links, 'linkedin').url).toBe(
 			'https://www.linkedin.com/jobs/search/?keywords=Web+Developer&location=Bandung%2C+Indonesia'
 		);
-		expect(byId.jobstreet.url).toBe(
+		expect(linkFor(links, 'jobstreet').url).toBe(
 			'https://id.jobstreet.com/id/jobs?keywords=Web+Developer&where=Bandung'
 		);
-		expect(byId.glints.url).toBe(
+		expect(linkFor(links, 'glints').url).toBe(
 			'https://glints.com/id/opportunities/jobs/explore?keyword=Web+Developer&country=ID&locationName=Bandung'
 		);
-		expect(byId.kalibrr.url).toBe('https://www.kalibrr.com/id-ID/home/te/web-developer');
-		expect(byId.indeed.url).toBe('https://id.indeed.com/jobs?q=Web+Developer&l=Bandung');
+		expect(linkFor(links, 'kalibrr').url).toBe(
+			'https://www.kalibrr.com/id-ID/home/te/web-developer'
+		);
+		expect(linkFor(links, 'indeed').url).toBe(
+			'https://id.indeed.com/jobs?q=Web+Developer&l=Bandung'
+		);
 
-		expect(byId.kalibrr.usesCity).toBe(false);
-		expect(byId.linkedin.usesCity).toBe(true);
+		expect(linkFor(links, 'kalibrr').usesCity).toBe(false);
+		expect(linkFor(links, 'linkedin').usesCity).toBe(true);
 	});
 
 	it('searches all of Indonesia without a city', () => {
 		const links = jobSearchLinks({ keyword: 'Perawat' });
-		const linkedin = links.find((link) => link.site === 'linkedin')!;
+		const linkedin = linkFor(links, 'linkedin');
 		expect(new URL(linkedin.url).searchParams.get('location')).toBe('Indonesia');
-		const jobstreet = links.find((link) => link.site === 'jobstreet')!;
+		const jobstreet = linkFor(links, 'jobstreet');
 		expect(new URL(jobstreet.url).searchParams.has('where')).toBe(false);
 		expect(links.every((link) => !link.usesCity)).toBe(true);
 	});
@@ -72,9 +84,9 @@ describe('job search links', () => {
 	it('limits length, trims whitespace and skips empty keywords', () => {
 		expect(jobSearchLinks({ keyword: '   ' })).toEqual([]);
 		const long = 'x'.repeat(500);
-		const [linkedin] = jobSearchLinks({ keyword: long }, ['linkedin']);
+		const linkedin = linkFor(jobSearchLinks({ keyword: long }, ['linkedin']), 'linkedin');
 		expect(new URL(linkedin.url).searchParams.get('keywords')).toHaveLength(JOB_QUERY_MAX);
-		const [trimmed] = jobSearchLinks({ keyword: '  Data   Analyst ' }, ['indeed']);
+		const trimmed = linkFor(jobSearchLinks({ keyword: '  Data   Analyst ' }, ['indeed']), 'indeed');
 		expect(new URL(trimmed.url).searchParams.get('q')).toBe('Data Analyst');
 	});
 
