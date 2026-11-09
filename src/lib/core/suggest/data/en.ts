@@ -1,5 +1,6 @@
 import type { SuggestionData } from '../types';
-import { CITIES, DEGREES, INSTITUTIONS, PROVINCES } from './shared';
+import { degreeOptions } from '../../education/index';
+import { CITIES, INSTITUTIONS, PROVINCES } from './shared';
 
 export const suggestionsEn: SuggestionData = {
 	jobTitles: [
@@ -485,7 +486,7 @@ export const suggestionsEn: SuggestionData = {
 		'Office Administration'
 	],
 	institutions: INSTITUTIONS,
-	degrees: DEGREES,
+	degrees: degreeOptions('en'),
 	orgRoles: [
 		'Chairperson',
 		'Vice Chairperson',

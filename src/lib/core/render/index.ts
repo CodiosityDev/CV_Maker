@@ -21,6 +21,7 @@ import type {
 	SectionKey,
 	SkillGroups
 } from '../schema/types';
+import { displayDegree, isSchoolLevel, scoreLabel } from '../education/index';
 import { displayUrl, sanitizeUrl } from '../security/url';
 import { formatDateRange, formatYearMonth, phoneHref } from './format';
 import { CV_LABELS, type CvLabels } from './labels';
@@ -97,9 +98,6 @@ export interface RenderOptions {
 const trim = (value: string | undefined): string => (value ?? '').trim();
 const opt = (value: string | undefined): string | undefined => trim(value) || undefined;
 const cleanList = (items: readonly string[]): string[] => items.map(trim).filter(Boolean);
-const join = (...parts: (string | undefined)[]): string | undefined =>
-	parts.map(opt).filter(Boolean).join(' ') || undefined;
-
 function makeLink(url: string | undefined, label?: string): RenderLink | undefined {
 	const href = sanitizeUrl(url);
 	if (!href) return undefined;
@@ -123,14 +121,22 @@ function buildEntries(
 			return cv.education
 				.map((e) => {
 					const gpa = opt(e.gpa);
+					const school = isSchoolLevel(e.degree);
+					const degree = opt(e.degree) ? displayDegree(trim(e.degree), locale) : undefined;
 					const meta: string[] = [];
 					if (gpa)
-						meta.push(`${labels.gpa} ${gpa}${opt(e.gpaScale) ? `/${trim(e.gpaScale)}` : ''}`);
-					if (opt(e.thesisTitle)) meta.push(`${labels.thesis}: ${trim(e.thesisTitle)}`);
+						meta.push(
+							`${scoreLabel(e.degree, locale)} ${gpa}${opt(e.gpaScale) ? `/${trim(e.gpaScale)}` : ''}`
+						);
+					if (opt(e.thesisTitle))
+						meta.push(`${school ? labels.finalProject : labels.thesis}: ${trim(e.thesisTitle)}`);
 					return {
 						id: e.id,
 						title: trim(e.institution),
-						subtitle: join(e.degree, e.major),
+						// "S1 Ilmu Komputer" · "Bachelor's Degree, Computer Science"
+						subtitle:
+							[degree, opt(e.major)].filter(Boolean).join(locale === 'en' ? ', ' : ' ') ||
+							undefined,
 						meta,
 						dateText: formatDateRange(e.dates, locale),
 						bullets: cleanList(e.highlights)

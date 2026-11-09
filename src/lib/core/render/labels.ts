@@ -19,6 +19,8 @@ export interface CvLabels {
 	present: string;
 	gpa: string;
 	thesis: string;
+	/** Thesis-like work at school level (SMA/SMK): "Karya tulis", "Final project". */
+	finalProject: string;
 	email: string;
 	phone: string;
 	location: string;
@@ -61,6 +63,7 @@ export const CV_LABELS: Record<Locale, CvLabels> = {
 		present: 'Sekarang',
 		gpa: 'IPK',
 		thesis: 'Skripsi',
+		finalProject: 'Karya tulis',
 		email: 'Email',
 		phone: 'Telepon',
 		location: 'Domisili',
@@ -101,6 +104,7 @@ export const CV_LABELS: Record<Locale, CvLabels> = {
 		present: 'Present',
 		gpa: 'GPA',
 		thesis: 'Thesis',
+		finalProject: 'Final project',
 		email: 'Email',
 		phone: 'Phone',
 		location: 'Location',
