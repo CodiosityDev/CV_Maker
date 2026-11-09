@@ -3,6 +3,32 @@
  * Plain text only. Every key here must also exist in the other language file.
  */
 export const appId = {
+	atsPanel: {
+		title: 'Cek ATS',
+		summary: '{error} wajib diperbaiki · {warn} disarankan · {tip} tips',
+		disclaimer: 'Skor ini perkiraan berdasarkan aturan umum ATS, bukan jaminan lolos.',
+		empty: 'Tidak ada masalah yang terdeteksi.',
+		showTips: 'Lihat {count} tips',
+		loading: 'Memeriksa CV…',
+		failed: 'CV belum bisa diperiksa. Coba lagi.',
+		retry: 'Coba lagi',
+		matchTitle: 'Cocokkan dengan lowongan',
+		jobLabel: 'Tempel teks lowongan di sini',
+		jobPlaceholder: 'Contoh: mencari staf yang menguasai Excel dan SQL.',
+		jobPrivacy: 'Teks lowongan hanya dipakai di halaman ini dan tidak disimpan.',
+		characterCount: '{count}/{max} karakter',
+		keywordSummary: 'Kata kunci yang cocok: {matched} dari {total} ({percent}%)',
+		presentTitle: 'Sudah ada di CV',
+		missingTitle: 'Belum ada',
+		noKeywords: 'Belum ada kata kunci yang bisa dicocokkan.',
+		nonePresent: 'Belum ada kata kunci yang cocok.',
+		noneMissing: 'Semua kata kunci sudah ada di CV.',
+		keywordHelp: 'Klik keahlian yang belum ada untuk menambahkannya ke Keahlian teknis.',
+		addKeyword: 'Tambahkan {term} ke Keahlian teknis',
+		added: '{term} ditambahkan.',
+		doneScore: 'Skor ATS: {score}/100',
+		checkAgain: 'Cek lagi'
+	},
 	incognito: {
 		label: 'Mode Incognito',
 		headerLabel: 'Incognito',
@@ -371,6 +397,7 @@ export const appId = {
 			'CV ini tidak ada di browser ini atau sudah dihapus. Buka CV Saya untuk memilih CV lain.'
 	},
 	dashboard: {
+		checkAts: 'Cek ATS',
 		pageTitle: 'CV Saya — CV Maker',
 		title: 'CV Saya',
 		localNote:

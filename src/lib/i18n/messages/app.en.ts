@@ -5,6 +5,32 @@
 import type { AppMessages } from '../translate';
 
 export const appEn: AppMessages = {
+	atsPanel: {
+		title: 'Check ATS',
+		summary: '{error} must fix · {warn} recommended · {tip} tips',
+		disclaimer: 'This score is an estimate based on general ATS rules, not a guarantee of success.',
+		empty: 'No issues detected.',
+		showTips: 'Show {count} tips',
+		loading: 'Checking your CV…',
+		failed: 'Your CV could not be checked. Try again.',
+		retry: 'Try again',
+		matchTitle: 'Match a job description',
+		jobLabel: 'Paste the job description here',
+		jobPlaceholder: 'Example: looking for someone with Excel and SQL skills.',
+		jobPrivacy: 'The job description is used only on this page and is not saved.',
+		characterCount: '{count}/{max} characters',
+		keywordSummary: 'Matching keywords: {matched} of {total} ({percent}%)',
+		presentTitle: 'Already in your CV',
+		missingTitle: 'Not in your CV yet',
+		noKeywords: 'No keywords could be matched yet.',
+		nonePresent: 'No matching keywords yet.',
+		noneMissing: 'All keywords are already in your CV.',
+		keywordHelp: 'Click a missing skill to add it to Technical skills.',
+		addKeyword: 'Add {term} to Technical skills',
+		added: '{term} added.',
+		doneScore: 'ATS score: {score}/100',
+		checkAgain: 'Check again'
+	},
 	incognito: {
 		label: 'Incognito Mode',
 		headerLabel: 'Incognito',
@@ -371,6 +397,7 @@ export const appEn: AppMessages = {
 			'This CV is not in this browser or has been deleted. Open My CVs to choose another CV.'
 	},
 	dashboard: {
+		checkAts: 'Check ATS',
 		pageTitle: 'My CVs — CV Maker',
 		title: 'My CVs',
 		localNote:

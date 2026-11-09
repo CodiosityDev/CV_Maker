@@ -1,7 +1,16 @@
 <script lang="ts">
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import {
+		analyzeCv,
+		createAtsAnalyzer,
+		type AtsAnalyzer,
+		type AtsReport,
+		type KeywordReport,
+		type CheckTarget
+	} from '#lib/core/ats/index.ts';
 	import { LIMITS, newId, type CVDocument } from '#lib/core/schema/index.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
@@ -12,6 +21,7 @@
 		loadSuggestions,
 		suggest,
 		categoryOf,
+		normalize,
 		type SuggestionData
 	} from '#lib/core/suggest/index.ts';
 	import {
@@ -37,6 +47,7 @@
 	import CvPreview from '../CvPreview.svelte';
 	import TemplatePicker from '../TemplatePicker.svelte';
 	import ExportPanel from '../ExportPanel.svelte';
+	import AtsPanel from '../AtsPanel.svelte';
 	import { toast } from '../toast.svelte.ts';
 	import PersonalStep from './PersonalStep.svelte';
 	import CollectionSteps from './CollectionSteps.svelte';
@@ -44,10 +55,11 @@
 	let { initial }: { initial: CVDocument } = $props();
 	const store = untrack(() => createCvStore(initial));
 	const incognitoUi = getIncognitoUiContext();
-	if (store.cv.status.wizardCompleted || store.cv.status.wizardStep === 0) {
+	const requestedAtsReview = untrack(() => page.url.searchParams.get('step') === 'review');
+	if (requestedAtsReview || store.cv.status.wizardCompleted || store.cv.status.wizardStep === 0) {
 		store.update(
 			(draft) => {
-				draft.status.wizardStep = draft.status.wizardCompleted ? 10 : 1;
+				draft.status.wizardStep = requestedAtsReview ? 9 : draft.status.wizardCompleted ? 10 : 1;
 			},
 			{ skipHistory: true }
 		);
@@ -55,6 +67,8 @@
 	let mounted = true;
 	onDestroy(() => {
 		mounted = false;
+		atsAnalyzer?.dispose();
+		clearAtsUndo();
 		void store.destroy();
 	});
 	const index = $derived(store.cv.status.wizardStep);
@@ -105,6 +119,19 @@
 	let heading: HTMLHeadingElement | undefined = $state();
 	const model = $derived(toRenderModel(store.cv, { photoUrl }));
 	const sessionExpired = $derived(incognito.active && Boolean(incognito.expiredAt));
+	let atsAnalyzer: AtsAnalyzer | undefined;
+	let atsReady = $state(false);
+	let atsReport = $state.raw<AtsReport>();
+	let atsKeywords = $state.raw<KeywordReport>();
+	let atsLoading = $state(false);
+	let atsFailed = $state(false);
+	let atsRetry = $state(0);
+	let jobPost = $state('');
+	let analysisRequest = 0;
+	let atsUndo = $state.raw<{ id: number; revision: string; signature: string }>();
+	const doneAtsScore = $derived(
+		step === 'done' && !sessionExpired ? analyzeCv($state.snapshot(store.cv)).score : undefined
+	);
 	const collectionSteps: WizardStepId[] = [
 		'education',
 		'experience',
@@ -117,9 +144,17 @@
 		previewOpen = false;
 		replaceOpen = false;
 		pendingSummary = '';
+		jobPost = '';
+		atsReport = undefined;
+		atsKeywords = undefined;
 	});
 
 	onMount(() => {
+		atsAnalyzer = createAtsAnalyzer();
+		atsReady = true;
+		if (requestedAtsReview) {
+			void focusAtsPanel();
+		}
 		const unregisterBeforeStart = incognitoUi?.registerBeforeStart(async () => {
 			await store.flush();
 			return store.saveState !== 'error';
@@ -142,6 +177,54 @@
 			unregisterBeforeEnd?.();
 			media.removeEventListener('change', update);
 		};
+	});
+	$effect(() => {
+		const request = ++analysisRequest;
+		const ready = atsReady;
+		const currentStep = step;
+		const removed = store.externalChange === 'removed';
+		const text = jobPost;
+		void atsRetry;
+		if (!ready || currentStep !== 'review' || removed) {
+			atsLoading = false;
+			return;
+		}
+		const cv = $state.snapshot(store.cv);
+		atsLoading = true;
+		atsFailed = false;
+		atsKeywords = undefined;
+		const timer = setTimeout(() => {
+			void atsAnalyzer?.analyze(cv, text.trim() ? text : undefined).then(
+				(result) => {
+					if (!mounted || request !== analysisRequest) return;
+					atsReport = result.report;
+					atsKeywords = result.keywords;
+					atsLoading = false;
+				},
+				() => {
+					if (!mounted || request !== analysisRequest) return;
+					atsReport = undefined;
+					atsKeywords = undefined;
+					atsLoading = false;
+					atsFailed = true;
+				}
+			);
+		}, 400);
+		return () => {
+			clearTimeout(timer);
+			if (analysisRequest === request) analysisRequest += 1;
+		};
+	});
+	$effect(() => {
+		const notice = atsUndo;
+		const revision = store.cv.updatedAt;
+		const removed = store.externalChange === 'removed';
+		if (
+			notice &&
+			(removed ||
+				(revision !== notice.revision && untrack(atsContentSignature) !== notice.signature))
+		)
+			clearAtsUndo();
 	});
 	$effect(() => {
 		const locale = i18n.locale;
@@ -244,6 +327,9 @@
 	}
 	async function move(next: number) {
 		if (store.externalChange === 'removed') return;
+		if (next !== 9 && page.url.searchParams.get('step') === 'review') {
+			replaceState(resolve('/(app)/buat/[id]', { id: store.cv.id }), page.state);
+		}
 		attempted = false;
 		store.update(
 			(draft) => {
@@ -254,18 +340,29 @@
 		);
 		await focusHeading();
 	}
-	async function focusIssue(issue: StepIssue) {
+	async function focusIssue(issue: { field?: string }) {
 		await tick();
+		if (!issue.field) {
+			await focusHeading();
+			return;
+		}
 		const control =
-			document.getElementById(issue.field) ?? document.getElementById(`${issue.field}-month`);
+			document.getElementById(issue.field) ??
+			document.getElementById(`${issue.field}-month`) ??
+			document.getElementById(`${issue.field}.0`) ??
+			document.getElementById(`${issue.field}-add`);
+		if (!control) {
+			await focusHeading();
+			return;
+		}
 		let disclosure = control?.closest('details');
 		while (disclosure) {
 			disclosure.open = true;
 			disclosure = disclosure.parentElement?.closest('details') ?? null;
 		}
 		await tick();
-		control?.focus();
-		control?.scrollIntoView({ block: 'center' });
+		control.focus();
+		control.scrollIntoView({ block: 'center' });
 	}
 	async function back() {
 		if (store.externalChange === 'removed') {
@@ -311,10 +408,84 @@
 			return 'skills';
 		return WIZARD_STEPS.find(({ id }) => id === section)?.id ?? 'target';
 	}
-	async function jumpToIssue(issue: StepIssue) {
-		await move(WIZARD_STEPS.findIndex(({ id }) => id === issueStep(issue)));
+	function atsField(target: CheckTarget): string | undefined {
+		if (target.step === 'personal' && target.field)
+			return target.field === 'links' && target.itemId
+				? `personal.links.${target.itemId}.url`
+				: `personal.${target.field}`;
+		if (target.section && target.itemId && target.field)
+			return `${target.section}.${target.itemId}.${target.field}`;
+		if (target.section === 'summary') return 'summary';
+		if (target.section === 'skills') return 'skills.hard';
+		return target.field;
+	}
+	async function jumpToIssue(issue: StepIssue | CheckTarget) {
+		const targetStep = 'step' in issue ? issue.step : issueStep(issue);
+		const field = 'step' in issue ? atsField(issue) : issue.field;
+		await move(WIZARD_STEPS.findIndex(({ id }) => id === targetStep));
 		attempted = true;
-		await focusIssue(issue);
+		await focusIssue({ field });
+	}
+	async function focusAtsPanel() {
+		await tick();
+		const panel = document.getElementById('ats-panel');
+		panel?.focus({ preventScroll: true });
+		panel?.scrollIntoView({ block: 'start' });
+	}
+	async function checkAtsAgain(event: MouseEvent) {
+		event.preventDefault();
+		await move(9);
+		await focusAtsPanel();
+	}
+	function atsContentSignature() {
+		const content = $state.snapshot(store.cv);
+		return JSON.stringify({ ...content, status: undefined, updatedAt: undefined });
+	}
+	function clearAtsUndo() {
+		if (atsUndo) toast.dismiss(atsUndo.id);
+		atsUndo = undefined;
+	}
+	function canAddAtsKeyword(term: string) {
+		return (
+			store.externalChange !== 'removed' &&
+			store.cv.skills.hard.length < LIMITS.skillsPerGroup &&
+			![store.cv.skills.hard, store.cv.skills.soft, store.cv.skills.tools].some((group) =>
+				group.some((skill) => normalize(skill) === normalize(term))
+			)
+		);
+	}
+	async function focusAtsJob() {
+		await tick();
+		const input = document.querySelector<HTMLTextAreaElement>('#ats-panel textarea');
+		if (input) input.focus({ preventScroll: true });
+		else heading?.focus({ preventScroll: true });
+	}
+	async function addAtsKeyword(term: string) {
+		if (
+			!canAddAtsKeyword(term) ||
+			!atsKeywords?.keywords.some(
+				(keyword) => keyword.term === term && keyword.known && !keyword.inCv
+			)
+		)
+			return;
+		clearAtsUndo();
+		store.update(
+			(draft) => {
+				draft.skills.hard.push(term);
+			},
+			{ coalesceKey: `ats.skill.${newId()}` }
+		);
+		const signature = atsContentSignature();
+		const id = toast.info(t('atsPanel.added', { term }), {
+			labelKey: 'wizard.undo',
+			run: () => {
+				if (store.externalChange !== 'removed' && atsContentSignature() === signature) store.undo();
+				clearAtsUndo();
+				void focusAtsJob();
+			}
+		});
+		atsUndo = { id, revision: store.cv.updatedAt, signature };
+		await focusAtsJob();
 	}
 	function issueText(issue: StepIssue) {
 		const field = issue.field.split('.').at(-1) ?? '';
@@ -595,11 +766,29 @@
 							</div>
 						{:else}<p class="ready" role="status">{t('wizard.reviewReady')}</p>{/if}
 						{#if !sessionExpired}
+							<AtsPanel
+								report={atsReport}
+								keywords={atsKeywords}
+								loading={atsLoading}
+								failed={atsFailed}
+								bind:jobPost
+								onjump={jumpToIssue}
+								onadd={addAtsKeyword}
+								canAdd={canAddAtsKeyword}
+								onretry={() => (atsRetry += 1)}
+							/>
 							<TemplatePicker {store} {model} />
 							<p class="hint">{t('wizard.previewNotice')}</p>
 							<CvPreview {model} />
 						{/if}
 					{:else if step === 'done'}
+						{#if doneAtsScore !== undefined}<p
+								class="ats-done-summary"
+								data-testid="ats-done-summary"
+							>
+								{t('atsPanel.doneScore', { score: doneAtsScore })} ·
+								<a href="#ats-panel" onclick={checkAtsAgain}>{t('atsPanel.checkAgain')}</a>
+							</p>{/if}
 						{#if !sessionExpired}<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />{/if}
 						<div class="done-actions">
 							<Button href="/cv" variant="secondary" onclick={openDashboard}
@@ -677,6 +866,16 @@
 </Dialog>
 
 <style>
+	.ats-done-summary {
+		margin-bottom: 16px;
+		font-size: 0.875rem;
+	}
+	.ats-done-summary a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		color: var(--color-brand-ink);
+	}
 	.done-actions {
 		display: flex;
 		flex-wrap: wrap;
