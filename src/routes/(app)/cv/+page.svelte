@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import { cvRepo, incognito, storage, onExternalChange } from '#lib/core/storage/index.ts';
@@ -118,6 +120,19 @@
 	function more(cv: CVMeta) {
 		menuCv = cv;
 		menuOpen = true;
+	}
+
+	async function checkAts(cv: CVMeta) {
+		if (busy) return;
+		busy = true;
+		menuOpen = false;
+		try {
+			await goto(resolve('/(app)/buat/[id]?step=review#ats-panel', { id: cv.id }));
+		} catch {
+			if (active) toast.error(t('dashboard.actionError'));
+		} finally {
+			if (active) busy = false;
+		}
 	}
 
 	async function showExport(cv: CVMeta, trigger: EventTarget | null) {
@@ -248,6 +263,9 @@
 </svelte:head>
 
 {#snippet actions(cv: CVMeta)}
+	<button type="button" disabled={busy} onclick={() => checkAts(cv)}
+		>{t('dashboard.checkAts')}</button
+	>
 	<button type="button" disabled={busy} onclick={() => duplicate(cv)}
 		>{t('dashboard.duplicate')}</button
 	>
