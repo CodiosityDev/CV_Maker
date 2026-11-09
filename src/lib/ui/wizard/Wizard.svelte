@@ -47,6 +47,7 @@
 	import CvPreview from '../CvPreview.svelte';
 	import TemplatePicker from '../TemplatePicker.svelte';
 	import ExportPanel from '../ExportPanel.svelte';
+	import JobLinks from '../JobLinks.svelte';
 	import AtsPanel from '../AtsPanel.svelte';
 	import { toast } from '../toast.svelte.ts';
 	import PersonalStep from './PersonalStep.svelte';
@@ -56,10 +57,23 @@
 	const store = untrack(() => createCvStore(initial));
 	const incognitoUi = getIncognitoUiContext();
 	const requestedAtsReview = untrack(() => page.url.searchParams.get('step') === 'review');
-	if (requestedAtsReview || store.cv.status.wizardCompleted || store.cv.status.wizardStep === 0) {
+	const requestedCareerTarget = untrack(() => page.url.searchParams.get('step') === 'target');
+	if (
+		requestedCareerTarget ||
+		requestedAtsReview ||
+		store.cv.status.wizardCompleted ||
+		store.cv.status.wizardStep === 0
+	) {
 		store.update(
 			(draft) => {
-				draft.status.wizardStep = requestedAtsReview ? 9 : draft.status.wizardCompleted ? 10 : 1;
+				draft.status.wizardStep = requestedCareerTarget
+					? 1
+					: requestedAtsReview
+						? 9
+						: draft.status.wizardCompleted
+							? 10
+							: 1;
+				if (requestedCareerTarget) draft.status.wizardCompleted = false;
 			},
 			{ skipHistory: true }
 		);
@@ -159,6 +173,8 @@
 		atsReady = true;
 		if (requestedAtsReview) {
 			void focusAtsPanel();
+		} else if (requestedCareerTarget) {
+			void focusIssue({ field: 'targetRole' });
 		}
 		const unregisterBeforeStart = incognitoUi?.registerBeforeStart(async () => {
 			await store.flush();
@@ -332,7 +348,8 @@
 	}
 	async function move(next: number) {
 		if (store.externalChange === 'removed') return;
-		if (next !== 9 && page.url.searchParams.get('step') === 'review') {
+		const requested = page.url.searchParams.get('step');
+		if ((next !== 9 && requested === 'review') || (next !== 1 && requested === 'target')) {
 			replaceState(resolve('/(app)/buat/[id]', { id: store.cv.id }), page.state);
 		}
 		attempted = false;
@@ -393,6 +410,14 @@
 			return;
 		event.preventDefault();
 		if ((await flushBeforeLeave()) && mounted && step === 'done') await goto(resolve('/(app)/cv'));
+	}
+	async function fillJobTarget(event: MouseEvent) {
+		if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)
+			return;
+		event.preventDefault();
+		if (removed) return;
+		await move(1);
+		await focusIssue({ field: 'targetRole' });
 	}
 	async function next(event: SubmitEvent) {
 		event.preventDefault();
@@ -814,7 +839,14 @@
 									{t('atsPanel.doneScore', { score: doneAtsScore })} ·
 									<a href="#ats-panel" onclick={checkAtsAgain}>{t('atsPanel.checkAgain')}</a>
 								</p>{/if}
-							{#if !sessionExpired}<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />{/if}
+							{#if !sessionExpired}
+								<ExportPanel cv={store.cv} beforeLeave={flushBeforeLeave} />
+								<JobLinks
+									cv={store.cv}
+									suggestionData={suggestionsData}
+									onfillTarget={fillJobTarget}
+								/>
+							{/if}
 							<div class="done-actions">
 								<Button href="/cv" variant="secondary" onclick={openDashboard}
 									>{t('wizard.goDashboard')}</Button

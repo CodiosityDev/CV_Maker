@@ -397,7 +397,24 @@ export const appEn: AppMessages = {
 		notFoundDescription:
 			'This CV is not in this browser or has been deleted. Open My CVs to choose another CV.'
 	},
+	jobLinks: {
+		title: 'Find jobs for {keyword}',
+		dialogTitle: 'Find jobs',
+		emptyTitle: 'Find jobs',
+		description:
+			'Open search results on job sites. Only the job title and city are sent, and only when you click.',
+		empty: 'Add a target role to find relevant jobs.',
+		fillTarget: 'Fill in target role',
+		city: 'in {city}',
+		wholeCountry: 'across Indonesia',
+		newTab: '(opens a new tab)',
+		related: 'Also search:',
+		resetKeyword: 'Back to {keyword}',
+		incognitoNote:
+			'Job sites you open appear in your browser history; close the window when you finish.'
+	},
 	dashboard: {
+		findJobs: 'Find jobs',
 		checkAts: 'Check ATS',
 		pageTitle: 'My CVs — CV Maker',
 		title: 'My CVs',

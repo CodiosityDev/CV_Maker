@@ -397,7 +397,24 @@ export const appId = {
 		notFoundDescription:
 			'CV ini tidak ada di browser ini atau sudah dihapus. Buka CV Saya untuk memilih CV lain.'
 	},
+	jobLinks: {
+		title: 'Cari lowongan {keyword}',
+		dialogTitle: 'Cari lowongan',
+		emptyTitle: 'Cari lowongan',
+		description:
+			'Buka hasil pencarian di situs kerja. Hanya posisi dan kota yang dikirim, dan hanya saat kamu mengklik.',
+		empty: 'Isi posisi tujuan untuk mencari lowongan yang sesuai.',
+		fillTarget: 'Isi posisi tujuan',
+		city: 'di {city}',
+		wholeCountry: 'seluruh Indonesia',
+		newTab: '(membuka tab baru)',
+		related: 'Cari juga:',
+		resetKeyword: 'Kembali ke {keyword}',
+		incognitoNote:
+			'Situs kerja yang dibuka tercatat di riwayat browser; tutup jendela setelah selesai.'
+	},
 	dashboard: {
+		findJobs: 'Cari lowongan',
 		checkAts: 'Cek ATS',
 		pageTitle: 'CV Saya — CV Maker',
 		title: 'CV Saya',

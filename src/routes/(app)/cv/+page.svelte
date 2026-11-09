@@ -5,11 +5,13 @@
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import { cvRepo, incognito, storage, onExternalChange } from '#lib/core/storage/index.ts';
+	import { loadSuggestions, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { i18n, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
+	import JobLinks from '#lib/ui/JobLinks.svelte';
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
@@ -24,6 +26,10 @@
 	let menuCv = $state<CVMeta>();
 	let exportOpen = $state(false);
 	let exportCv = $state.raw<CVDocument>();
+	let jobsOpen = $state(false);
+	let jobsCv = $state.raw<CVDocument>();
+	let jobsSuggestions = $state.raw<SuggestionData>();
+	let jobsRequest = 0;
 	let renameOpen = $state(false);
 	let renameCv = $state<CVMeta>();
 	let renameTitle = $state('');
@@ -53,7 +59,7 @@
 			memory = mode === 'memory';
 			listError = false;
 			const ids = new Set(list.map((cv) => cv.id));
-			for (const cv of [menuCv, renameCv, deleteCv, exportCv]) {
+			for (const cv of [menuCv, renameCv, deleteCv, exportCv, jobsCv]) {
 				if (cv && !ids.has(cv.id)) clearDialogs(cv.id);
 			}
 			if (exportOpen && exportCv) {
@@ -69,6 +75,25 @@
 				) {
 					exportCv = doc ?? undefined;
 					if (!doc) exportOpen = false;
+				}
+			}
+			if (jobsOpen && jobsCv) {
+				const id = jobsCv.id;
+				const doc = await cvRepo.get(id);
+				if (
+					active &&
+					request === listRequest &&
+					session === incognito.active &&
+					expiredAt === incognito.expiredAt &&
+					jobsOpen &&
+					jobsCv?.id === id
+				) {
+					if (!doc) clearDialogs(id);
+					else {
+						jobsCv = doc;
+						jobsSuggestions = undefined;
+						void loadJobSuggestions(doc, ++jobsRequest, session, expiredAt);
+					}
 				}
 			}
 		} catch {
@@ -92,6 +117,7 @@
 		return () => {
 			active = false;
 			listRequest += 1;
+			jobsRequest += 1;
 			unsubscribe();
 			document.removeEventListener('visibilitychange', visible);
 		};
@@ -115,6 +141,12 @@
 		if (id === undefined || exportCv?.id === id) {
 			exportOpen = false;
 			exportCv = undefined;
+		}
+		if (id === undefined || jobsCv?.id === id) {
+			jobsOpen = false;
+			jobsCv = undefined;
+			jobsSuggestions = undefined;
+			jobsRequest += 1;
 		}
 		if (id === undefined) {
 			wipeOpen = false;
@@ -185,6 +217,65 @@
 			exportOpen = true;
 		} catch {
 			if (active) toast.error(t('dashboard.actionError'));
+		} finally {
+			if (active) busy = false;
+		}
+	}
+
+	async function loadJobSuggestions(
+		cv: CVDocument,
+		request: number,
+		session: boolean,
+		expiredAt: string | undefined
+	) {
+		try {
+			const data = await loadSuggestions(cv.locale);
+			if (
+				active &&
+				jobsOpen &&
+				request === jobsRequest &&
+				jobsCv === cv &&
+				session === incognito.active &&
+				expiredAt === incognito.expiredAt
+			)
+				jobsSuggestions = data;
+		} catch {
+			// Search links still work when optional related-title suggestions are unavailable.
+		}
+	}
+
+	async function showJobs(cv: CVMeta, trigger: EventTarget | null) {
+		if (busy) return;
+		const request = ++jobsRequest;
+		const session = incognito.active;
+		const expiredAt = incognito.expiredAt;
+		const sameSession = () =>
+			active &&
+			request === jobsRequest &&
+			session === incognito.active &&
+			expiredAt === incognito.expiredAt &&
+			cvs.some((item) => item.id === cv.id);
+		busy = true;
+		menuOpen = false;
+		jobsSuggestions = undefined;
+		try {
+			const doc = await cvRepo.get(cv.id);
+			if (!sameSession()) return;
+			if (!doc) {
+				toast.info(t('dashboard.missing'));
+				await refresh();
+				return;
+			}
+			jobsCv = doc;
+			busy = false;
+			await tick();
+			if (!sameSession() || jobsCv?.id !== cv.id) return;
+			if (trigger instanceof HTMLElement && trigger.isConnected)
+				trigger.focus({ preventScroll: true });
+			jobsOpen = true;
+			void loadJobSuggestions(doc, request, session, expiredAt);
+		} catch {
+			if (active && request === jobsRequest) toast.error(t('dashboard.actionError'));
 		} finally {
 			if (active) busy = false;
 		}
@@ -287,6 +378,9 @@
 </svelte:head>
 
 {#snippet actions(cv: CVMeta)}
+	<button type="button" disabled={busy} onclick={(event) => showJobs(cv, event.currentTarget)}
+		>{t('dashboard.findJobs')}</button
+	>
 	<button type="button" disabled={busy} onclick={() => checkAts(cv)}
 		>{t('dashboard.checkAts')}</button
 	>
@@ -430,6 +524,12 @@
 			<p class="incomplete-note">{t('dashboard.unfinishedDownload')}</p>
 		{/if}
 		<ExportPanel cv={exportCv} />
+	{/if}
+</Dialog>
+
+<Dialog bind:open={jobsOpen} title={t('jobLinks.dialogTitle')} presentation="sheet" closeOnBackdrop>
+	{#if jobsOpen && jobsCv}
+		<JobLinks cv={jobsCv} suggestionData={jobsSuggestions} />
 	{/if}
 </Dialog>
 
