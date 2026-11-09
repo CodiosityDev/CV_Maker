@@ -1,0 +1,45 @@
+# CV Maker on Hestia "Apache2 + nginx proxy" (the default web template).
+# nginx serves files with an extension itself and passes everything else (/privasi, /cv/<id>, /api/…)
+# to Apache, which reads this file. Not needed once deploy/hestia/install.sh has switched the domain
+# to the nginx-only cv-static template (nginx never reads .htaccess, and denies hidden files).
+#
+# No `Options` / `DirectoryIndex` here on purpose: they need extra AllowOverride rights and would
+# turn every request into a 500 on a stricter server.
+
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+
+	# AI API → the Node server on 127.0.0.1:8787 (only when Apache can proxy).
+	<IfModule mod_proxy_http.c>
+		RewriteRule ^api/(.*)$ http://127.0.0.1:8787/api/$1 [P,L]
+	</IfModule>
+
+	# Prerendered pages: /privasi → privasi.html (also with a trailing slash).
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+	RewriteRule ^(.+?)/?$ /$1.html [L]
+
+	# App routes rendered in the browser (/buat, /buat/<id>, /cv, /cv/<id>/…) → the app shell.
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteRule ^(buat|cv)(/.*)?$ /200.html [L]
+</IfModule>
+
+# Unknown paths: the app shows its own "not found" page (status stays 404).
+ErrorDocument 404 /200.html
+
+<IfModule mod_headers.c>
+	# Same as static/_headers and deploy/hestia/security-headers.conf. The main CSP with script hashes
+	# is a <meta> tag from SvelteKit; this one adds what a <meta> CSP cannot set.
+	Header always set Content-Security-Policy "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+	Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+	Header always set X-Content-Type-Options "nosniff"
+	Header always set X-Frame-Options "DENY"
+	Header always set Referrer-Policy "no-referrer"
+	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), serial=(), hid=()"
+	Header always set Cross-Origin-Opener-Policy "same-origin"
+	Header always set Cross-Origin-Resource-Policy "same-origin"
+	# Pages must be revalidated so a new deploy shows at once (hashed assets are cached by nginx).
+	<FilesMatch "\.html$">
+		Header set Cache-Control "no-cache"
+	</FilesMatch>
+</IfModule>
