@@ -1,0 +1,109 @@
+#=========================================================================#
+# CV Maker — HTTPS server for the static SvelteKit build (adapter-static). #
+# Installed by deploy/hestia/install.sh. Edit the copy in the repo, then  #
+# re-run the installer; changes made here are lost on domain rebuild.     #
+#=========================================================================#
+
+server {
+	listen      %ip%:%web_ssl_port% ssl;
+	#__HTTP2__
+	server_name %domain_idn% %alias_idn%;
+	root        %sdocroot%;
+	index       index.html;
+	charset     utf-8;
+	server_tokens off;
+
+	access_log  /var/log/nginx/domains/%domain%.log combined;
+	access_log  /var/log/nginx/domains/%domain%.bytes bytes;
+	error_log   /var/log/nginx/domains/%domain%.error.log error;
+
+	ssl_certificate     %ssl_pem%;
+	ssl_certificate_key %ssl_key%;
+
+	gzip            on;
+	gzip_vary       on;
+	gzip_comp_level 6;
+	gzip_min_length 256;
+	gzip_types      text/css text/plain text/javascript application/javascript application/json application/manifest+json image/svg+xml;
+
+	# Hidden files (.git, .env, …) are never served.
+	location ~ /\.(?!well-known\/) {
+		deny all;
+		return 404;
+	}
+
+	# Cloudflare-only files that adapter-static copies into the build.
+	location ~ ^/_(headers|redirects)$ {
+		return 404;
+	}
+
+	# Cloudflare proxies this domain: take the visitor's IP from CF-Connecting-IP, but ONLY when the
+	# request really comes from Cloudflare (https://www.cloudflare.com/ips/). Used for AI rate limits.
+	set_real_ip_from 173.245.48.0/20;
+	set_real_ip_from 103.21.244.0/22;
+	set_real_ip_from 103.22.200.0/22;
+	set_real_ip_from 103.31.4.0/22;
+	set_real_ip_from 141.101.64.0/18;
+	set_real_ip_from 108.162.192.0/18;
+	set_real_ip_from 190.93.240.0/20;
+	set_real_ip_from 188.114.96.0/20;
+	set_real_ip_from 197.234.240.0/22;
+	set_real_ip_from 198.41.128.0/17;
+	set_real_ip_from 162.158.0.0/15;
+	set_real_ip_from 104.16.0.0/13;
+	set_real_ip_from 104.24.0.0/14;
+	set_real_ip_from 172.64.0.0/13;
+	set_real_ip_from 131.0.72.0/22;
+	set_real_ip_from 2400:cb00::/32;
+	set_real_ip_from 2606:4700::/32;
+	set_real_ip_from 2803:f800::/32;
+	set_real_ip_from 2405:b500::/32;
+	set_real_ip_from 2405:8100::/32;
+	set_real_ip_from 2a06:98c0::/29;
+	set_real_ip_from 2c0f:f248::/32;
+	real_ip_header CF-Connecting-IP;
+
+	# AI assist API: server/ in the repo, PM2 process "cvmaker-api" on 127.0.0.1:8787.
+	# Down or not deployed yet → 502, which the app shows as "AI not available right now".
+	location ^~ /api/ {
+		include /etc/nginx/snippets/cvmaker-security-headers.conf;
+		add_header Cache-Control "no-store" always;
+		client_max_body_size 64k;
+		proxy_pass http://127.0.0.1:8787;
+		proxy_http_version 1.1;
+		proxy_set_header Host $host;
+		proxy_set_header Connection "";
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_connect_timeout 5s;
+		proxy_read_timeout 90s;
+		proxy_buffering off;
+	}
+
+	# Content-hashed JS/CSS/fonts: a new deploy gets new file names, so cache for a year.
+	location ^~ /_app/immutable/ {
+		include /etc/nginx/snippets/cvmaker-security-headers.conf;
+		add_header Cache-Control "public, max-age=31536000, immutable" always;
+		try_files $uri =404;
+	}
+
+	# Client-only app routes (/buat, /cv and everything below) → SPA shell, URL unchanged.
+	location ~ ^/(buat|cv)(/|$) {
+		include /etc/nginx/snippets/cvmaker-security-headers.conf;
+		add_header Cache-Control "no-cache" always;
+		try_files /200.html =404;
+	}
+
+	# Prerendered pages (/, /faq, /privasi, /tentang), version.json, favicon, robots.txt.
+	# no-cache = always revalidate, so a new deploy is picked up immediately.
+	location / {
+		include /etc/nginx/snippets/cvmaker-security-headers.conf;
+		add_header Cache-Control "no-cache" always;
+		try_files $uri $uri.html $uri/ =404;
+	}
+
+	# Unknown URLs: the SPA shell renders the app's own "not found" page; status stays 404.
+	error_page 404 /200.html;
+
+	include %home%/%user%/conf/web/%domain%/nginx.ssl.conf_*;
+}
