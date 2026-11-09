@@ -33,6 +33,14 @@ export function ipSubject(secret: string, ip: string): string {
 	return mac(secret, 'ip', ip);
 }
 
+/** Random visitor id made by the browser (22 base64url chars, no personal data). */
+export const VISITOR_ID_PATTERN = /^[\w-]{22}$/;
+
+/** Stable key for a visitor id (stored instead of the id itself). */
+export function visitorSubject(secret: string, id: string): string {
+	return mac(secret, 'visitor', id);
+}
+
 /** 'YYYY-MM-DD' of the current day in WIB. */
 export function wibDay(now: number = Date.now()): string {
 	return new Date(now + WIB_OFFSET_MS).toISOString().slice(0, 10);
