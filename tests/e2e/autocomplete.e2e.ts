@@ -228,3 +228,45 @@ test('a failed suggestion-data download leaves editable fields and autosave work
 		await page.unrouteAll({ behavior: 'wait' });
 	}
 });
+
+test('touch fills the field even when the phone never delivers the click, and scrolling does not pick', async ({
+	page
+}, testInfo) => {
+	test.skip(testInfo.project.name === 'desktop-1280', 'touch screens only');
+	await start(page);
+	const role = page.getByRole('combobox', { name: 'Posisi yang dituju', exact: true });
+	const options = page.locator('#targetRole-suggestions').getByRole('option');
+	// Phones such as iOS Safari move focus off the input before `click`, closing the list first.
+	await page.evaluate(() =>
+		document.addEventListener(
+			'click',
+			(event) => {
+				if (event.target instanceof Element && event.target.closest('[role="option"]')) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+				}
+			},
+			true
+		)
+	);
+	await role.tap();
+	await page.keyboard.type('data');
+	await expect(options.first()).toBeVisible();
+	const box = (await options.first().boundingBox())!;
+	const cdp = await page.context().newCDPSession(page);
+	const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', y: number) =>
+		cdp.send('Input.dispatchTouchEvent', {
+			type,
+			touchPoints: type === 'touchEnd' ? [] : [{ x: box.x + 20, y }]
+		});
+	await touch('touchStart', box.y + 10);
+	await touch('touchMove', box.y + 60);
+	await touch('touchEnd', box.y + 60);
+	await expect(role).toHaveValue('data');
+
+	const first = (await options.first().textContent())!.trim();
+	await options.first().tap();
+	await expect(role).toHaveValue(first);
+	await expect(role).toBeFocused();
+	await expect(role).toHaveAttribute('aria-expanded', 'false');
+});

@@ -220,6 +220,30 @@
 		clearTimeout(timer);
 		onselect?.(selected);
 	}
+	// Touch: choose on touchend. Phones (iOS Safari especially) move focus away from the input before
+	// `click`, which closes the list so the click never reaches the option. Cancelling touchend also
+	// stops that focus change and the late click. A finger that moved was scrolling the list.
+	let touch: { x: number; y: number; moved: boolean } | undefined;
+	function touchstart(event: TouchEvent) {
+		const point = event.touches[0];
+		touch =
+			event.touches.length === 1 && point
+				? { x: point.clientX, y: point.clientY, moved: false }
+				: undefined;
+	}
+	function touchmove(event: TouchEvent) {
+		const point = event.touches[0];
+		if (touch && point && Math.hypot(point.clientX - touch.x, point.clientY - touch.y) > 10)
+			touch.moved = true;
+	}
+	function touchend(event: TouchEvent, selected: string) {
+		const tapped = touch && !touch.moved;
+		touch = undefined;
+		if (!tapped || !event.cancelable) return;
+		event.preventDefault();
+		choose(selected);
+	}
+
 	function keydown(event: KeyboardEvent) {
 		if (disabled || input?.matches(':disabled')) return;
 		if (!event.isComposing) {
@@ -339,6 +363,8 @@
 				suppliedFocus?.(event);
 			}}
 			onblur={(event) => {
+				// Focus moved onto an option (some phones do this on tap): keep the list for its click.
+				if (event.relatedTarget instanceof Node && list?.contains(event.relatedTarget)) return;
 				focused = false;
 				dismissed = true;
 				active = -1;
@@ -363,6 +389,10 @@
 					aria-selected={active === index}
 					tabindex="-1"
 					onpointerdown={(event) => event.preventDefault()}
+					ontouchstart={touchstart}
+					ontouchmove={touchmove}
+					ontouchend={(event) => touchend(event, result)}
+					ontouchcancel={() => (touch = undefined)}
 					onclick={() => choose(result)}
 					onkeydown={(event) => {
 						if (event.key === 'Enter' || event.key === ' ') {
