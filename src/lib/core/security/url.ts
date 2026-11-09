@@ -34,7 +34,15 @@ export function sanitizeUrl(input: string | undefined | null): string | undefine
 	}
 	if (!ALLOWED_PROTOCOLS.has(url.protocol)) return undefined;
 	if (url.protocol === 'mailto:') {
-		return EMAIL_LIKE.test(decodeURIComponent(url.pathname)) ? url.href : undefined;
+		// A plain address only: no ?cc=/bcc=/subject=/body= smuggled into a CV link.
+		if (url.search || url.hash) return undefined;
+		let address: string;
+		try {
+			address = decodeURIComponent(url.pathname);
+		} catch {
+			return undefined; // malformed %-escape, e.g. "budi%@mail.com"
+		}
+		return EMAIL_LIKE.test(address) ? url.href : undefined;
 	}
 	if (url.username || url.password) return undefined;
 	if (!url.hostname.includes('.') && url.hostname !== 'localhost') return undefined;

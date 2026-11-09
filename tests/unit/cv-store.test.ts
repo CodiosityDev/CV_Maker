@@ -221,13 +221,45 @@ describe('cv store', () => {
 		it('keepLocalVersion() saves immediately with a newer updatedAt', async () => {
 			const { repo, store } = setup();
 			store.update((d) => (d.summary = 'mine'));
-			store.applyExternalChange({ type: 'cv-removed', id: sampleCvAts.id });
+			store.applyExternalChange({
+				type: 'cv-saved',
+				id: sampleCvAts.id,
+				updatedAt: '2099-01-01T00:00:00.000Z'
+			});
+			expect(store.externalChange).toBe('updated');
 			const before = store.cv.updatedAt;
 			clock += 60_000;
 			await store.keepLocalVersion();
 			expect(store.externalChange).toBe('none');
 			expect(repo.saved.at(-1)?.summary).toBe('mine');
 			expect(repo.saved.at(-1)!.updatedAt > before).toBe(true);
+		});
+
+		it('a deleted CV is purged from memory: content and undo/redo history', async () => {
+			const { repo, store } = setup();
+			store.update((d) => (d.personal.fullName = 'Rahasia Warnet'));
+			store.update((d) => (d.personal.phone = '081234567890'));
+			store.undo();
+			expect(store.canUndo && store.canRedo).toBe(true);
+			const step = store.cv.status.wizardStep;
+
+			store.applyExternalChange({ type: 'wiped' });
+			expect(store.externalChange).toBe('removed');
+			expect(store.cv.id).toBe(sampleCvAts.id);
+			expect(store.cv.personal.fullName).toBe('');
+			expect(store.cv.personal.email).toBe('');
+			expect(store.cv.experience).toEqual([]);
+			expect(store.cv.status.wizardStep).toBe(step);
+			expect(store.canUndo).toBe(false);
+			expect(store.canRedo).toBe(false);
+			store.undo();
+			expect(store.cv.personal.fullName).toBe('');
+
+			// Nothing to keep: the old "keep my version" must not re-create it.
+			await store.keepLocalVersion();
+			await vi.advanceTimersByTimeAsync(2000);
+			expect(repo.save).not.toHaveBeenCalled();
+			expect(store.externalChange).toBe('removed');
 		});
 	});
 

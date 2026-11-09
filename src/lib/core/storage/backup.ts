@@ -9,6 +9,7 @@
 import { newId } from '../schema/ids';
 import { loadCvDocument } from '../schema/migrations';
 import { sniffImageType } from '../security/image-type';
+import { processPhoto } from '../security/photo';
 import type { CVDocument } from '../schema/types';
 import type { StorageBackend, StoredAsset } from './backend';
 import { broadcast } from './sync';
@@ -121,9 +122,37 @@ function readAsset(raw: unknown): StoredAsset | undefined {
 
 // --- repository --------------------------------------------------------------------------------
 
+export interface BackupOptions {
+	/**
+	 * Re-encodes an imported photo (drops EXIF/GPS metadata, like a fresh upload). `null` = keep the
+	 * validated bytes as they are. Default: `processPhoto` where the browser can decode images.
+	 */
+	reencodePhoto?: ((photo: Blob) => Promise<{ blob: Blob; width: number; height: number }>) | null;
+}
+
+const defaultReencode: BackupOptions['reencodePhoto'] =
+	typeof createImageBitmap === 'function' ? processPhoto : null;
+
 export function createBackupRepository(
-	getBackend: () => Promise<StorageBackend>
+	getBackend: () => Promise<StorageBackend>,
+	options: BackupOptions = {}
 ): BackupRepository {
+	const reencode = options.reencodePhoto === undefined ? defaultReencode : options.reencodePhoto;
+
+	/** Validated asset → re-encoded asset (metadata stripped). Unreadable images are dropped. */
+	async function cleanAsset(asset: StoredAsset): Promise<StoredAsset | undefined> {
+		if (!reencode) return asset;
+		try {
+			const result = await reencode(new Blob([asset.bytes], { type: asset.type }));
+			const type = result.blob.type;
+			const bytes = await result.blob.arrayBuffer();
+			if (sniffImageType(bytes) !== type) return undefined;
+			return { ...asset, type, bytes, width: result.width, height: result.height };
+		} catch {
+			return undefined;
+		}
+	}
+
 	return {
 		async export(ids) {
 			const backend = await getBackend();
@@ -206,7 +235,8 @@ export function createBackupRepository(
 				if (photoId) {
 					let newPhotoId = storedAssets.get(photoId);
 					if (!newPhotoId) {
-						const asset = readAsset(assetsInFile.get(photoId));
+						const read = readAsset(assetsInFile.get(photoId));
+						const asset = read && (await cleanAsset(read));
 						if (asset) {
 							await backend.putAsset(asset);
 							storedAssets.set(photoId, asset.id);
