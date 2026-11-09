@@ -1,5 +1,6 @@
 /**
- * Namespace 'ats' — ATS checker messages (Bahasa Indonesia). Owned by core (one key per CheckId).
+ * Namespace 'ats' — core-owned messages (Bahasa Indonesia): ATS checker (one key per CheckId) and AI
+ * assist errors (`ai.errors.<AiErrorCode>`).
  * Plain text only. Every key here must also exist in ats.en.ts.
  */
 export const atsId = {
@@ -48,6 +49,16 @@ export const atsId = {
 				'{count} poin di "{item}" memakai kata "saya/aku". Langsung mulai dengan kata kerja.',
 			duplicateBullet: 'Ada {count} poin yang sama persis. Hapus atau ubah salah satunya.',
 			fewSkills: 'Baru {count} keahlian. Tambahkan sampai 5–10 yang relevan.'
+		}
+	},
+	ai: {
+		errors: {
+			quota: 'Jatah bantuan AI hari ini sudah habis. Coba lagi besok setelah pukul 00.00 WIB.',
+			busy: 'Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.',
+			offline: 'Tidak ada koneksi internet. Bantuan AI butuh internet; CV-mu tetap tersimpan.',
+			unavailable: 'Bantuan AI sedang tidak tersedia. Coba lagi nanti.',
+			invalid: 'Permintaan tidak bisa diproses. Muat ulang halaman lalu coba lagi.',
+			failed: 'AI belum bisa memberi saran kali ini. Jatahmu tidak berkurang; coba lagi.'
 		}
 	}
 };

@@ -45,5 +45,15 @@ export const atsEn: AtsMessages = {
 			duplicateBullet: '{count} point(s) appear twice. Remove or rewrite one of them.',
 			fewSkills: 'Only {count} skill(s). Add up to 5–10 relevant ones.'
 		}
+	},
+	ai: {
+		errors: {
+			quota: "Today's free AI help is used up. Try again tomorrow after 00:00 WIB.",
+			busy: 'Too many requests. Wait a moment and try again.',
+			offline: 'No internet connection. AI help needs internet; your CV is still saved.',
+			unavailable: 'AI help is not available right now. Try again later.',
+			invalid: 'The request could not be processed. Reload the page and try again.',
+			failed: 'The AI could not make a suggestion this time. Your quota was not used; try again.'
+		}
 	}
 };

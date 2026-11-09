@@ -1,4 +1,5 @@
 import { UI_LOCALE_STORAGE_KEY } from '../../i18n/types';
+import { AI_DEVICE_STORAGE_KEY } from '../ai/types';
 import { createEmptyCv } from '../schema/defaults';
 import { newId } from '../schema/ids';
 import { LIMITS } from '../schema/limits';
@@ -70,7 +71,7 @@ export interface StorageControl {
 const COPY_SUFFIX: Record<Locale, string> = { id: '(salinan)', en: '(copy)' };
 
 /** Keys in localStorage owned by this app (removed by wipeAll). */
-export const LOCAL_STORAGE_KEYS = [UI_LOCALE_STORAGE_KEY] as const;
+export const LOCAL_STORAGE_KEYS = [UI_LOCALE_STORAGE_KEY, AI_DEVICE_STORAGE_KEY] as const;
 
 /** `personal.photoAssetId` of an untrusted stored record, if it is a string. */
 function rawPhotoId(raw: unknown): string | undefined {
