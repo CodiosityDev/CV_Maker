@@ -140,6 +140,7 @@ export const appEn: AppMessages = {
 		skillsLimit: 'Up to {max} skills per group.',
 		hints: {
 			gpa: 'Example: 3.65 out of 4.00.',
+			reportGrade: 'Example: 85 out of 100.',
 			photo: 'Choose a formal photo with a plain background.'
 		},
 		newItems: {
@@ -202,6 +203,8 @@ export const appEn: AppMessages = {
 			major: 'Major',
 			gpa: 'GPA',
 			gpaScale: 'GPA scale',
+			reportGrade: 'Average report grade',
+			scoreMaximum: 'Maximum',
 			start: 'Start',
 			end: 'End',
 			thesisTitle: 'Thesis / final project title',

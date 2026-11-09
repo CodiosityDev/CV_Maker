@@ -12,6 +12,7 @@
 	import type { StepIssue, WizardStepId } from '#lib/core/wizard/index.ts';
 	import type { Guidance } from '#lib/core/content/index.ts';
 	import { formatDateRange } from '#lib/core/render/index.ts';
+	import { defaultScoreScale, isSchoolLevel } from '#lib/core/education/index.ts';
 	import { suggest, type SuggestField, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Input from '../Input.svelte';
@@ -76,6 +77,30 @@
 			},
 			{ coalesceKey: `${section}.${id}.${field}${operation === 'structure' ? `.${newId()}` : ''}` }
 		);
+	}
+	const editedScoreScales: Record<string, string[] | undefined> = Object.create(null);
+	function editEducationDegree(id: string, degree: string) {
+		editItem('education', id, 'degree', (entry) => {
+			const scale = entry.gpaScale?.trim() ?? '';
+			const manuallyEdited = editedScoreScales[id]?.includes(scale) ?? false;
+			const defaultScale =
+				scale === defaultScoreScale(entry.degree) || scale === defaultScoreScale(undefined);
+			if (!scale || (!manuallyEdited && defaultScale)) {
+				entry.gpaScale = defaultScoreScale(degree);
+			}
+			entry.degree = degree;
+		});
+	}
+	function editEducationScale(id: string, value: string) {
+		const scale = value.trim();
+		if (!scale) editedScoreScales[id] = undefined;
+		else {
+			const edited = (editedScoreScales[id] ??= []);
+			if (!edited.includes(scale)) edited.push(scale);
+		}
+		editItem('education', id, 'gpaScale', (entry) => {
+			entry.gpaScale = value;
+		});
 	}
 	function itemSummary(section: ItemSection, entry: CVDocument[ItemSection][number]) {
 		let title = '';
@@ -178,6 +203,7 @@
 				})}
 			>
 				{#snippet item(entry)}
+					{@const school = isSchoolLevel(entry.degree)}
 					<div class="item-fields">
 						{#each ['institution', 'degree', 'major'] as field (field)}
 							{@const key = field as 'institution' | 'degree' | 'major'}
@@ -192,20 +218,23 @@
 								error={error(`education.${entry.id}.${key}`)}
 								bind:value={
 									() => entry[key],
-									(value) =>
-										editItem('education', entry.id, key, (draft) => {
-											draft[key] = value;
-										})
+									(value) => {
+										if (key === 'degree') editEducationDegree(entry.id, value);
+										else
+											editItem('education', entry.id, key, (draft) => {
+												draft[key] = value;
+											});
+									}
 								}
 							/>
 						{/each}
 						<div class="two-fields">
 							<Input
 								id={`education.${entry.id}.gpa`}
-								label={t('wizard.fields.gpa')}
+								label={t(school ? 'wizard.fields.reportGrade' : 'wizard.fields.gpa')}
 								showCounter
 								maxlength={LIMITS.short}
-								hint={t('wizard.hints.gpa')}
+								hint={t(school ? 'wizard.hints.reportGrade' : 'wizard.hints.gpa')}
 								bind:value={
 									() => entry.gpa ?? '',
 									(value) =>
@@ -216,15 +245,11 @@
 							/>
 							<Input
 								id={`education.${entry.id}.gpaScale`}
-								label={t('wizard.fields.gpaScale')}
+								label={t(school ? 'wizard.fields.scoreMaximum' : 'wizard.fields.gpaScale')}
 								showCounter
 								maxlength={LIMITS.short}
 								bind:value={
-									() => entry.gpaScale ?? '',
-									(value) =>
-										editItem('education', entry.id, 'gpaScale', (draft) => {
-											draft.gpaScale = value;
-										})
+									() => entry.gpaScale ?? '', (value) => editEducationScale(entry.id, value)
 								}
 							/>
 						</div>
@@ -237,20 +262,20 @@
 									draft.dates = range;
 								})}
 						/>
-						<Textarea
-							id={`education.${entry.id}.thesisTitle`}
-							label={t('wizard.fields.thesisTitle')}
-							showCounter
-							maxlength={LIMITS.description}
-							rows={2}
-							bind:value={
-								() => entry.thesisTitle ?? '',
-								(value) =>
-									editItem('education', entry.id, 'thesisTitle', (draft) => {
-										draft.thesisTitle = value;
-									})
-							}
-						/>
+						{#if !school}<Textarea
+								id={`education.${entry.id}.thesisTitle`}
+								label={t('wizard.fields.thesisTitle')}
+								showCounter
+								maxlength={LIMITS.description}
+								rows={2}
+								bind:value={
+									() => entry.thesisTitle ?? '',
+									(value) =>
+										editItem('education', entry.id, 'thesisTitle', (draft) => {
+											draft.thesisTitle = value;
+										})
+								}
+							/>{/if}
 						<BulletEditor
 							id={`education.${entry.id}.highlights`}
 							label={t('wizard.fields.highlights')}
