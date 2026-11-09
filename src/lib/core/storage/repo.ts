@@ -51,6 +51,11 @@ export interface AssetRepository {
 
 /** Orphaned photos younger than this are kept (undo safety). */
 export const ORPHAN_MIN_AGE_MS = 24 * 60 * 60 * 1000;
+/**
+ * When a CV is deleted, unused photos older than this go too (earlier photos of that CV, kept for
+ * undo). Younger ones may belong to an upload in another tab that is about to be saved.
+ */
+export const REMOVE_ORPHAN_MIN_AGE_MS = 60 * 1000;
 
 export interface StorageControl {
 	/** 'memory' means data will be lost when the tab closes → show a warning. */
@@ -67,6 +72,15 @@ const COPY_SUFFIX: Record<Locale, string> = { id: '(salinan)', en: '(copy)' };
 /** Keys in localStorage owned by this app (removed by wipeAll). */
 export const LOCAL_STORAGE_KEYS = [UI_LOCALE_STORAGE_KEY] as const;
 
+/** `personal.photoAssetId` of an untrusted stored record, if it is a string. */
+function rawPhotoId(raw: unknown): string | undefined {
+	if (typeof raw !== 'object' || raw === null) return undefined;
+	const personal = (raw as { personal?: unknown }).personal;
+	if (typeof personal !== 'object' || personal === null) return undefined;
+	const id = (personal as { photoAssetId?: unknown }).photoAssetId;
+	return typeof id === 'string' && id ? id : undefined;
+}
+
 export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 	cvRepo: CvRepository;
 	assetRepo: AssetRepository;
@@ -81,6 +95,42 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 		return docs;
 	}
 
+	/** Photo ids referenced by any stored CV — read from the RAW records, so photos of CVs that
+	 * fail validation (e.g. written by a newer app version in another tab) are never deleted. */
+	async function referencedPhotoIds(backend: StorageBackend): Promise<Set<string>> {
+		const ids = new Set<string>();
+		for (const raw of await backend.getAllCvs()) {
+			const id = rawPhotoId(raw);
+			if (id) ids.add(id);
+		}
+		return ids;
+	}
+
+	async function getFrom(backend: StorageBackend, id: string): Promise<CVDocument | null> {
+		const raw = await backend.getCv(id);
+		if (raw === undefined) return null;
+		const result = loadCvDocument(raw);
+		if (!result.ok) return null;
+		if (result.migrated) await backend.putCv(result.cv);
+		return result.cv;
+	}
+
+	/** Deletes unused photos created before `cutoff` (ms since epoch). */
+	async function deleteOrphans(backend: StorageBackend, cutoff: number): Promise<number> {
+		const used = await referencedPhotoIds(backend);
+		let removed = 0;
+		for (const id of await backend.getAllAssetIds()) {
+			if (used.has(id)) continue;
+			const asset = await backend.getAsset(id);
+			const createdAt = asset ? Date.parse(asset.createdAt) : Number.NaN;
+			// Unknown/invalid dates count as old: such records can't be from this session.
+			if (Number.isFinite(createdAt) && createdAt > cutoff) continue;
+			await backend.deleteAsset(id);
+			removed += 1;
+		}
+		return removed;
+	}
+
 	async function put(backend: StorageBackend, doc: CVDocument): Promise<void> {
 		await backend.putCv(doc);
 		broadcast({ type: 'cv-saved', id: doc.id, updatedAt: doc.updatedAt });
@@ -93,13 +143,7 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 		},
 
 		async get(id) {
-			const backend = await getBackend();
-			const raw = await backend.getCv(id);
-			if (raw === undefined) return null;
-			const result = loadCvDocument(raw);
-			if (!result.ok) return null;
-			if (result.migrated) await backend.putCv(result.cv);
-			return result.cv;
+			return getFrom(await getBackend(), id);
 		},
 
 		async create(init) {
@@ -115,7 +159,9 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 		},
 
 		async duplicate(id) {
-			const source = await cvRepo.get(id);
+			// One backend per operation: never read from one storage and write to another.
+			const backend = await getBackend();
+			const source = await getFrom(backend, id);
 			if (!source) return null;
 			const now = new Date().toISOString();
 			const suffix = COPY_SUFFIX[source.locale];
@@ -126,16 +172,17 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 				createdAt: now,
 				updatedAt: now
 			};
-			await put(await getBackend(), copy);
+			await put(backend, copy);
 			return copy;
 		},
 
 		async rename(id, title) {
-			const doc = await cvRepo.get(id);
+			const backend = await getBackend();
+			const doc = await getFrom(backend, id);
 			if (!doc) return;
 			const cleaned = cleanText(title, LIMITS.cvTitle).trim();
 			if (!cleaned) return;
-			await put(await getBackend(), {
+			await put(backend, {
 				...doc,
 				title: cleaned,
 				updatedAt: new Date().toISOString()
@@ -144,15 +191,14 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 
 		async remove(id) {
 			const backend = await getBackend();
-			const doc = await cvRepo.get(id);
+			// Raw record: the photo goes even if the CV itself no longer validates.
+			const photoId = rawPhotoId(await backend.getCv(id));
 			await backend.deleteCv(id);
-			const photoId = doc?.personal.photoAssetId;
-			if (photoId) {
-				const others = await loadAll(backend);
-				if (!others.some((other) => other.personal.photoAssetId === photoId)) {
-					await backend.deleteAsset(photoId);
-				}
+			if (photoId && !(await referencedPhotoIds(backend)).has(photoId)) {
+				await backend.deleteAsset(photoId);
 			}
+			// Earlier photos of this CV (kept for undo) are no longer needed either.
+			await deleteOrphans(backend, Date.now() - REMOVE_ORPHAN_MIN_AGE_MS);
 			broadcast({ type: 'cv-removed', id });
 		}
 	};
@@ -193,24 +239,7 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 
 		async removeOrphans(options = {}) {
 			const minAgeMs = options.minAgeMs ?? ORPHAN_MIN_AGE_MS;
-			const backend = await getBackend();
-			const used = new Set(
-				(await loadAll(backend))
-					.map((doc) => doc.personal.photoAssetId)
-					.filter((id): id is string => id !== undefined)
-			);
-			const cutoff = Date.now() - minAgeMs;
-			let removed = 0;
-			for (const id of await backend.getAllAssetIds()) {
-				if (used.has(id)) continue;
-				const asset = await backend.getAsset(id);
-				const createdAt = asset ? Date.parse(asset.createdAt) : Number.NaN;
-				// Unknown/invalid dates count as old: such records can't be from this session.
-				if (Number.isFinite(createdAt) && createdAt > cutoff) continue;
-				await backend.deleteAsset(id);
-				removed += 1;
-			}
-			return removed;
+			return deleteOrphans(await getBackend(), Date.now() - minAgeMs);
 		}
 	};
 

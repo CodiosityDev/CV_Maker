@@ -32,12 +32,15 @@ import { DEFAULT_SECTION_ORDER, DEFAULT_TEMPLATE_ID } from './defaults';
 // Primitive helpers
 // ---------------------------------------------------------------------------
 
+// Control characters (keeps \n and \t) and the noncharacters U+FFFE/U+FFFF: invalid in DOCX/XML.
 // eslint-disable-next-line no-control-regex
-const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F￾￿]/g;
+/** Half of a surrogate pair (emoji) without its other half — also invalid in XML. */
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
-/** Removes control characters (keeps \n and \t) and truncates. */
+/** Removes control characters (keeps \n and \t) and truncates without leaving half an emoji. */
 export function cleanText(value: string, max: number): string {
-	return value.replace(CONTROL_CHARS, '').slice(0, max);
+	return value.replace(CONTROL_CHARS, '').slice(0, max).replace(LONE_SURROGATE, '');
 }
 
 /** Required text: non-strings become '', long text is truncated. */

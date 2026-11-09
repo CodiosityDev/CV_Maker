@@ -12,13 +12,19 @@ import type { KeywordMatch, KeywordReport } from './types';
 const SHORT_TERMS = new Set(['ui', 'ux', 'hr', 'qa', 'qc', 'k3', 'it', 'ai', 'pr', 'c', 'r', 'go']);
 const MAX_KEYWORDS = 25;
 
-/** Like the suggestion normalizer, but drops sentence dots ("Excel." → "excel") while keeping "node.js". */
+/** Strips leading/trailing dots of one word in linear time (no regex backtracking on "x.....x"). */
+function trimDots(word: string): string {
+	let start = 0;
+	let end = word.length;
+	while (start < end && word[start] === '.') start += 1;
+	while (end > start && word[end - 1] === '.') end -= 1;
+	return word.slice(start, end);
+}
+
+/** Like the suggestion normalizer, but drops sentence dots ("Excel." → "excel", ".NET" → "net")
+ * while keeping inner dots ("node.js"). Linear time: pasted job posts are untrusted input. */
 function normalize(text: string): string {
-	return baseNormalize(text)
-		.replace(/\.+(?= |$)/g, '') // trailing dots: "excel." → "excel"
-		.replace(/(^| )\.+/g, '$1') // leading dots too (".NET" → "net"); inner dots stay ("node.js")
-		.replace(/ {2,}/g, ' ')
-		.trim();
+	return baseNormalize(text).split(' ').map(trimDots).filter(Boolean).join(' ');
 }
 export const MAX_JOB_POST_CHARS = 20_000;
 

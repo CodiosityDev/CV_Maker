@@ -178,6 +178,20 @@ export const incognito = {
 	checkIdle
 };
 
+/**
+ * Back/forward cache: browsers may keep this page frozen in memory after the user navigates away
+ * and restore it — with the incognito CV — when someone presses Back. Erase and start fresh instead.
+ */
+function onPageShow(event: PageTransitionEvent): void {
+	if (!event.persisted || !active) return;
+	void (async () => {
+		await backend?.clear(); // also clears hasData, so no "leave site?" prompt on the reload
+		location.reload();
+	})();
+}
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function')
+	window.addEventListener('pageshow', onPageShow);
+
 /** @internal Storage backend used while `incognito.active` (created on first use). */
 export function incognitoBackend(): StorageBackend {
 	backend ??= createIncognitoBackend();

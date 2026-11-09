@@ -9,6 +9,7 @@
  *
  * Always mutate through `update()` — direct writes to `store.cv` bypass undo history and autosave.
  */
+import { createEmptyCv } from '../schema/defaults';
 import type { CVDocument } from '../schema/types';
 import {
 	cvRepo as defaultRepo,
@@ -73,10 +74,15 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 	let saveChain: Promise<void> = Promise.resolve();
 	let destroyed = false;
 	/**
-	 * Set when another tab deleted this CV (or wiped all data): autosave must not resurrect it.
-	 * Edits are kept in memory (dirty) until the user explicitly chooses `keepLocalVersion()`.
+	 * Set when this CV was deleted (another tab, "delete all data", incognito auto-erase): autosave
+	 * must not resurrect it. Its content is also purged from memory (see `purge`).
 	 */
 	let savingBlocked = false;
+	/**
+	 * Storage session this editor was opened in. Writes are refused once the tab switches between
+	 * normal and incognito storage, so an incognito CV can never be written to the device's disk.
+	 */
+	const openedIncognito = incognito.active;
 
 	const snapshot = (): CVDocument => $state.snapshot(cv) as CVDocument;
 
@@ -116,6 +122,10 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 		const doc = snapshot();
 		saveState = 'saving';
 		saveChain = saveChain.then(async () => {
+			if (!savingBlocked && incognito.active !== openedIncognito) {
+				// The tab switched storage mode under this editor: treat the CV as gone here.
+				markRemoved();
+			}
 			if (savingBlocked) {
 				// Deleted elsewhere while this save was queued: drop it, keep the edits pending.
 				dirty = true;
@@ -214,10 +224,12 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 	}
 
 	/**
-	 * Keep this tab's version: dismiss the notice and save it now with a fresh `updatedAt`
-	 * (so it is the newest version everywhere). If the CV was deleted elsewhere, this re-creates it.
+	 * Keep this tab's version after another tab saved a newer one: dismiss the notice and save it now
+	 * with a fresh `updatedAt` (so it is the newest version everywhere). Does nothing for a deleted
+	 * CV: its content was purged.
 	 */
 	function keepLocalVersion(): Promise<void> {
+		if (externalChange === 'removed') return saveChain;
 		externalChange = 'none';
 		savingBlocked = false;
 		touch();
@@ -233,9 +245,30 @@ export function createCvStore(initial: CVDocument, options: CvStoreOptions = {})
 			return;
 		}
 		// 'cv-removed' or 'wiped': never let a pending autosave bring the CV back.
+		markRemoved();
+	}
+
+	/** The CV no longer exists: stop saving and forget its content. */
+	function markRemoved(): void {
 		externalChange = 'removed';
 		savingBlocked = true;
 		cancelTimer();
+		purge();
+	}
+
+	/**
+	 * Replace the content (and undo/redo history) with an empty CV so personal data deleted from storage
+	 * doesn't stay on screen or in memory — e.g. on a shared computer after incognito auto-erase.
+	 * Keeps id, kind, locale and wizard position so the page can show its notice in place.
+	 */
+	function purge(): void {
+		const blank = createEmptyCv({ id: cv.id, kind: cv.kind, locale: cv.locale });
+		cv = { ...blank, status: $state.snapshot(cv.status) };
+		undoStack.length = 0;
+		redoStack.length = 0;
+		lastCoalesceKey = undefined;
+		dirty = false;
+		syncCounts();
 	}
 
 	const onPageHide = () => void flush();
