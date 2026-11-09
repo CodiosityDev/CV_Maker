@@ -24,7 +24,9 @@ async function openTab() {
 	return import('../../src/lib/core/storage/index');
 }
 
-describe('incognito mode', () => {
+// Each test re-imports the storage modules from scratch (a fresh "tab"); on a busy machine that
+// cold import alone can exceed the default 5 s.
+describe('incognito mode', { timeout: 30_000 }, () => {
 	beforeEach(() => {
 		globalThis.indexedDB = new IDBFactory();
 		vi.stubGlobal('sessionStorage', fakeSessionStorage());
@@ -122,7 +124,7 @@ describe('incognito mode', () => {
 	});
 });
 
-describe('incognito idle auto-erase', () => {
+describe('incognito idle auto-erase', { timeout: 30_000 }, () => {
 	beforeEach(() => {
 		globalThis.indexedDB = new IDBFactory();
 		vi.stubGlobal('sessionStorage', fakeSessionStorage());

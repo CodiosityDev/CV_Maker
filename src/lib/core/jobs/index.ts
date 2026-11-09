@@ -63,10 +63,10 @@ function withParams(base: string, params: Record<string, string>): string {
 }
 
 /**
- * Order = display order. Formats checked 2026-11-06: LinkedIn (redirects to its results page for the
- * keyword and city) and Kalibrr (keyword page) verified by fetching. JobStreet, Glints and Indeed block
- * automated requests (403): their formats follow each site's own search form and must be confirmed by
- * opening a generated link in a browser after any change.
+ * Order = display order. Formats verified: LinkedIn (keyword + city) and Kalibrr (keyword page) by
+ * fetching, 2026-11-06; JobStreet and Indeed (keyword + city) and Glints (keyword only — its city
+ * filter needs an internal location id) by the owner in a browser, 2026-11-09. These sites block
+ * automated requests, so re-check in a browser after changing a format.
  */
 const SITES: readonly SiteDefinition[] = [
 	{
@@ -89,13 +89,10 @@ const SITES: readonly SiteDefinition[] = [
 	{
 		id: 'glints',
 		name: 'Glints',
-		usesCity: true,
-		build: (keyword, city) =>
-			withParams('https://glints.com/id/opportunities/jobs/explore', {
-				keyword,
-				country: 'ID',
-				locationName: city
-			})
+		// Glints filters by an internal location id, not a city name: keyword search across Indonesia.
+		usesCity: false,
+		build: (keyword) =>
+			withParams('https://glints.com/id/opportunities/jobs/explore', { keyword, country: 'ID' })
 	},
 	{
 		id: 'kalibrr',

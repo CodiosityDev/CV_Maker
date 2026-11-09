@@ -38,7 +38,7 @@ describe('job search links', () => {
 			'https://id.jobstreet.com/id/jobs?keywords=Web+Developer&where=Bandung'
 		);
 		expect(linkFor(links, 'glints').url).toBe(
-			'https://glints.com/id/opportunities/jobs/explore?keyword=Web+Developer&country=ID&locationName=Bandung'
+			'https://glints.com/id/opportunities/jobs/explore?keyword=Web+Developer&country=ID'
 		);
 		expect(linkFor(links, 'kalibrr').url).toBe(
 			'https://www.kalibrr.com/id-ID/home/te/web-developer'
@@ -48,6 +48,7 @@ describe('job search links', () => {
 		);
 
 		expect(linkFor(links, 'kalibrr').usesCity).toBe(false);
+		expect(linkFor(links, 'glints').usesCity).toBe(false);
 		expect(linkFor(links, 'linkedin').usesCity).toBe(true);
 	});
 
