@@ -3,6 +3,42 @@
  * Plain text only. Every key here must also exist in the other language file.
  */
 export const appId = {
+	editor: {
+		title: 'Ubah CV',
+		description: 'Ubah isi dan susunan CV. Perubahan tersimpan otomatis.',
+		download: 'Unduh',
+		view: 'Tampilan editor',
+		edit: 'Ubah',
+		preview: 'Preview',
+		appearance: 'Tampilan',
+		sections: {
+			count: '{count} item',
+			hidden: 'Disembunyikan',
+			up: 'Pindah ke atas: {title}',
+			down: 'Pindah ke bawah: {title}',
+			drag: 'Seret untuk memindah: {title}',
+			moved: '{title} kini di posisi {position} dari {total}',
+			more: 'Aksi bagian: {title}',
+			rename: 'Ganti judul',
+			renameTitle: 'Ganti judul bagian',
+			titleLabel: 'Judul bagian',
+			defaultTitle: 'Judul bawaan: {title}. Kosongkan untuk memakainya.',
+			showOnCv: 'Tampilkan di CV',
+			delete: 'Hapus section',
+			deleteTitle: 'Hapus section ini?',
+			deleteDescription: 'Hapus “{title}” beserta {count} item? Kamu bisa mengurungkannya.',
+			removed: 'Section dihapus.',
+			add: 'Tambah section',
+			addTitle: 'Tambah section kustom',
+			addPlaceholder: 'Pelatihan, Publikasi, Kegiatan Sukarela',
+			limit: 'Maksimal {count} section kustom. Hapus salah satu untuk menambah lagi.',
+			customEmpty: 'Belum ada isi. Tambahkan pelatihan atau kegiatan yang ingin dicantumkan.',
+			itemTitle: 'Judul',
+			itemSubtitle: 'Subjudul (opsional)',
+			itemBullets: 'Poin kegiatan',
+			newItem: 'Item baru'
+		}
+	},
 	atsPanel: {
 		title: 'Cek ATS',
 		summary: '{error} wajib diperbaiki · {warn} disarankan · {tip} tips',

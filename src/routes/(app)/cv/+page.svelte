@@ -466,7 +466,9 @@
 						>
 					</p>
 					<div class="primary-actions">
-						<Button href={`/buat/${cv.id}`} variant="secondary"
+						<Button
+							href={cv.wizardCompleted ? `/cv/${cv.id}/edit` : `/buat/${cv.id}`}
+							variant="secondary"
 							>{t(cv.wizardCompleted ? 'dashboard.edit' : 'dashboard.continue')}</Button
 						>
 						<Button disabled={busy} onclick={(event) => showExport(cv, event.currentTarget)}

@@ -17,13 +17,7 @@
 	import { getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
-	import {
-		loadSuggestions,
-		suggest,
-		categoryOf,
-		normalize,
-		type SuggestionData
-	} from '#lib/core/suggest/index.ts';
+	import { loadSuggestions, normalize, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import {
 		WIZARD_STEPS,
 		validateStep,
@@ -37,12 +31,7 @@
 	import { i18n, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '../Button.svelte';
 	import Card from '../Card.svelte';
-	import Input from '../Input.svelte';
-	import Autocomplete from '../Autocomplete.svelte';
-	import Textarea from '../Textarea.svelte';
-	import Select from '../Select.svelte';
 	import Stepper from '../Stepper.svelte';
-	import Dialog from '../Dialog.svelte';
 	import BottomSheet from '../BottomSheet.svelte';
 	import CvPreview from '../CvPreview.svelte';
 	import TemplatePicker from '../TemplatePicker.svelte';
@@ -52,6 +41,8 @@
 	import { toast } from '../toast.svelte.ts';
 	import PersonalStep from './PersonalStep.svelte';
 	import CollectionSteps from './CollectionSteps.svelte';
+	import CareerFields from './CareerFields.svelte';
+	import SummaryFields from './SummaryFields.svelte';
 
 	let { initial }: { initial: CVDocument } = $props();
 	const store = untrack(() => createCvStore(initial));
@@ -97,22 +88,6 @@
 	let guidance = $state.raw<Guidance>();
 	let examples = $state.raw<Guidance>();
 	let suggestionsData = $state.raw<SuggestionData>();
-	const summaryExamples = $derived.by(() => {
-		const available = examples?.summaryExamples ?? [];
-		if (!suggestionsData) return available;
-		const category = categoryOf(suggestionsData, store.cv.targetRole);
-		const field =
-			category === 'finance' ? 'accounting' : category === 'customer' ? 'sales' : category;
-		const preferred = available.some((example) => example.field === field)
-			? field
-			: category === 'data'
-				? 'it'
-				: 'general';
-		return [
-			...available.filter((example) => example.field === preferred),
-			...available.filter((example) => example.field !== preferred)
-		];
-	});
 	let guidanceError = $state(false);
 	let exampleError = $state(false);
 	let guidanceAttempt = $state(0);
@@ -127,8 +102,6 @@
 	let photoUrl = $state<string>();
 	let photoLoadError = $state(false);
 	let photoMissing = $state(false);
-	let replaceOpen = $state(false);
-	let pendingSummary = $state('');
 	let requestedPersistence = untrack(() => initial.status.wizardCompleted);
 	let heading: HTMLHeadingElement | undefined = $state();
 	const model = $derived(toRenderModel(store.cv, { photoUrl }));
@@ -158,8 +131,6 @@
 	$effect(() => {
 		if (!removed) return;
 		previewOpen = false;
-		replaceOpen = false;
-		pendingSummary = '';
 		jobPost = '';
 		atsReport = undefined;
 		atsKeywords = undefined;
@@ -411,6 +382,13 @@
 		event.preventDefault();
 		if ((await flushBeforeLeave()) && mounted && step === 'done') await goto(resolve('/(app)/cv'));
 	}
+	async function openEditor(event: MouseEvent) {
+		if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)
+			return;
+		event.preventDefault();
+		if ((await flushBeforeLeave()) && mounted && step === 'done')
+			await goto(resolve('/(app)/cv/[id]/edit', { id: store.cv.id }));
+	}
 	async function fillJobTarget(event: MouseEvent) {
 		if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)
 			return;
@@ -550,20 +528,6 @@
 			else store.undo();
 		}
 	}
-	function useSummary(text: string) {
-		pendingSummary = text;
-		if (store.cv.summary.trim()) replaceOpen = true;
-		else applySummary();
-	}
-	function applySummary() {
-		store.update(
-			(draft) => {
-				draft.summary = pendingSummary;
-			},
-			{ coalesceKey: `summary.example.${newId()}` }
-		);
-		replaceOpen = false;
-	}
 	async function reload() {
 		if (await store.reloadFromRepo()) {
 			loadedAt = store.cv.updatedAt;
@@ -684,61 +648,7 @@
 					{/if}
 					<fieldset class="step-fields" disabled={store.externalChange === 'removed'}>
 						{#if step === 'target'}
-							<Select
-								id="locale"
-								label={t('wizard.fields.locale')}
-								options={[
-									{ value: 'id', label: t('locale.id') },
-									{ value: 'en', label: t('locale.en') }
-								]}
-								bind:value={
-									() => store.cv.locale,
-									(value) =>
-										store.update(
-											(draft) => {
-												draft.locale = value === 'en' ? 'en' : 'id';
-											},
-											{ coalesceKey: 'locale' }
-										)
-								}
-							/>
-							<Autocomplete
-								id="targetRole"
-								label={t('wizard.fields.targetRole')}
-								popularWhenEmpty
-								suggestions={(query) =>
-									suggestionsData
-										? suggest(suggestionsData, 'jobTitle', query, { popularWhenEmpty: true })
-										: []}
-								maxlength={LIMITS.title}
-								showCounter
-								bind:value={
-									() => store.cv.targetRole ?? '',
-									(value) =>
-										store.update(
-											(draft) => {
-												draft.targetRole = value;
-											},
-											{ coalesceKey: 'targetRole' }
-										)
-								}
-							/>
-							<Input
-								id="title"
-								label={t('wizard.fields.title')}
-								maxlength={LIMITS.cvTitle}
-								showCounter
-								bind:value={
-									() => store.cv.title,
-									(value) =>
-										store.update(
-											(draft) => {
-												draft.title = value;
-											},
-											{ coalesceKey: 'title' }
-										)
-								}
-							/>
+							<CareerFields {store} {suggestionsData} />
 						{:else if step === 'personal'}
 							{#if photoMissing}<p role="alert" class="error">{t('wizard.photoMissing')}</p>{/if}
 							{#if photoLoadError}<p role="alert" class="error">{t('wizard.photoFailed')}</p>{/if}
@@ -753,54 +663,7 @@
 								onTarget={() => move(1)}
 							/>
 						{:else if step === 'summary'}
-							<Textarea
-								id="summary"
-								label={t('wizard.fields.summary')}
-								hideLabel
-								maxlength={LIMITS.summary}
-								bind:value={
-									() => store.cv.summary,
-									(value) =>
-										store.update(
-											(draft) => {
-												draft.summary = value;
-											},
-											{ coalesceKey: 'summary' }
-										)
-								}
-							/>
-							{#if examples}
-								<details class="tips">
-									<summary>{t('wizard.actionVerbs')}</summary>
-									<p>{examples.actionVerbs.join(', ')}</p>
-								</details>
-								<details class="tips summary-examples">
-									<summary>{t('wizard.examples')}</summary>
-									<div class="examples">
-										{#each summaryExamples.slice(0, 1) as example (example.field)}<article>
-												<h2>{example.label}</h2>
-												<p>{example.text}</p>
-												<Button variant="secondary" onclick={() => useSummary(example.text)}
-													>{t('wizard.useSummary')}</Button
-												>
-											</article>{/each}
-									</div>
-									{#if summaryExamples.length > 1}
-										<details class="other-examples">
-											<summary>{t('wizard.otherExamples')}</summary>
-											<div class="examples">
-												{#each summaryExamples.slice(1) as example (example.field)}<article>
-														<h2>{example.label}</h2>
-														<p>{example.text}</p>
-														<Button variant="secondary" onclick={() => useSummary(example.text)}
-															>{t('wizard.useSummary')}</Button
-														>
-													</article>{/each}
-											</div>
-										</details>
-									{/if}
-								</details>
-							{/if}
+							<SummaryFields {store} {examples} {suggestionsData} />
 						{:else if step === 'review'}
 							{#if reviewIssues.length}
 								<div class="review-issues" role="status">
@@ -851,7 +714,11 @@
 								<Button href="/cv" variant="secondary" onclick={openDashboard}
 									>{t('wizard.goDashboard')}</Button
 								>
-								<Button variant="ghost" onclick={() => move(9)}>{t('wizard.editAgain')}</Button>
+								<Button
+									href={resolve('/(app)/cv/[id]/edit', { id: store.cv.id })}
+									variant="ghost"
+									onclick={openEditor}>{t('wizard.editAgain')}</Button
+								>
 							</div>
 							{#if !sessionExpired}
 								<p class="hint">{t('wizard.previewNotice')}</p>
@@ -914,15 +781,6 @@
 	>
 		{#if previewOpen && !sessionExpired}<CvPreview {model} />{/if}
 	</BottomSheet>
-	<Dialog
-		bind:open={replaceOpen}
-		title={t('wizard.replaceTitle')}
-		description={t('wizard.replaceDescription')}
-	>
-		{#snippet footer()}<Button variant="secondary" onclick={() => (replaceOpen = false)}
-				>{t('common.cancel')}</Button
-			><Button onclick={applySummary}>{t('wizard.replace')}</Button>{/snippet}
-	</Dialog>
 {/if}
 
 <style>
@@ -1051,22 +909,9 @@
 	.tips ul {
 		padding-left: 1.25rem;
 	}
-	.tips p {
-		margin: 0.75rem 0;
-	}
-	.examples {
-		display: grid;
-		gap: 1.5rem;
-		padding-top: 1rem;
-	}
-	.examples h2,
 	.review-issues h2,
 	.preview-heading h2 {
 		font-size: 1rem;
-	}
-	.examples article {
-		padding-bottom: 1rem;
-		border-bottom: 1px solid var(--color-border);
 	}
 	.banner {
 		margin: 1rem 0;
