@@ -26,6 +26,8 @@ export interface ServerConfig {
 		devicesPerIp: number;
 		/** All users together per day: a cost ceiling. */
 		global: number;
+		/** New visitors counted per IP per day (mobile carriers share IPs: keep it high). */
+		visitorsPerIp: number;
 	};
 	/** Watch an ad for one more AI use (Google Ad Manager rewarded ad on a separate origin). */
 	ads: {
@@ -88,7 +90,8 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 			device: int(env, 'AI_LIMIT_DEVICE', 3),
 			ip: int(env, 'AI_LIMIT_IP', 100),
 			devicesPerIp: int(env, 'AI_LIMIT_DEVICES_PER_IP', 10),
-			global: int(env, 'AI_LIMIT_GLOBAL', 1500)
+			global: int(env, 'AI_LIMIT_GLOBAL', 1500),
+			visitorsPerIp: int(env, 'VISITOR_LIMIT_IP', 300)
 		},
 		ads: {
 			enabled: env.ADS_ENABLED?.trim() === 'true',

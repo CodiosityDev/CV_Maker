@@ -5,9 +5,14 @@
  */
 /**
  * device/ip/global: AI uses · issue: new device tokens per IP · bonus: extra uses earned from ads
- * per device · bonusip: the same per IP · ticket: single-use ad tickets (replay protection).
+ * per device · bonusip: the same per IP · ticket: single-use ad tickets (replay protection) ·
+ * visit: a visitor seen today (once per day) · visitip: new visitors per IP (anti-inflation).
  */
-export type QuotaScope = 'device' | 'ip' | 'issue' | 'global' | 'bonus' | 'bonusip' | 'ticket';
+export type QuotaScope =
+	'device' | 'ip' | 'issue' | 'global' | 'bonus' | 'bonusip' | 'ticket' | 'visit' | 'visitip';
+
+/** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */
+export type TotalName = 'visitors';
 
 export interface QuotaKey {
 	scope: QuotaScope;
@@ -23,6 +28,9 @@ export interface QuotaStore {
 	used(scope: QuotaScope, subject: string, day: string): Promise<number>;
 	/** Deletes counters older than `beforeDay`. */
 	prune(beforeDay: string): Promise<void>;
+	/** All-time counter (never pruned): +1, returns the new value. */
+	addTotal(name: TotalName): Promise<number>;
+	total(name: TotalName): Promise<number>;
 	close(): Promise<void>;
 }
 
@@ -55,6 +63,7 @@ export async function refund(
 /** For development and tests. Counters are lost on restart. */
 export function memoryQuotaStore(): QuotaStore {
 	const counts = new Map<string, number>();
+	const totals = new Map<TotalName, number>();
 	const id = (scope: QuotaScope, subject: string, day: string) => `${day}|${scope}|${subject}`;
 	return {
 		async increment(scope, subject, day, limit) {
@@ -75,6 +84,14 @@ export function memoryQuotaStore(): QuotaStore {
 		},
 		async prune(beforeDay) {
 			for (const key of counts.keys()) if (key.slice(0, 10) < beforeDay) counts.delete(key);
+		},
+		async addTotal(name) {
+			const value = (totals.get(name) ?? 0) + 1;
+			totals.set(name, value);
+			return value;
+		},
+		async total(name) {
+			return totals.get(name) ?? 0;
 		},
 		async close() {}
 	};

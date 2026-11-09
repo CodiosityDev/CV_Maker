@@ -6,11 +6,17 @@
  *   POST /api/ai/run          → { result, quota }  (body AiRequest, header X-Device-Token)
  *   POST /api/ai/reward/start → { adUrl }          (header X-Device-Token; open adUrl in a new tab)
  *   POST /api/ai/reward/claim → { quota }          (body { ticket }; called by the AD PAGE origin)
+ *   GET  /api/hello           → { visitors }       (all-time visitor count, counts nothing)
+ *   POST /api/hello           → { visitors }       (body { visitor }; counts this visitor once a day)
  * Errors: { error: AiErrorCode, quota? } with 400/401/403/413/429/502/503.
  *
  * Rewarded ads (owner: +1 use per ad, max 10 ads per device per day): Google gives no server-side
  * confirmation on the web, so a claim needs a signed, single-use ticket bound to the device, at
  * least `ads.minSeconds` after the start, within the daily caps. Cheating can at most reach the cap.
+ *
+ * Visitors (owner: a counter from 0 that never resets) = the sum of daily unique visitors, keyed by
+ * a random id the browser keeps. Max `limits.visitorsPerIp` new visitors per IP per day stops a script
+ * from inflating it. "hello" rather than "visit"/"stats": ad blockers drop requests to such paths.
  *
  * The server stores counters only (no CV content) and logs metadata only (task, model, ms, status).
  */
@@ -24,6 +30,8 @@ import {
 	nextWibMidnight,
 	verifyDeviceToken,
 	verifyRewardTicket,
+	VISITOR_ID_PATTERN,
+	visitorSubject,
 	wibDay
 } from './identity';
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
@@ -37,6 +45,7 @@ const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
 const BURST = { run: 6, other: 30 } as const;
 const CLAIM_PATH = '/api/ai/reward/claim';
+const HELLO_PATH = '/api/hello';
 
 export interface AppDeps {
 	config: Pick<ServerConfig, 'appOrigin' | 'appSecret' | 'limits' | 'ads'>;
@@ -254,6 +263,35 @@ export function createApp(deps: AppDeps) {
 		return { quota: await quotaFor(ticket.device) };
 	}
 
+	async function hello(req: IncomingMessage, ip: string): Promise<{ visitors: number }> {
+		sameOrigin(req);
+		burst(ip, 'other');
+		const body = (await readJson(req)) as { visitor?: unknown } | null;
+		const visitor = body?.visitor;
+		if (typeof visitor !== 'string' || !VISITOR_ID_PATTERN.test(visitor)) {
+			throw new HttpError(400, 'invalid');
+		}
+		const day = wibDay(now());
+		const firstToday = await store.increment(
+			'visit',
+			visitorSubject(config.appSecret, visitor),
+			day,
+			1
+		);
+		if (
+			firstToday &&
+			(await store.increment(
+				'visitip',
+				ipSubject(config.appSecret, ip),
+				day,
+				config.limits.visitorsPerIp
+			))
+		) {
+			return { visitors: await store.addTotal('visitors') };
+		}
+		return { visitors: await store.total('visitors') };
+	}
+
 	/** CORS only for the claim endpoint and only for the ad page's origin (no credentials). */
 	function corsHeaders(req: IncomingMessage, path: string): Record<string, string> {
 		if (path !== CLAIM_PATH || req.headers.origin !== config.ads.origin) return {};
@@ -289,6 +327,13 @@ export function createApp(deps: AppDeps) {
 			if (req.method === 'GET' && path === '/api/ai/quota') {
 				burst(ip, 'other');
 				return send(res, 200, await quotaFor(deviceFrom(req)));
+			}
+			if (req.method === 'GET' && path === HELLO_PATH) {
+				burst(ip, 'other');
+				return send(res, 200, { visitors: await store.total('visitors') });
+			}
+			if (req.method === 'POST' && path === HELLO_PATH) {
+				return send(res, 200, await hello(req, ip));
 			}
 			if (req.method === 'POST' && path === '/api/ai/device') {
 				return send(res, 200, await issue(req, ip));
