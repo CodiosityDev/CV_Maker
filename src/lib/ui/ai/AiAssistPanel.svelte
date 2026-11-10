@@ -237,7 +237,7 @@
 		onclick={ask}>{busy ? t('aiAssist.busy') : label}</button
 	>
 	{#if !canRun && module}<p class="hint">
-			{t(task === 'skills' ? 'aiAssist.needSkills' : 'aiAssist.needBackground')}
+			{t(task === 'summary' ? 'aiAssist.needBackground' : 'aiAssist.needSkills')}
 		</p>{/if}
 	<AiQuota {rewarding} disabled={removed} onreward={reward}>
 		{#if errorKey}<p class="error" role="alert">

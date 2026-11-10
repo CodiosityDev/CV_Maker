@@ -82,6 +82,9 @@ describe('AI profile (what leaves the device)', () => {
 		};
 		expect(aiCanRun('headline', empty)).toBe(false);
 		expect(aiCanRun('skills', { ...empty, targetRole: 'Data Analyst' })).toBe(true);
+		// The headline field comes before education in the wizard: the target role is enough.
+		expect(aiCanRun('headline', { ...empty, targetRole: 'Data Analyst' })).toBe(true);
+		expect(aiCanRun('summary', { ...empty, targetRole: 'Data Analyst' })).toBe(false);
 	});
 });
 
