@@ -98,7 +98,7 @@ export function wordXmlToText(xml: string): PartText {
 	return { text: lines.join('\n'), tables, textBoxes };
 }
 
-const CONTACT = /[^\s@]+@[^\s@]+\.[a-z]{2,}|(?:\+62|62|0)8\d[\d\s.-]{6,}/i;
+const CONTACT = /[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}|(?:\+62|62|0)8\d[\d\s.-]{6,20}/i;
 
 /** Reads a .docx file (bytes). Throws ScanError. */
 export function extractDocx(bytes: Uint8Array): ExtractedCv {

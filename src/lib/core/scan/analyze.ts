@@ -101,7 +101,8 @@ const HEADING_INDEX: [string, ScanSection][] = (
 	.flatMap(([section, words]) => words.map((word): [string, ScanSection] => [word, section]))
 	.sort((a, b) => b[0].length - a[0].length); // longest phrase first
 
-const EMAIL = /[^\s@<>()[\]:;,]+@[^\s@<>()[\]:;,]+\.[a-z]{2,}/gi;
+// Bounded repeats: a crafted file must not freeze the page (no quadratic backtracking).
+const EMAIL = /[^\s@<>()[\]:;,]{1,64}@[^\s@<>()[\]:;,]{1,190}\.[a-z]{2,24}/gi;
 const PHONE =
 	/(?:\+62|\b62|\b0)\s?8\d{1,2}[\s.-]?\d{3,4}[\s.-]?\d{3,5}\b|\+\d{1,3}[\s.-]?\(?\d{2,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b/;
 const LINKEDIN = /linkedin/i;
