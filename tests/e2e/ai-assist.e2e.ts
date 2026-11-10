@@ -630,3 +630,19 @@ test('a mode cycle with no AI panel mounted resets consent before resuming the n
 	await expect(consent(page)).toBeVisible();
 	expect(api.runs).toHaveLength(1);
 });
+
+test('first pass: the headline suggestion works on Data diri with only the target role', async ({
+	page
+}) => {
+	await mockApi(page);
+	await page.goto('/buat');
+	await page.getByRole('button', { name: 'Pilih CV ATS', exact: true }).click();
+	await expect(page.locator('.step-heading h1')).toHaveText('Bahasa & posisi tujuan');
+	const target = page.getByRole('combobox', { name: 'Posisi yang dituju', exact: true });
+	await target.fill('Web Developer');
+	await target.press('Escape');
+	await advance(page, 'Data diri');
+	await expect(panels(page, 'headline')).toBeVisible();
+	await expect(runButton(page, 'headline')).toBeEnabled();
+	await expect(panels(page, 'headline')).not.toContainText('Isi posisi tujuan');
+});

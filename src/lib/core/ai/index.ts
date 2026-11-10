@@ -124,8 +124,10 @@ export function aiCanRun(task: AiTask, cv: CVDocument): boolean {
 	const p = aiProfileFromCv(cv);
 	const background =
 		p.education.length + p.experience.length + p.organizations.length + p.projects.length > 0;
-	if (task === 'skills') return Boolean(p.targetRole) || background;
-	return Boolean(p.targetRole) && background;
+	// Headline and skills work from the target role alone: the headline field is on step 2,
+	// before any education/experience exists. A summary needs real background to write about.
+	if (task === 'summary') return Boolean(p.targetRole) && background;
+	return Boolean(p.targetRole) || background;
 }
 
 /** Review input for a CV FILE (see core/scan). Contact details are removed. */
