@@ -9,6 +9,7 @@
 	import Textarea from '../Textarea.svelte';
 	import Button from '../Button.svelte';
 	import Dialog from '../Dialog.svelte';
+	import AiAssist from '../AiAssist.svelte';
 
 	let {
 		store,
@@ -82,6 +83,7 @@
 			)
 	}
 />
+<AiAssist {store} task="summary" />
 {#if examples}
 	<details class="tips">
 		<summary>{t('wizard.actionVerbs')}</summary>
@@ -140,7 +142,7 @@
 		border-radius: var(--radius-md);
 		background: var(--color-mint-50);
 		border: 1px solid var(--color-mint);
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 0.875rem;
 	}
 	summary {

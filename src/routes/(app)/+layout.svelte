@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import { initIncognitoUiContext } from '#lib/ui/incognito-context.ts';
+	import { initIncognitoUiContext, getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
+	import { resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
 	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
 	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
+	import Logo from '#lib/ui/Logo.svelte';
+	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
 	initIncognitoUiContext();
+	const incognitoUi = getIncognitoUiContext();
+	$effect(() => {
+		syncAiSession();
+	});
 	let menuOpen = $state(false);
 	let menu: HTMLDetailsElement | undefined = $state();
 	function closeMenu(event: KeyboardEvent) {
@@ -24,6 +31,16 @@
 	onMount(() => {
 		// Housekeeping: delete photos no CV uses anymore (older than 24 h, so undo stays safe).
 		void assetRepo.removeOrphans().catch(() => {});
+		const stopExpire = incognito.onExpire(resetAiSession);
+		const stopEnd = incognitoUi?.registerBeforeEnd(resetAiSession);
+		const stopExternal = onExternalChange((event) => {
+			if (event.type === 'wiped') resetAiSession();
+		});
+		return () => {
+			stopExpire();
+			stopEnd?.();
+			stopExternal();
+		};
 	});
 </script>
 
@@ -40,10 +57,11 @@
 <header class="app-header">
 	<div class="site-container header-inner">
 		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
-			<span>{t('app.name')}</span>
+			<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
 		</a>
 		<LanguageSwitcher />
 		<IncognitoHeader />
+		<ThemeToggle />
 		<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
 			<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
 				<svg
@@ -78,28 +96,58 @@
 	}
 	.header-inner {
 		display: flex;
+		min-height: 66px;
 		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: 8px;
 		padding-block: 7px;
 	}
-	@media (max-width: 479px) {
+	@media (max-width: 639px) {
 		.header-inner {
+			gap: 2px;
+		}
+		.header-inner :global(.language-switcher) {
+			gap: 0;
+			padding: 0;
+		}
+		.header-inner :global(.incognito-toggle) {
+			padding-inline: 6px;
 			gap: 4px;
+		}
+	}
+	@media (max-width: 359px) {
+		.header-inner .brand {
+			font-size: 14px;
 		}
 	}
 	.brand {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
+		gap: 8px;
 		margin-right: auto;
+		min-width: 44px;
 		min-height: 44px;
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 20px;
 		font-weight: 800;
 		letter-spacing: -0.06em;
 		text-decoration: none;
 		white-space: nowrap;
+	}
+	@media (max-width: 479px) {
+		.brand-name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
 	}
 	.app-menu {
 		position: relative;

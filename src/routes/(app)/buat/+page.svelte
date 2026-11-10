@@ -343,7 +343,7 @@
 	}
 	.badge {
 		margin-bottom: 12px;
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 0.875rem;
 		font-weight: 600;
 		width: fit-content;

@@ -234,7 +234,7 @@
 		border: 1px solid transparent;
 		border-radius: var(--radius-md);
 		background: var(--color-brand);
-		color: var(--color-ink);
+		color: var(--color-on-brand);
 		font-size: 0.875rem;
 		font-weight: 700;
 		line-height: 1.5;

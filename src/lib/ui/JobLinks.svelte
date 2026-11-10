@@ -192,7 +192,7 @@
 	}
 	.related-list button[aria-pressed='true'] {
 		background: var(--color-mint);
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	.reset-keyword,
 	.fill-target {

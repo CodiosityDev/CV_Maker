@@ -43,6 +43,16 @@
 	--color-warning-surface: var(--color-cream-50);
 	--color-danger: var(--color-coral-ink);
 	--color-danger-surface: var(--color-coral-50);
+	--color-on-brand: #1f1d3d;
+	--color-logo-ink: #1f1d3d;
+	--color-paper: #ffffff;
+	--color-paper-ink: #1f1d3d;
+	--color-paper-muted: #656078;
+	--color-paper-focus: #7166b1;
+	--color-paper-border: #e4e0f0;
+	--color-paper-label: #f3f2ff;
+	--color-backdrop: rgb(31 29 61 / 28%);
+	--shadow-paper: 0 1px 2px rgb(31 29 61 / 8%), 0 8px 24px rgb(31 29 61 / 12%);
 	--text-xs: 0.75rem;
 	--text-sm: 0.875rem;
 	--text-base: 1rem;
@@ -59,6 +69,40 @@
 	--radius-pill: 999px;
 	--shadow-card: 0 1px 2px rgb(31 29 61 / 0.03), 0 8px 24px rgb(31 29 61 / 0.05);
 	--shadow-dialog: 0 2px 6px rgb(31 29 61 / 0.04), 0 16px 40px rgb(31 29 61 / 0.08);
+}
+
+:root:not([data-theme='light']) {
+	color-scheme: dark;
+	--color-brand-hover: #aaa7ff;
+	--color-brand-50: #2d284a;
+	--color-brand-100: #3d345f;
+	--color-brand-ink: #c9c1ff;
+	--color-progress: #b4a5ff;
+	--color-mint: #304d4b;
+	--color-mint-50: #233a39;
+	--color-cream: #46382f;
+	--color-cream-50: #30282f;
+	--color-coral-50: #442a36;
+	--color-coral-ink: #ffb1b1;
+	--color-surface: #211e38;
+	--color-surface-muted: #2b2744;
+	--color-canvas: #17152b;
+	--color-text: #f6f2ff;
+	--color-logo-ink: #fff1e1;
+	--color-text-muted: #c5bdd9;
+	--color-border: #49405f;
+	--color-control-border: #a094c2;
+	--color-focus: #c9c1ff;
+	--color-success: #abd5ce;
+	--color-warning: #ffd0a4;
+	--color-backdrop: rgb(12 10 24 / 68%);
+	--shadow-card: 0 1px 2px rgb(8 6 20 / 12%), 0 8px 24px rgb(8 6 20 / 16%);
+	--shadow-dialog: 0 2px 6px rgb(8 6 20 / 16%), 0 16px 40px rgb(8 6 20 / 24%);
+	--shadow-paper: 0 0 0 1px rgb(255 255 255 / 12%), 0 8px 24px rgb(8 6 20 / 22%);
+}
+
+:root[data-theme='light'] {
+	color-scheme: light;
 }
 
 :root {
@@ -116,7 +160,7 @@ select:disabled {
 }
 ::selection {
 	background: var(--color-mint);
-	color: var(--color-ink);
+	color: var(--color-text);
 }
 h1,
 h2,
@@ -220,6 +264,15 @@ main:focus {
 	border-radius: var(--radius-lg);
 	background: var(--color-cream-50);
 	border-color: var(--color-cream);
+}
+
+@media print {
+	:root,
+	:root:not([data-theme='light']) {
+		color-scheme: light;
+		background: var(--color-paper);
+		color: var(--color-paper-ink);
+	}
 }
 
 @media (min-width: 768px) {

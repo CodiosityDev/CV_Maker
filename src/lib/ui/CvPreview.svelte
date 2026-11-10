@@ -119,16 +119,19 @@
 	.viewport {
 		width: 100%;
 		overflow: hidden;
-		background: #fff;
+		background: var(--color-paper);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-card);
+		box-shadow: var(--shadow-paper);
 	}
 	.paper {
+		--color-focus: var(--color-paper-focus);
+		color: var(--color-paper-ink);
+		color-scheme: light;
 		width: 210mm;
 		min-height: 297mm;
 		transform-origin: top left;
-		background: #fff;
+		background: var(--color-paper);
 	}
 	figcaption {
 		margin-top: 0.75rem;

@@ -186,7 +186,7 @@
 		animation: appear 180ms ease-out;
 	}
 	.ui-dialog::backdrop {
-		background: rgb(31 29 61 / 28%);
+		background: var(--color-backdrop);
 	}
 	.dialog-heading {
 		display: flex;

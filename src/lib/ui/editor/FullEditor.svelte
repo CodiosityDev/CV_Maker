@@ -619,11 +619,11 @@
 		border-radius: var(--radius-sm);
 		background: transparent;
 		font: inherit;
-		color: var(--color-ink);
+		color: var(--color-text);
 		cursor: pointer;
 	}
 	.view-switch button[aria-pressed='true'] {
-		background: white;
+		background: var(--color-surface);
 	}
 	.view-switch button:focus-visible {
 		outline: 2px solid var(--color-brand-ink);
@@ -646,7 +646,7 @@
 	.fixed-section {
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		background: white;
+		background: var(--color-surface);
 		margin-bottom: 1rem;
 		overflow-wrap: anywhere;
 	}

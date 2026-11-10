@@ -95,6 +95,18 @@ async function visiblePreview(page: Page) {
 test('ATS happy path reaches review and done with saved content and heading focus', async ({
 	page
 }) => {
+	// Vite preview has no API server; keep the optional quota lookup local and deterministic.
+	await page.route('**/api/ai/quota', (route) =>
+		route.fulfill({
+			json: { limit: 3, remaining: 3, resetsAt: '2030-01-01T17:00:00.000Z' }
+		})
+	);
+	// Preview has no API server; keep the happy-path console assertion strict.
+	await page.route('**/api/hello', async (route) => {
+		if (route.request().method() !== 'GET') return route.fallback();
+		await route.fulfill({ status: 200, json: { visitors: 0 } });
+	});
+
 	const errors: string[] = [];
 	page.on('pageerror', (error) => errors.push(error.message));
 	page.on('console', (message) => {

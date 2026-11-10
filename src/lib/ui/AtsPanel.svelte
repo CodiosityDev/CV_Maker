@@ -226,7 +226,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		background: var(--color-surface);
-		color: var(--color-ink);
+		color: var(--color-text);
 		overflow-wrap: anywhere;
 	}
 	h2 {
@@ -284,7 +284,7 @@
 		min-width: 0;
 		border-radius: var(--radius-md);
 		padding: 12px;
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	.check-group.error {
 		background: var(--color-coral-50);
@@ -391,7 +391,7 @@
 		padding: 8px 12px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 0.8125rem;
 		line-height: 1.5;
 		text-align: left;

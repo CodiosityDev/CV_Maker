@@ -148,7 +148,7 @@
 	}
 	.primary {
 		background: var(--color-brand);
-		color: var(--color-ink);
+		color: var(--color-on-brand);
 	}
 	.primary:hover:not(:disabled):not([aria-disabled='true']) {
 		background: var(--color-brand-hover);
@@ -169,7 +169,7 @@
 	}
 	.danger {
 		background: var(--color-coral);
-		color: var(--color-ink);
+		color: var(--color-on-brand);
 	}
 	.danger:hover:not(:disabled):not([aria-disabled='true']) {
 		background: var(--color-coral-50);

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AiAssist from '../AiAssist.svelte';
 	import {
 		EXPERIENCE_TYPES,
 		LANGUAGE_LEVELS,
@@ -567,6 +568,7 @@
 		<div class="skills-sections">
 			{#if !skillSection || skillSection === 'skills'}
 				{#if suggestionsData}<SkillRecommendations {store} data={suggestionsData} {onTarget} />{/if}
+				<AiAssist {store} task="skills" />
 				{#each ['hard', 'soft', 'tools'] as field (field)}
 					{@const group = field as 'hard' | 'soft' | 'tools'}
 					<SkillTags

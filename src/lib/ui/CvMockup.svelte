@@ -38,22 +38,22 @@
 		margin-inline: auto;
 	}
 	.cv-paper {
-		border: 1px solid var(--color-border);
+		border: 1px solid var(--color-paper-border);
 		border-radius: var(--radius-lg);
-		background: var(--color-surface);
-		box-shadow: var(--shadow-card);
+		background: var(--color-paper);
+		box-shadow: var(--shadow-paper);
 	}
 	.paper-label {
 		padding: 12px 22px;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-paper-border);
 		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-		background: var(--color-brand-50);
-		color: var(--color-text-muted);
+		background: var(--color-paper-label);
+		color: var(--color-paper-muted);
 		font-size: 0.75rem;
 	}
 	.cv-body {
 		padding: 24px 22px 28px;
-		color: var(--color-ink);
+		color: var(--color-paper-ink);
 		font-size: 0.6875rem;
 		line-height: 1.6;
 	}
@@ -76,7 +76,7 @@
 	.cv-heading {
 		margin-bottom: 7px;
 		padding-bottom: 4px;
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-paper-border);
 		font-size: 0.75rem;
 		font-weight: 700;
 	}

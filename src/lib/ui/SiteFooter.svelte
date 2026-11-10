@@ -58,7 +58,7 @@
 		transition: color var(--motion-duration) ease-out;
 	}
 	a:hover {
-		color: var(--color-ink);
+		color: var(--color-text);
 		text-decoration: underline;
 	}
 	nav {

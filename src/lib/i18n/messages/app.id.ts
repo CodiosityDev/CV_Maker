@@ -39,6 +39,41 @@ export const appId = {
 			newItem: 'Item baru'
 		}
 	},
+	aiAssist: {
+		headline: 'Saran headline dengan AI',
+		write: 'Tulis dengan AI',
+		improve: 'Perbaiki dengan AI',
+		skills: 'Saran skill dengan AI',
+		busy: 'Sedang menyusun…',
+		needBackground:
+			'Isi posisi tujuan dan minimal satu pendidikan, pengalaman, organisasi, atau proyek dulu.',
+		needSkills: 'Isi posisi tujuan atau satu riwayat dulu.',
+		quota: 'Sisa {remaining} dari {limit} hari ini',
+		reset: 'Jatah direset pukul 00.00 WIB.',
+		reward: 'Tonton iklan untuk +1 bantuan AI (sisa {count} iklan hari ini)',
+		rewardHint: 'Iklan dibuka di tab baru yang terpisah dari CV-mu.',
+		quotaAdded: 'Jatah Bantuan AI bertambah.',
+		headlineChoices: 'Pilihan headline dari AI',
+		preview: 'Pratinjau ringkasan AI',
+		use: 'Pakai teks ini',
+		discard: 'Abaikan',
+		placeholder: 'Ganti dengan angka yang benar atau hapus.',
+		applied: 'Saran AI dipakai.',
+		consentTitle: 'Bantuan AI',
+		consentIntro:
+			'Yang dikirim: posisi tujuan, pendidikan dan nilai, pengalaman, organisasi, proyek, skill, sertifikasi, dan ringkasan. Bahasa CV juga disertakan.',
+		notSent: 'Nama, email, telepon, kota, tautan, dan foto tidak dikirim.',
+		processing:
+			'Isi ini dikirim melalui server CV Maker ke penyedia AI pihak ketiga setelah kamu setuju. Isi CV tidak disimpan di server; hanya penghitung jatah anonim, selama 7 hari.',
+		freeQuota: 'Tersedia 3 bantuan gratis per perangkat per hari, direset pukul 00.00 WIB.',
+		agree: 'Setuju & lanjutkan',
+		noTarget: 'Belum diisi',
+		background: 'Riwayat yang dikirim',
+		backgroundCount:
+			'{education} pendidikan · {experience} pengalaman · {organizations} organisasi · {projects} proyek',
+		skillsAndSummary: 'Skill, sertifikasi, dan ringkasan',
+		contentCount: '{skills} skill · {certificates} sertifikasi · ringkasan {characters} karakter'
+	},
 	atsPanel: {
 		title: 'Cek ATS',
 		summary: '{error} wajib diperbaiki · {warn} disarankan · {tip} tips',

@@ -153,7 +153,7 @@
 	}
 	.incognito-toggle.active {
 		background: var(--color-mint);
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	.incognito-toggle:disabled {
 		opacity: 0.6;

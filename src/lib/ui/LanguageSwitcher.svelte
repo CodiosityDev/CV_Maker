@@ -59,7 +59,7 @@
 	}
 	button.active {
 		background: var(--color-mint);
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	button:disabled {
 		opacity: 0.65;

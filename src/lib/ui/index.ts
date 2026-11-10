@@ -16,5 +16,6 @@ export { default as LanguageSwitcher } from './LanguageSwitcher.svelte';
 export { default as SiteHeader } from './SiteHeader.svelte';
 export { default as SiteFooter } from './SiteFooter.svelte';
 export { default as Icon } from './Icon.svelte';
+export { default as Logo } from './Logo.svelte';
 export { default as CvMockup } from './CvMockup.svelte';
 export { toast } from './toast.svelte.ts';
