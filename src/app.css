@@ -78,7 +78,9 @@
    Every pair stays WCAG AA; see the contrast table in HANDOFF. */
 :root:not([data-theme='light']) {
 	color-scheme: dark;
-	--color-brand-hover: #a9a6f5;
+	/* Big lavender buttons glare on a dark page: a calmer shade (button text still 5.4:1). */
+	--color-brand: #8f8ce6;
+	--color-brand-hover: #9a97ee;
 	--color-brand-50: #2d2b3c;
 	--color-brand-100: #3a3752;
 	--color-brand-ink: #c2bcf2;
