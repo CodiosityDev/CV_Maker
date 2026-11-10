@@ -228,3 +228,20 @@ test('an Undo toast expires on a later edit instead of undoing unrelated content
 	await expect(cards(page)).toHaveCount(1);
 	await expect(role).toHaveValue('Asisten lab');
 });
+
+test('an end date before the start date is flagged at once and clears when fixed', async ({
+	page
+}) => {
+	await experience(page);
+	const card = await addExperience(page, 'Kasir', 'Toko Sinar');
+	const start = card.getByRole('group', { name: 'Mulai', exact: true });
+	await start.getByLabel('Bulan', { exact: true }).selectOption('10');
+	await start.getByLabel('Tahun', { exact: true }).selectOption('2018');
+	const end = card.getByRole('group', { name: 'Selesai', exact: true });
+	await end.getByLabel('Bulan', { exact: true }).selectOption('09');
+	await end.getByLabel('Tahun', { exact: true }).selectOption('2017');
+	const message = card.getByText('Tanggal selesai tidak boleh sebelum tanggal mulai.');
+	await expect(message).toBeVisible();
+	await end.getByLabel('Tahun', { exact: true }).selectOption('2019');
+	await expect(message).toHaveCount(0);
+});

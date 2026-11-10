@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { DateRange } from '#lib/core/schema/index.ts';
+	import { isDateOrderInvalid } from '#lib/core/wizard/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import MonthPicker from '../MonthPicker.svelte';
 
@@ -14,6 +15,11 @@
 		error?: string;
 		onChange: (range: DateRange, field: 'start' | 'end' | 'current') => void;
 	} = $props();
+	// Shown at once (wizard and full editor), not only after "Lanjut": an end before the start is
+	// always a mistake.
+	const shownError = $derived(
+		error ?? (isDateOrderInvalid(range) ? t('validation.dateOrder') : undefined)
+	);
 </script>
 
 <div class="date-range">
@@ -28,7 +34,7 @@
 	<MonthPicker
 		{id}
 		label={t('wizard.fields.end')}
-		{error}
+		error={shownError}
 		allowCurrent
 		bind:value={
 			() => range?.end, (value) => onChange({ ...(range ?? { current: false }), end: value }, 'end')
