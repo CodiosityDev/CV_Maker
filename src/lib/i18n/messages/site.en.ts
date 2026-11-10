@@ -72,7 +72,8 @@ export const siteEn: SiteMessages = {
 			copyFailed: 'Automatic copying is unavailable. Select the text below to copy it.',
 			copyText: 'Text to copy',
 			retry: 'Try again',
-			noText: 'There is no CV text to send.'
+			noText:
+				'There is not enough CV content for the AI to review yet. Add education, experience or skills first. Your name and contact details are never sent to the AI.'
 		}
 	},
 	landing: {
