@@ -126,6 +126,9 @@ export const siteEn: SiteMessages = {
 		faqLink: 'Read the FAQ'
 	},
 	faq: {
+		aiInventedQuestion: 'Can AI add experience I do not have?',
+		aiInventedAnswer:
+			'No. Schools, companies, organisations, certificates, years, GPA, and skills are checked against the original CV. New numbers are replaced with [add number]. Additional skills are suggestions you choose yourself. Check the converted result before saving.',
 		scanUploadQuestion: 'Is my CV file uploaded?',
 		scanUploadAnswer:
 			'No. PDF, DOCX, and TXT files are read on your device and are not stored. Only if you choose AI feedback and agree is text without names, contact details, links, or addresses sent for AI processing.',
@@ -168,6 +171,8 @@ export const siteEn: SiteMessages = {
 		back: 'Back to home'
 	},
 	privacy: {
+		convertCopy:
+			'Converting to an ATS CV without AI runs on your device. If you choose Improve with AI and agree, text without names, contact details, links, and addresses is sent through the CV Maker server to the AI provider. The converted result stays in server memory for up to 2 minutes after it is ready for your browser to retrieve, without being stored in a database. The new CV is saved on your device only when you choose Save & open editor.',
 		scanTitle: 'ATS Check',
 		scanCopy:
 			'CV files are read on your device, are not sent to a server, and are not stored. Only when you choose Ask AI for feedback and agree is CV text without names, contact details, links, or addresses sent through the CV Maker server to the AI provider. The text is not stored.',

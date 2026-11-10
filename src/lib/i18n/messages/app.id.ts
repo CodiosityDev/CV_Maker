@@ -3,6 +3,56 @@
  * Plain text only. Every key here must also exist in the other language file.
  */
 export const appId = {
+	convertAts: {
+		title: 'Ubah jadi CV ATS',
+		description:
+			'AI menyusun ulang isi CV-mu ke format ATS, menulis ulang poin pengalaman, dan memberi saran. Data kontak tidak dikirim.',
+		ai: 'Rapikan dengan AI (1 jatah)',
+		local: 'Ubah tanpa AI',
+		localHint: 'Disusun otomatis di perangkatmu. Periksa hasilnya di editor.',
+		quotaUnknown: 'Konversi AI memakai 1 jatah bantuan AI.',
+		consentTitle: 'Ubah CV dengan AI?',
+		consentIntro:
+			'Teks CV berikut dikirim ke server CV Maker lalu ke penyedia AI. Hasil tersedia sementara di memori server maksimal 2 menit setelah siap untuk diambil browser.',
+		contactsNotSent:
+			'Nama, email, nomor HP, tautan, dan alamat tidak dikirim; dibaca di perangkatmu lalu dipasang kembali.',
+		preparing: 'Menyiapkan konversi…',
+		sending: 'Mengirim…',
+		working: 'AI sedang menyusun CV-mu…',
+		localWorking: 'Menyusun CV di perangkatmu…',
+		saving: 'Menyimpan CV…',
+		processingHint: 'Biasanya 15–40 detik. Kamu bisa menutup tampilan proses ini dengan Batal.',
+		cancelHint: 'Batal menutup proses di halaman ini. Jika AI sudah mulai, jatah tetap terpakai.',
+		cancelled: 'Konversi dibatalkan.',
+		localFailed: 'CV belum bisa disusun. Coba lagi atau pilih file lain.',
+		saveFailed: 'CV belum tersimpan. Coba simpan lagi.',
+		openEditor: 'Buka editor',
+		openFailed: 'CV sudah tersimpan, tetapi editor belum bisa dibuka. Coba buka lagi.',
+		retry: 'Coba lagi',
+		imageOnly:
+			'Teks pada file ini tidak bisa dibaca sehingga belum bisa diubah menjadi CV ATS. Buat CV baru dan isi datanya dengan panduan.',
+		createNew: 'Buat CV baru',
+		review: {
+			title: 'Tinjau hasil konversi',
+			description: 'Periksa hasilnya sebelum menyimpan. Kamu masih bisa melengkapinya di editor.',
+			contacts: 'Nama dan kontak yang ditemukan',
+			noContacts: 'Nama dan kontak belum ditemukan. Lengkapi di editor.',
+			sections: 'Isi CV',
+			notes: 'Yang perlu diperiksa',
+			aiNotes: 'Saran dari AI',
+			suggestedSkills: 'Tambahkan keahlian yang kamu miliki',
+			skillsHint:
+				'Pilih hanya yang sesuai dengan kemampuanmu. Tidak ada yang ditambahkan otomatis.',
+			placeholders: 'Ganti dengan angka yang benar atau hapus.',
+			unplaced: 'Baris yang belum ditempatkan',
+			copy: 'Salin baris',
+			copied: 'Baris disalin.',
+			manualCopy: 'Salin baris ini secara manual.',
+			save: 'Simpan & buka editor',
+			cancel: 'Batal',
+			incognito: 'Dalam Mode Incognito, CV ini hanya tersimpan sementara di sesi ini.'
+		}
+	},
 	editor: {
 		title: 'Ubah CV',
 		description: 'Ubah isi dan susunan CV. Perubahan tersimpan otomatis.',

@@ -5,6 +5,56 @@
 import type { AppMessages } from '../translate';
 
 export const appEn: AppMessages = {
+	convertAts: {
+		title: 'Convert to an ATS CV',
+		description:
+			'AI restructures your CV for ATS, rewrites experience bullets, and offers suggestions. Contact details are not sent.',
+		ai: 'Improve with AI (1 request)',
+		local: 'Convert without AI',
+		localHint: 'Structured automatically on your device. Check the result in the editor.',
+		quotaUnknown: 'AI conversion uses 1 AI assistance request.',
+		consentTitle: 'Convert your CV with AI?',
+		consentIntro:
+			'The CV text below is sent to the CV Maker server and then to the AI provider. Results stay in server memory for up to 2 minutes after they are ready for your browser to retrieve.',
+		contactsNotSent:
+			'Names, email, phone numbers, links, and addresses are not sent; they are read on your device and added back afterwards.',
+		preparing: 'Preparing conversion…',
+		sending: 'Sending…',
+		working: 'AI is restructuring your CV…',
+		localWorking: 'Structuring your CV on this device…',
+		saving: 'Saving CV…',
+		processingHint: 'Usually 15–40 seconds. Choose Cancel to close the progress view.',
+		cancelHint:
+			'Cancel closes this process on this page. A request is still used if AI has already started.',
+		cancelled: 'Conversion cancelled.',
+		localFailed: 'The CV could not be structured. Try again or choose another file.',
+		saveFailed: 'The CV has not been saved. Try saving again.',
+		openEditor: 'Open editor',
+		openFailed: 'The CV is saved, but the editor could not be opened. Try opening it again.',
+		retry: 'Try again',
+		imageOnly:
+			'Text in this file cannot be read, so it cannot be converted to an ATS CV yet. Create a new CV and follow the guidance to enter your details.',
+		createNew: 'Create a new CV',
+		review: {
+			title: 'Review the converted CV',
+			description: 'Check the result before saving. You can complete it in the editor.',
+			contacts: 'Name and contact details found',
+			noContacts: 'No name or contact details found. Add them in the editor.',
+			sections: 'CV contents',
+			notes: 'Things to check',
+			aiNotes: 'AI suggestions',
+			suggestedSkills: 'Add skills you have',
+			skillsHint: 'Choose only skills you have. Nothing is added automatically.',
+			placeholders: 'Replace with a real number or remove.',
+			unplaced: 'Unplaced lines',
+			copy: 'Copy lines',
+			copied: 'Lines copied.',
+			manualCopy: 'Copy these lines manually.',
+			save: 'Save & open editor',
+			cancel: 'Cancel',
+			incognito: 'In Incognito Mode, this CV is stored temporarily in this session only.'
+		}
+	},
 	editor: {
 		title: 'Edit CV',
 		description: 'Edit your CV content and sections. Changes save automatically.',
