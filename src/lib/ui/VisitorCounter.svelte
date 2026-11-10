@@ -15,6 +15,12 @@
 	let format = $state.raw<Stats['formatVisitors']>();
 	const finalNumber = $derived(count !== undefined && format ? format(count, i18n.locale) : '');
 	const displayedNumber = $derived(format ? format(displayed, i18n.locale) : '');
+	// Width of the final number, reserved during the count-up: a digit is 1ch (tabular), a "." or
+	// "," separator is much narrower, so "1.234" does not leave a gap before the label.
+	const numberWidth = $derived.by(() => {
+		const digits = finalNumber.replace(/\D/g, '').length;
+		return `calc(${Math.max(1, digits)}ch + ${(finalNumber.length - digits) * 0.3}ch)`;
+	});
 	const onlineNumber = $derived(online !== undefined && format ? format(online, i18n.locale) : '');
 	const label = $derived(
 		[
@@ -120,7 +126,7 @@
 					<span class="separator" aria-hidden="true"></span>
 				{/if}
 				<span class="stat visitor-value" aria-hidden="true">
-					<strong style:width="{Math.max(1, finalNumber.length)}ch">{displayedNumber}</strong>
+					<strong style:width={numberWidth}>{displayedNumber}</strong>
 					<span>{t(count === 1 ? 'landing.visitor' : 'landing.visitors')}</span>
 				</span>
 			</p>
@@ -191,7 +197,5 @@
 		color: var(--color-text);
 		font-weight: 650;
 		font-variant-numeric: tabular-nums;
-		/* The reserved width (for the count-up) sits before the number, not before the label. */
-		text-align: end;
 	}
 </style>
