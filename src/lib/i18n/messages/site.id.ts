@@ -70,7 +70,8 @@ export const siteId = {
 			copyFailed: 'Tidak bisa menyalin otomatis. Pilih teks di bawah untuk menyalinnya.',
 			copyText: 'Teks untuk disalin',
 			retry: 'Coba lagi',
-			noText: 'Tidak ada teks CV yang bisa dikirim.'
+			noText:
+				'Isi CV-nya masih terlalu sedikit untuk dinilai AI. Tambahkan pendidikan, pengalaman, atau keahlian dulu. Nama dan kontak memang tidak dikirim ke AI.'
 		}
 	},
 	landing: {

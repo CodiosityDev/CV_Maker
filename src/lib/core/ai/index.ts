@@ -192,6 +192,39 @@ export function aiReviewInputFromCv(cv: CVDocument, jobPost = ''): AiReviewInput
 		[p.skills.hard, p.skills.tools, p.skills.soft].filter((g) => g.length).map((g) => g.join(', '))
 	);
 	section('CERTIFICATIONS', p.certifications);
+	// Not in the AI profile (headline/summary tasks don't need them), but part of a review.
+	const clipped = (value: string | undefined) => clip(value, LIMITS.title);
+	section(
+		'LANGUAGES',
+		cv.languages
+			.map((l) => [clipped(l.name), l.level, clipped(l.score)].filter(Boolean).join(', '))
+			.filter(Boolean)
+			.slice(0, 10)
+	);
+	section(
+		'AWARDS',
+		cv.awards
+			.map((a) => [clipped(a.title), clipped(a.issuer)].filter(Boolean).join(' — '))
+			.filter(Boolean)
+			.slice(0, 10)
+	);
+	for (const custom of cv.custom.slice(0, 5)) {
+		section(
+			clipped(custom.title).toUpperCase() || 'OTHER',
+			custom.items
+				.slice(0, 10)
+				.flatMap((item) => [
+					[clipped(item.title), clipped(item.subtitle)].filter(Boolean).join(' — '),
+					...clipList(item.bullets, AI_PROFILE_LIMITS.bulletsPerItem, LIMITS.bullet).map(
+						(b) => `• ${b}`
+					)
+				])
+				.filter(Boolean)
+		);
+	}
+	// Only contact details and a headline = nothing to review: keep the text empty (button off).
+	const headline = clip(cv.personal.headline, LIMITS.headline);
+	if (lines.length && headline) lines.unshift('HEADLINE', headline, '');
 	return {
 		locale: p.locale,
 		targetRole: p.targetRole,

@@ -15,6 +15,7 @@ import {
 import { parseAiRequest } from '../../src/lib/core/ai/schema';
 import type { AiRequest, AiReviewInput } from '../../src/lib/core/ai/types';
 import { sampleCvAts } from '../../src/lib/core/fixtures/index';
+import type { CVDocument } from '../../src/lib/core/schema/types';
 
 const CV_TEXT = `Rina Putri Lestari
 Fresh Graduate Sistem Informasi
@@ -223,5 +224,58 @@ describe('HTTP: a review uses 1 of the daily uses', () => {
 		const sent = JSON.stringify(calls[0]?.messages);
 		for (const secret of ['Rina Putri', 'gmail', '3456', 'linkedin', 'Veteran'])
 			expect(sent).not.toContain(secret);
+	});
+});
+
+describe('review input from a CV made in the app', () => {
+	const blank = (): CVDocument => {
+		const cv = structuredClone(sampleCvAts);
+		return {
+			...cv,
+			summary: '',
+			education: [],
+			experience: [],
+			organizations: [],
+			projects: [],
+			skills: { hard: [], soft: [], tools: [] },
+			languages: [],
+			certifications: [],
+			awards: [],
+			custom: []
+		};
+	};
+
+	it('stays empty when the CV only has contact details and a headline (nothing to review)', () => {
+		const cv = blank();
+		cv.personal.headline = 'Fresh Graduate Data Analyst';
+		expect(aiReviewInputFromCv(cv).cvText).toBe('');
+	});
+
+	it('includes languages, awards, custom sections and the headline, never contact details', () => {
+		const cv = blank();
+		cv.personal.headline = 'Fresh Graduate Data Analyst';
+		cv.languages = [{ id: 'l1', name: 'Inggris', level: 'fluent', score: 'TOEFL 550' }];
+		cv.awards = [{ id: 'a1', title: 'Juara 1 Lomba Data', issuer: 'Kampus' }];
+		cv.custom = [
+			{
+				key: 'custom:k1',
+				title: 'Relawan',
+				items: [{ id: 'c1', title: 'Pengajar TPA', bullets: ['Mengajar 20 anak setiap pekan'] }]
+			}
+		];
+		const text = aiReviewInputFromCv(cv).cvText;
+		for (const part of [
+			'HEADLINE',
+			'Fresh Graduate Data Analyst',
+			'LANGUAGES',
+			'TOEFL 550',
+			'Juara 1 Lomba Data',
+			'RELAWAN',
+			'• Mengajar 20 anak'
+		])
+			expect(text).toContain(part);
+		for (const secret of [cv.personal.fullName, cv.personal.email, cv.personal.phone])
+			if (secret) expect(text).not.toContain(secret);
+		expect(parseAiRequest({ task: 'review', review: aiReviewInputFromCv(cv) })).toBeDefined();
 	});
 });

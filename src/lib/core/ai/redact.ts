@@ -33,7 +33,12 @@ export function redactContacts(text: string): string {
 		.replace(PERSONAL_LINE, '')
 		.replace(LABEL_ONLY, '')
 		.split('\n')
-		.map((line) => line.replace(/\s{2,}/g, ' ').replace(/^[\s|•·,–-]+|[\s|•·,–-]+$/g, ''))
+		.map((line) =>
+			line
+				.replace(/\s{2,}/g, ' ')
+				// Leftover separators of removed contact details; bullet markers ("• ", "- ") stay.
+				.replace(/^[\s|·,]+|[\s|•·,–-]+$/g, '')
+		)
 		.filter(Boolean)
 		.join('\n');
 }
