@@ -56,7 +56,8 @@ export const AiReviewInputSchema = v.strictObject({
 
 export const AiRequestSchema = v.union([
 	v.strictObject({ task: v.picklist(AI_TASKS), profile: AiProfileSchema }),
-	v.strictObject({ task: v.literal('review'), review: AiReviewInputSchema })
+	v.strictObject({ task: v.literal('review'), review: AiReviewInputSchema }),
+	v.strictObject({ task: v.literal('convert'), convert: AiReviewInputSchema })
 ]);
 
 /** Parses an untrusted request body; `undefined` when it does not match the contract. */

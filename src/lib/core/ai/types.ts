@@ -5,6 +5,7 @@
  * phone, city, links or photo — and only after the user presses an AI button and agrees.
  */
 import type { ExperienceType, Locale } from '../schema/types';
+import type { CvDraft } from '../convert/types';
 
 /** localStorage key of the anonymous AI device token (cleared by storage.wipeAll). */
 export const AI_DEVICE_STORAGE_KEY = 'cvmaker.aiDevice';
@@ -42,7 +43,9 @@ export interface AiReviewInput {
 }
 
 export type AiRequest =
-	{ task: AiTask; profile: AiProfile } | { task: 'review'; review: AiReviewInput };
+	| { task: AiTask; profile: AiProfile }
+	| { task: 'review'; review: AiReviewInput }
+	| { task: 'convert'; convert: AiReviewInput };
 
 export interface HeadlineResult {
 	task: 'headline';
@@ -73,7 +76,27 @@ export interface ReviewResult {
 	/** Skills/keywords from the job post the CV lacks (empty without a job post). */
 	missingKeywords: string[];
 }
-export type AiResult = HeadlineResult | SummaryResult | SkillsResult | ReviewResult;
+/**
+ * "Ubah jadi CV ATS" (1 of today's uses): the CV text restructured into CV Maker's sections, bullets
+ * rewritten for ATS, plus what the user should still add. Contact details are never part of it.
+ */
+export interface ConvertResult {
+	task: 'convert';
+	draft: CvDraft;
+	/** Dates where only the year was written (month set to January): ask the user to check. */
+	monthGuessed: number;
+	/** Skills NOT in the CV that fit the target role: show as optional chips, never auto-added. */
+	suggestedSkills: string[];
+	/** What to add or check (e.g. "Tambahkan hasil terukur di magang PT X"). */
+	notes: { title: string; detail: string }[];
+}
+export type AiResult = HeadlineResult | SummaryResult | SkillsResult | ReviewResult | ConvertResult;
+
+/** Answer of `POST /api/ai/run` for long tasks (convert): poll `GET /api/ai/job?id=`. */
+export interface AiJobStarted {
+	job: string;
+	quota: AiQuota;
+}
 
 export interface AiQuota {
 	/** Uses per device today: the free uses plus extra uses earned by watching ads. */
@@ -121,6 +144,9 @@ export const AI_PROFILE_LIMITS = {
 
 /** Max suggestions per skills group returned by the server. */
 export const AI_SKILL_SUGGESTIONS = { hard: 6, tools: 6, soft: 4 } as const;
+
+/** Limits of the CV conversion answer. */
+export const AI_CONVERT_LIMITS = { suggestedSkills: 8, notes: 6 } as const;
 
 /** Limits of the CV review request and answer. */
 export const AI_REVIEW_LIMITS = {

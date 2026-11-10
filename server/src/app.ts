@@ -4,6 +4,8 @@
  *   GET  /api/ai/quota        → AiQuota            (header X-Device-Token optional)
  *   POST /api/ai/device       → { token }          (anonymous device token)
  *   POST /api/ai/run          → { result, quota }  (body AiRequest, header X-Device-Token)
+ *                               task 'convert' → 202 { job, quota }; then poll
+ *   GET  /api/ai/job?id=      → { status: 'pending' } | { status: 'done', result, quota } (same token)
  *   POST /api/ai/reward/start → { adUrl }          (header X-Device-Token; open adUrl in a new tab)
  *   POST /api/ai/reward/claim → { quota }          (body { ticket }; called by the AD PAGE origin)
  *   GET  /api/hello           → { visitors }       (all-time visitor count, counts nothing)
@@ -36,14 +38,18 @@ import {
 } from './identity';
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
 import { buildMessages, maxTokensFor, parseAnswer } from './tasks';
+import { createJobStore } from './jobs';
 import { parseAiRequest } from '../../src/lib/core/ai/schema';
-import type { AiErrorCode, AiQuota } from '../../src/lib/core/ai/types';
+import type { AiErrorCode, AiQuota, AiRequest, AiResult } from '../../src/lib/core/ai/types';
 
 const MAX_BODY_BYTES = 32 * 1024;
 /** A ticket older than this cannot be claimed (the ad tab was left open too long). */
 const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
-const BURST = { run: 6, other: 30 } as const;
+const BURST = { run: 6, other: 30, poll: 90 } as const;
+/** Long tasks get more time per model (they write a whole CV). */
+const LONG_TASK_TIMEOUT_MS = 60_000;
+const JOB_ID_PATTERN = /^[\w-]{22}$/;
 const CLAIM_PATH = '/api/ai/reward/claim';
 const HELLO_PATH = '/api/hello';
 
@@ -118,6 +124,7 @@ export function createApp(deps: AppDeps) {
 	const now = deps.now ?? Date.now;
 	const log = deps.log ?? (() => {});
 	const bursts = new Map<string, { minute: number; count: number }>();
+	const jobs = createJobStore<{ result: AiResult; quota: AiQuota }>(now);
 
 	function burst(ip: string, kind: keyof typeof BURST): void {
 		const minute = Math.floor(now() / 60_000);
@@ -171,6 +178,11 @@ export function createApp(deps: AppDeps) {
 		if (!device) throw new HttpError(401, 'invalid');
 		const request = parseAiRequest(await readJson(req));
 		if (!request) throw new HttpError(400, 'invalid');
+		if (request.task === 'convert') {
+			const free = jobs.canStart(device);
+			if (free === 'device') throw new HttpError(429, 'busy');
+			if (free === 'full') throw new HttpError(503, 'unavailable');
+		}
 
 		const day = wibDay(now());
 		// Free uses + uses earned from ads today.
@@ -186,16 +198,33 @@ export function createApp(deps: AppDeps) {
 		}
 		if (full === 'global') throw new HttpError(503, 'unavailable');
 
+		if (request.task === 'convert') {
+			// Answered at once; the browser polls GET /api/ai/job (no proxy timeout can cut it).
+			const job = jobs.start(device, () => answer(request, keys, day, device));
+			return { job, quota: await quotaFor(device) };
+		}
+		return answer(request, keys, day, device);
+	}
+
+	/** Calls the model and checks its answer. On any failure the use is given back. */
+	async function answer(
+		request: AiRequest,
+		keys: QuotaKey[],
+		day: string,
+		device: string
+	): Promise<{ result: AiResult; quota: AiQuota }> {
 		const started = now();
 		try {
-			const answer = await provider.complete(buildMessages(request), {
-				maxTokens: maxTokensFor(request)
+			const long = request.task === 'convert';
+			const reply = await provider.complete(buildMessages(request), {
+				maxTokens: maxTokensFor(request),
+				...(long ? { timeoutMs: LONG_TASK_TIMEOUT_MS } : {})
 			});
-			const result = parseAnswer(request, answer.text);
+			const result = parseAnswer(request, reply.text);
 			log({
 				event: 'ai.run',
 				task: request.task,
-				model: answer.model,
+				model: reply.model,
 				ms: now() - started,
 				ok: !!result
 			});
@@ -207,6 +236,20 @@ export function createApp(deps: AppDeps) {
 			log({ event: 'ai.run', task: request.task, ms: now() - started, ok: false });
 			throw new HttpError(503, 'unavailable');
 		}
+	}
+
+	async function jobStatus(req: IncomingMessage, ip: string): Promise<unknown> {
+		burst(ip, 'poll');
+		const device = deviceFrom(req);
+		if (!device) throw new HttpError(401, 'invalid');
+		const id = new URL(req.url ?? '/', 'http://local').searchParams.get('id') ?? '';
+		if (!JOB_ID_PATTERN.test(id)) throw new HttpError(400, 'invalid');
+		const view = jobs.get(id, device);
+		if (!view) throw new HttpError(404, 'failed');
+		if (view.status === 'pending') return { status: 'pending' };
+		if (view.status === 'done') return { status: 'done', ...view.value };
+		const error = view.error instanceof HttpError ? view.error : new HttpError(503, 'unavailable');
+		throw new HttpError(error.status, error.code, await quotaFor(device));
 	}
 
 	async function issue(req: IncomingMessage, ip: string): Promise<unknown> {
@@ -341,7 +384,11 @@ export function createApp(deps: AppDeps) {
 				return send(res, 200, await issue(req, ip));
 			}
 			if (req.method === 'POST' && path === '/api/ai/run') {
-				return send(res, 200, await run(req, ip));
+				const body = await run(req, ip);
+				return send(res, body && typeof body === 'object' && 'job' in body ? 202 : 200, body);
+			}
+			if (req.method === 'GET' && path === '/api/ai/job') {
+				return send(res, 200, await jobStatus(req, ip));
 			}
 			if (req.method === 'POST' && path === '/api/ai/reward/start') {
 				return send(res, 200, await rewardStart(req, ip));
