@@ -35,6 +35,7 @@ export const id = {
 		myCvs: 'CV Saya',
 		menu: 'Menu',
 		faq: 'FAQ',
+		atsCheck: 'Cek ATS',
 		codiosity: 'Codiosity',
 		home: 'Beranda',
 		about: 'Tentang',

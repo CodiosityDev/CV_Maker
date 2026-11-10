@@ -17,6 +17,7 @@
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
 			<Button href="/buat" size="lg">{t('nav.create')}</Button>
+			<a class="ats-link" href={resolve('/(site)/cek-ats')}>{t('landing.atsCheck')}</a>
 			<VisitorCounter />
 		</div>
 		<CvMockup />
@@ -77,6 +78,14 @@
 	}
 	.hero-copy {
 		min-width: 0;
+	}
+	.ats-link {
+		display: flex;
+		align-items: center;
+		min-height: 44px;
+		width: fit-content;
+		margin-top: 0.5rem;
+		font-size: 0.9375rem;
 	}
 	h1 {
 		max-width: 620px;

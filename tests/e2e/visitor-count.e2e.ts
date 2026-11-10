@@ -73,7 +73,7 @@ test('an unavailable API removes the counter and its reserved space', async ({ p
 	await page.goto('/');
 	await expect(page.getByTestId('visitor-count-slot')).toHaveCount(0);
 	await expect(page.getByTestId('visitor-count')).toHaveCount(0);
-	await expect(page.locator('.hero-copy > :last-child')).toHaveAttribute('href', '/buat');
+	await expect(page.locator('.hero-copy > :last-child')).toHaveAttribute('href', '/cek-ats');
 	await expect(page.getByText('pengunjung', { exact: true })).toHaveCount(0);
 });
 

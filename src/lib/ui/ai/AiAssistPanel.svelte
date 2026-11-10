@@ -9,6 +9,8 @@
 	import { toast } from '#lib/ui/toast.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
+	import AiText from './AiText.svelte';
+	import AiQuota from './AiQuota.svelte';
 	import {
 		aiSession,
 		loadAiModule,
@@ -219,12 +221,6 @@
 	}
 </script>
 
-{#snippet generatedText(text: string)}
-	{#each text.split(/(\[isi angka\]|\[add number\])/gi) as part, index (index)}{#if /^\[(?:isi angka|add number)\]$/i.test(part)}<mark
-				>{part}</mark
-			>{:else}{part}{/if}{/each}
-{/snippet}
-
 <section
 	class="ai-assist"
 	bind:this={root}
@@ -243,28 +239,17 @@
 	{#if !canRun && module}<p class="hint">
 			{t(task === 'skills' ? 'aiAssist.needSkills' : 'aiAssist.needBackground')}
 		</p>{/if}
-	{#if aiSession.quota}<p class="quota" data-testid="ai-quota" aria-live="polite">
-			{t('aiAssist.quota', {
-				remaining: aiSession.quota.remaining,
-				limit: aiSession.quota.limit
-			})}{#if exhausted}
-				{t('aiAssist.reset')}{/if}
-		</p>{/if}
-	{#if errorKey}<p class="error" role="alert">
-			{t(errorKey)}{#if !module}
-				<Button variant="ghost" onclick={prepare}>{t('wizard.retry')}</Button>{/if}
-		</p>{/if}
-	{#if exhausted && aiSession.quota?.rewards?.remaining}<div class="reward">
-			<Button variant="secondary" disabled={rewarding || removed} onclick={reward}
-				>{t('aiAssist.reward', { count: aiSession.quota.rewards.remaining })}</Button
-			>
-			<p class="hint">{t('aiAssist.rewardHint')}</p>
-		</div>{/if}
+	<AiQuota {rewarding} disabled={removed} onreward={reward}>
+		{#if errorKey}<p class="error" role="alert">
+				{t(errorKey)}{#if !module}
+					<Button variant="ghost" onclick={prepare}>{t('wizard.retry')}</Button>{/if}
+			</p>{/if}
+	</AiQuota>
 	{#if result?.task === 'headline'}
 		<div class="ai-choices" role="group" aria-label={t('aiAssist.headlineChoices')}>
 			{#each result.headlines.slice(0, 3) as headline, index (index)}<button
 					type="button"
-					onclick={() => applyText(headline)}>{@render generatedText(headline)}</button
+					onclick={() => applyText(headline)}><AiText text={headline} /></button
 				>{/each}
 		</div>
 	{:else if result?.task === 'summary'}
@@ -274,7 +259,7 @@
 			aria-labelledby={`${uid}-preview`}
 		>
 			<h3 id={`${uid}-preview`}>{t('aiAssist.preview')}</h3>
-			<p>{@render generatedText(result.summary)}</p>
+			<p><AiText text={result.summary} /></p>
 			<div class="actions">
 				<Button
 					onclick={() => {
@@ -297,7 +282,7 @@
 							{#each choices as skill, index (index)}<button
 									type="button"
 									disabled={store.cv.skills[group].length >= LIMITS.skillsPerGroup}
-									onclick={() => addSkill(group, skill)}>{@render generatedText(skill)}</button
+									onclick={() => addSkill(group, skill)}><AiText text={skill} /></button
 								>{/each}
 						</div>
 						{#if store.cv.skills[group].length >= LIMITS.skillsPerGroup}<p class="hint">
@@ -379,8 +364,7 @@
 	p {
 		line-height: 1.6;
 	}
-	.hint,
-	.quota {
+	.hint {
 		margin-top: 0.5rem;
 		color: var(--color-text-muted);
 		font-size: 0.8125rem;
@@ -445,15 +429,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-		margin-top: 0.75rem;
-	}
-	mark {
-		background: var(--color-cream);
-		color: var(--color-text);
-		padding: 0.0625rem 0.125rem;
-		border-radius: 3px;
-	}
-	.reward {
 		margin-top: 0.75rem;
 	}
 	.profile-summary {

@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { MAX_JOB_POST_CHARS } from '#lib/core/ats/keywords.ts';
-	import type {
-		AtsCheck,
-		AtsReport,
-		CheckTarget,
-		KeywordMatch,
-		KeywordReport
-	} from '#lib/core/ats/types.ts';
+	import type { AtsCheck, AtsReport, CheckTarget, KeywordReport } from '#lib/core/ats/types.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
+	import SharedKeywordResults from '#lib/ui/ats-check/SharedKeywordResults.svelte';
 
 	interface Props {
 		report?: AtsReport;
@@ -17,8 +12,10 @@
 		loading?: boolean;
 		failed?: boolean;
 		jobPost?: string;
+		showJobField?: boolean;
+		fixLabel?: string;
 		onjump: (target: CheckTarget) => void | Promise<void>;
-		onadd: (term: string) => void;
+		onadd?: (term: string) => void;
 		onretry: () => void;
 		canAdd?: (term: string) => boolean;
 	}
@@ -29,6 +26,8 @@
 		loading = false,
 		failed = false,
 		jobPost = $bindable(''),
+		showJobField = true,
+		fixLabel,
 		onjump,
 		onadd,
 		onretry,
@@ -45,13 +44,6 @@
 			.filter((group) => group.checks.length > 0)
 	);
 	const tips = $derived(report?.checks.filter((check) => check.level === 'tip') ?? []);
-	const knownFirst = (a: KeywordMatch, b: KeywordMatch) => Number(b.known) - Number(a.known);
-	const present = $derived(
-		(keywords?.keywords.filter((keyword) => keyword.inCv) ?? []).sort(knownFirst)
-	);
-	const missing = $derived(
-		(keywords?.keywords.filter((keyword) => !keyword.inCv) ?? []).sort(knownFirst)
-	);
 </script>
 
 {#snippet checkList(checks: AtsCheck[])}
@@ -61,10 +53,16 @@
 				<button
 					type="button"
 					class="check-action"
+					class:with-fix-label={!!fixLabel}
 					data-check-id={check.id}
 					onclick={() => onjump(check.target)}
 				>
-					{t(check.messageKey, check.params)}
+					{#if fixLabel}
+						<span class="check-message">{t(check.messageKey, check.params)}</span>
+						<span class="fix-label">{fixLabel}</span>
+					{:else}
+						{t(check.messageKey, check.params)}
+					{/if}
 				</button>
 			</li>
 		{/each}
@@ -130,90 +128,36 @@
 		{/if}
 	{/if}
 
-	<details class="job-match">
-		<summary>{t('atsPanel.matchTitle')}</summary>
-		<div class="job-content">
-			<div class="job-field">
-				<Textarea
-					id="{uid}-job-post"
-					label={t('atsPanel.jobLabel')}
-					placeholder={t('atsPanel.jobPlaceholder')}
-					hint={t('atsPanel.jobPrivacy')}
-					maxlength={MAX_JOB_POST_CHARS}
-					showCounter={false}
-					autocomplete="off"
-					spellcheck={false}
-					rows={5}
-					aria-describedby="{uid}-job-count"
-					bind:value={jobPost}
-				/>
-				<p class="character-count" id="{uid}-job-count">
-					{t('atsPanel.characterCount', { count: jobPost.length, max: MAX_JOB_POST_CHARS })}
-				</p>
-			</div>
-			{#if jobPost.trim() && keywords}
-				<div class="keyword-results" data-testid="ats-keywords">
-					<p class="keyword-summary" role="status">
-						{t('atsPanel.keywordSummary', {
-							matched: present.length,
-							total: keywords.keywords.length,
-							percent: Math.round(keywords.coverage * 100)
-						})}
+	{#if showJobField}
+		<details class="job-match">
+			<summary>{t('atsPanel.matchTitle')}</summary>
+			<div class="job-content">
+				<div class="job-field">
+					<Textarea
+						id="{uid}-job-post"
+						label={t('atsPanel.jobLabel')}
+						placeholder={t('atsPanel.jobPlaceholder')}
+						hint={t('atsPanel.jobPrivacy')}
+						maxlength={MAX_JOB_POST_CHARS}
+						showCounter={false}
+						autocomplete="off"
+						spellcheck={false}
+						rows={5}
+						aria-describedby="{uid}-job-count"
+						bind:value={jobPost}
+					/>
+					<p class="character-count" id="{uid}-job-count">
+						{t('atsPanel.characterCount', { count: jobPost.length, max: MAX_JOB_POST_CHARS })}
 					</p>
-					{#if keywords.keywords.length === 0}
-						<p>{t('atsPanel.noKeywords')}</p>
-					{:else}
-						<section
-							class="keyword-group"
-							data-testid="ats-keywords-present"
-							aria-labelledby="{uid}-present-title"
-						>
-							<h3 id="{uid}-present-title">{t('atsPanel.presentTitle')}</h3>
-							{#if present.length}
-								<ul class="keyword-list">
-									{#each present as keyword (keyword.term)}
-										<li>
-											<span class="keyword-chip present" data-known={keyword.known}
-												>{keyword.term}</span
-											>
-										</li>
-									{/each}
-								</ul>
-							{:else}<p class="keyword-empty">{t('atsPanel.nonePresent')}</p>{/if}
-						</section>
-						<section
-							class="keyword-group"
-							data-testid="ats-keywords-missing"
-							aria-labelledby="{uid}-missing-title"
-						>
-							<h3 id="{uid}-missing-title">{t('atsPanel.missingTitle')}</h3>
-							{#if missing.length}
-								<p class="keyword-help">{t('atsPanel.keywordHelp')}</p>
-								<ul class="keyword-list">
-									{#each missing as keyword (keyword.term)}
-										<li>
-											{#if keyword.known}
-												<button
-													type="button"
-													class="keyword-chip missing add-keyword"
-													data-known="true"
-													aria-label={t('atsPanel.addKeyword', { term: keyword.term })}
-													disabled={!canAdd(keyword.term)}
-													onclick={() => onadd(keyword.term)}>{keyword.term}</button
-												>
-											{:else}<span class="keyword-chip missing" data-known="false"
-													>{keyword.term}</span
-												>{/if}
-										</li>
-									{/each}
-								</ul>
-							{:else}<p class="keyword-empty">{t('atsPanel.noneMissing')}</p>{/if}
-						</section>
-					{/if}
 				</div>
-			{/if}
-		</div>
-	</details>
+				{#if jobPost.trim() && keywords}
+					<SharedKeywordResults {keywords} {onadd} {canAdd} />
+				{/if}
+			</div>
+		</details>
+	{:else if jobPost.trim() && keywords}
+		<SharedKeywordResults {keywords} {onadd} {canAdd} />
+	{/if}
 </section>
 
 <style>
@@ -260,9 +204,7 @@
 	}
 	.counts,
 	.disclaimer,
-	.loading,
-	.keyword-empty,
-	.keyword-help {
+	.loading {
 		color: var(--color-text-muted);
 		font-size: 0.8125rem;
 	}
@@ -324,6 +266,22 @@
 		text-decoration: underline;
 		text-underline-offset: 0.15em;
 	}
+	.check-action.with-fix-label {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.check-message {
+		min-width: 0;
+	}
+	.fix-label {
+		flex-shrink: 0;
+		font-weight: 650;
+		white-space: nowrap;
+		text-decoration: underline;
+		text-underline-offset: 0.15em;
+	}
 	summary {
 		min-height: 44px;
 		padding-block: 10px;
@@ -357,64 +315,6 @@
 		text-align: right;
 		color: var(--color-text-muted);
 		font-size: 0.75rem;
-	}
-	.keyword-results,
-	.keyword-group {
-		display: grid;
-		gap: 12px;
-		min-width: 0;
-	}
-	.keyword-results {
-		gap: 20px;
-	}
-	.keyword-summary {
-		font-size: 0.875rem;
-		font-weight: 600;
-	}
-	.keyword-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		padding: 0;
-		margin: 0;
-		list-style: none;
-	}
-	.keyword-list li {
-		min-width: 0;
-		max-width: 100%;
-	}
-	.keyword-chip {
-		display: inline-flex;
-		align-items: center;
-		min-width: 0;
-		max-width: 100%;
-		padding: 8px 12px;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		color: var(--color-text);
-		font-size: 0.8125rem;
-		line-height: 1.5;
-		text-align: left;
-		overflow-wrap: anywhere;
-	}
-	.keyword-chip.present {
-		background: var(--color-mint-50);
-	}
-	.keyword-chip.missing {
-		background: var(--color-cream-50);
-	}
-	.add-keyword {
-		min-width: 44px;
-		min-height: 44px;
-		text-decoration: underline;
-		text-underline-offset: 0.15em;
-	}
-	.add-keyword:hover:not(:disabled) {
-		background: var(--color-cream);
-	}
-	.add-keyword:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
 	}
 	@media (min-width: 768px) {
 		.ats-panel {

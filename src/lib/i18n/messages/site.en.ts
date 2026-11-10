@@ -2,7 +2,81 @@
 import type { SiteMessages } from '../translate';
 
 export const siteEn: SiteMessages = {
+	atsCheck: {
+		pageTitle: 'ATS Check',
+		description: 'Check CV readability and job keywords, using a file or a CV made in CV Maker.',
+		loading: 'Preparing the check…',
+		loadFailed: 'The checker could not load. Try again.',
+		retry: 'Try again',
+		needsJavaScript: 'Enable JavaScript to check your CV on this device.',
+		source: 'CV source',
+		uploadTab: 'Upload a CV file',
+		savedTab: 'CVs from CV Maker',
+		fileLabel: 'Choose a CV file',
+		fileHint: 'PDF, DOCX, or TXT · max 5 MB',
+		filePrivacy: 'Your file is read on your device and is not uploaded to a server.',
+		anotherFile: 'Scan another file',
+		chooseCv: 'Choose a CV to check',
+		untitled: 'Untitled CV',
+		modified: 'Updated {date}',
+		noSaved: 'No CV on this device yet?',
+		listFailed: 'The CV list could not load.',
+		targetRole: 'Target role',
+		jobLabel: 'Paste a job post (optional)',
+		characterCount: '{count}/{max} characters',
+		jobPrivacy:
+			'The job post is checked on your device. Text is only sent if you choose AI feedback and agree.',
+		reading: 'Reading file…',
+		loadingCv: 'Opening CV…',
+		analyzing: 'Analysing…',
+		readFailed: 'The file could not be read. Choose it again to retry.',
+		cvMissing: 'This CV is no longer available. Choose another CV.',
+		cvLoadFailed: 'The CV could not open. Select it again to retry.',
+		analysisFailed: 'The check did not complete. Try again.',
+		fix: 'Fix',
+		scanResultsTitle: 'File check results',
+		imageOnlyTitle: 'This CV is an image or scan',
+		sectionsTitle: 'Detected sections',
+		noSections: 'No sections were recognised.',
+		contactsTitle: 'Detected contact details',
+		contactLinkedIn: 'LinkedIn',
+		contactFound: '{label}: found',
+		contactMissing: '{label}: not found',
+		statsTitle: 'File summary',
+		pagesLabel: 'Pages',
+		wordsLabel: 'Words',
+		createCta: 'Want an ATS-readable CV? Create one in CV Maker.',
+		createAts: 'Create an ATS CV in CV Maker',
+		ai: {
+			title: 'AI feedback',
+			request: 'Ask AI for feedback',
+			busy: 'Requesting AI feedback…',
+			quota: 'Uses 1 AI assistance request today ({remaining} left)',
+			quotaUnknown: 'This feedback uses 1 AI assistance request.',
+			consentTitle: 'AI feedback on your CV',
+			consentIntro:
+				'The CV text below will be sent to the CV Maker server and then to the AI provider. The text is not stored.',
+			sentText: 'Text to be sent',
+			redacted:
+				'Names, email addresses, phone numbers, links, and addresses have been removed automatically.',
+			contextSent: 'The target role and job post, when provided, are also sent.',
+			send: 'Send & use 1 request',
+			strengths: 'What works well',
+			improvements: 'What to improve',
+			rewrites: 'Rewrite examples',
+			before: 'Before',
+			after: 'After',
+			missingKeywords: 'Missing job keywords',
+			copy: 'Copy',
+			copied: 'Text copied',
+			copyFailed: 'Automatic copying is unavailable. Select the text below to copy it.',
+			copyText: 'Text to copy',
+			retry: 'Try again',
+			noText: 'There is no CV text to send.'
+		}
+	},
 	landing: {
+		atsCheck: 'Already have a CV? Check its ATS score',
 		title: 'CV Maker — Create a free CV for your first job application',
 		description:
 			'Build an ATS or Creative CV with guidance for fresh graduates. Free, no sign-up, and your data stays on your device.',
@@ -52,6 +126,12 @@ export const siteEn: SiteMessages = {
 		faqLink: 'Read the FAQ'
 	},
 	faq: {
+		scanUploadQuestion: 'Is my CV file uploaded?',
+		scanUploadAnswer:
+			'No. PDF, DOCX, and TXT files are read on your device and are not stored. Only if you choose AI feedback and agree is text without names, contact details, links, or addresses sent for AI processing.',
+		scanScoreQuestion: 'Why does my file score differ from a CV made in CV Maker?',
+		scanScoreAnswer:
+			'External files are assessed using text and layout that an ATS can read. CV Maker CVs are checked as structured data, so their sections and content can be identified more precisely. Scores guide improvements and do not guarantee selection.',
 		title: 'FAQ — CV Maker',
 		description:
 			'Answers about ATS CVs, cost, data storage, mobile use, languages, and who makes CV Maker.',
@@ -88,6 +168,9 @@ export const siteEn: SiteMessages = {
 		back: 'Back to home'
 	},
 	privacy: {
+		scanTitle: 'ATS Check',
+		scanCopy:
+			'CV files are read on your device, are not sent to a server, and are not stored. Only when you choose Ask AI for feedback and agree is CV text without names, contact details, links, or addresses sent through the CV Maker server to the AI provider. The text is not stored.',
 		title: 'Privacy — CV Maker',
 		description:
 			'How CV Maker stores data on your device and how to delete it through browser settings.',

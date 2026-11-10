@@ -30,6 +30,7 @@ export const en: BaseMessages = {
 		myCvs: 'My CVs',
 		menu: 'Menu',
 		faq: 'FAQ',
+		atsCheck: 'ATS Check',
 		codiosity: 'Codiosity',
 		home: 'Home',
 		about: 'About',
