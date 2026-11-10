@@ -80,7 +80,7 @@
 	}
 	h1 {
 		max-width: 620px;
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: clamp(34px, 4.6vw, 52px);
 		font-weight: 650;
 		line-height: 1.14;
@@ -117,7 +117,7 @@
 		padding-left: 8px;
 	}
 	li::marker {
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-weight: 650;
 	}
 	li p,

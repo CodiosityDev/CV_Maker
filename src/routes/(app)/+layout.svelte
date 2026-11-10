@@ -9,6 +9,7 @@
 	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
+	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -60,6 +61,7 @@
 		</a>
 		<LanguageSwitcher />
 		<IncognitoHeader />
+		<ThemeToggle />
 		<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
 			<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
 				<svg
@@ -94,15 +96,29 @@
 	}
 	.header-inner {
 		display: flex;
+		min-height: 66px;
 		flex-wrap: nowrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: 8px;
 		padding-block: 7px;
 	}
-	@media (max-width: 479px) {
+	@media (max-width: 639px) {
 		.header-inner {
+			gap: 2px;
+		}
+		.header-inner :global(.language-switcher) {
+			gap: 0;
+			padding: 0;
+		}
+		.header-inner :global(.incognito-toggle) {
+			padding-inline: 6px;
 			gap: 4px;
+		}
+	}
+	@media (max-width: 359px) {
+		.header-inner .brand {
+			font-size: 14px;
 		}
 	}
 	.brand {
@@ -113,7 +129,7 @@
 		margin-right: auto;
 		min-width: 44px;
 		min-height: 44px;
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 20px;
 		font-weight: 800;
 		letter-spacing: -0.06em;

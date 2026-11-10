@@ -41,6 +41,8 @@ export const en: BaseMessages = {
 		links: 'Site links'
 	},
 	ui: {
+		useLightTheme: 'Use light theme',
+		useDarkTheme: 'Use dark theme',
 		loading: 'Loading…',
 		required: 'required',
 		characterCount: '{count}/{max}',

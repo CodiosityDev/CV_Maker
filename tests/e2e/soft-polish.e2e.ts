@@ -119,5 +119,7 @@ test('desktop site header shares one row from 1024px and keeps a logical focus s
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('button', { name: 'English', exact: true })).toBeFocused();
 	await page.keyboard.press('Tab');
+	await expect(page.getByTestId('theme-toggle')).toBeFocused();
+	await page.keyboard.press('Tab');
 	await expect(page.locator('header .header-cta')).toBeFocused();
 });

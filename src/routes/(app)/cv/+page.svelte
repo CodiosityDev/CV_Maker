@@ -16,6 +16,8 @@
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
 	import { resetAiSession } from '#lib/ui/ai/session.svelte.ts';
+	import { getThemeContext } from '#lib/ui/theme.svelte.ts';
+	const theme = getThemeContext();
 
 	let cvs = $state<CVMeta[]>([]);
 	let loading = $state(true);
@@ -362,6 +364,7 @@
 		try {
 			await storage.wipeAll();
 			resetAiSession();
+			theme.reset();
 			if (!active) return;
 			forgetCv();
 			toast.success(t('dashboard.wipeDone'));
@@ -618,7 +621,7 @@
 		padding: 2px 6px;
 		border-radius: 4px;
 		background: var(--color-coral-50);
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 		font-weight: 700;
 		white-space: nowrap;
@@ -662,7 +665,7 @@
 		padding: 16px 20px;
 		border-radius: var(--radius-lg);
 		background: var(--color-brand-50);
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 0.875rem;
 		line-height: 1.7;
 	}

@@ -5,6 +5,7 @@
 	import Button from '#lib/ui/Button.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
+	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
 
 	const menuId = $props.id();
 	let menuOpen = $state(false);
@@ -67,7 +68,7 @@
 				</li>
 			</ul>
 		</nav>
-		<div class="language-control"><LanguageSwitcher /></div>
+		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
 		<div class="create-action">
 			<Button href="/buat" size="sm" class="header-cta" onclick={closeMenu}
 				>{t('nav.create')}</Button
@@ -96,7 +97,7 @@
 		gap: 8px;
 		min-height: 44px;
 		width: fit-content;
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 1.25rem;
 		font-weight: 700;
 		letter-spacing: -0.04em;
@@ -104,6 +105,9 @@
 		white-space: nowrap;
 	}
 	.language-control {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 		grid-area: language;
 		justify-self: end;
 	}

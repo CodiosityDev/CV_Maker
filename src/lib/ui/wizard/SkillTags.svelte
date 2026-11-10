@@ -129,7 +129,7 @@
 	}
 	button:hover {
 		background: var(--color-surface);
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	.limit {
 		margin: 0.5rem 0 0;

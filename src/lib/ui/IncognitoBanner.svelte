@@ -47,7 +47,7 @@
 		padding-block: 6px;
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-brand-100);
-		color: var(--color-ink);
+		color: var(--color-text);
 	}
 	.banner-row {
 		display: grid;

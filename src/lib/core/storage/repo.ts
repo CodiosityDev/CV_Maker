@@ -73,6 +73,7 @@ const COPY_SUFFIX: Record<Locale, string> = { id: '(salinan)', en: '(copy)' };
 
 /** Keys in localStorage owned by this app (removed by wipeAll). */
 export const LOCAL_STORAGE_KEYS = [
+	'cvmaker.theme',
 	UI_LOCALE_STORAGE_KEY,
 	AI_DEVICE_STORAGE_KEY,
 	VISITOR_STORAGE_KEY

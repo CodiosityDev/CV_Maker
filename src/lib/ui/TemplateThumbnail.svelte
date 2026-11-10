@@ -83,10 +83,14 @@
 		overflow: hidden;
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
-		background: white;
+		background: var(--color-paper);
 		pointer-events: none;
 	}
 	.thumbnail-paper {
+		--color-focus: var(--color-paper-focus);
+		background: var(--color-paper);
+		color: var(--color-paper-ink);
+		color-scheme: light;
 		width: 210mm;
 		min-height: 297mm;
 		transform-origin: top left;
@@ -94,7 +98,7 @@
 	span {
 		display: block;
 		padding: 12px;
-		color: var(--color-text-muted);
+		color: var(--color-paper-muted);
 		font-size: 0.75rem;
 		line-height: 1.5;
 	}

@@ -897,7 +897,7 @@
 		border-radius: var(--radius-md);
 		background: var(--color-mint-50);
 		border: 1px solid var(--color-mint);
-		color: var(--color-ink);
+		color: var(--color-text);
 		font-size: 0.875rem;
 	}
 	summary {

@@ -131,7 +131,7 @@
 	}
 	.kind-options button.active {
 		background: var(--color-brand);
-		color: var(--color-ink);
+		color: var(--color-on-brand);
 	}
 	.creative-note {
 		margin-bottom: 16px;

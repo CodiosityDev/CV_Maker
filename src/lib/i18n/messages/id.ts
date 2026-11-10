@@ -46,6 +46,8 @@ export const id = {
 		links: 'Tautan situs'
 	},
 	ui: {
+		useLightTheme: 'Gunakan tema terang',
+		useDarkTheme: 'Gunakan tema gelap',
 		loading: 'Memuat…',
 		required: 'wajib',
 		characterCount: '{count}/{max}',

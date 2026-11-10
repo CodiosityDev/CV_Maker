@@ -266,15 +266,18 @@
 		max-width: 210mm;
 		margin-inline: auto;
 		overflow: hidden;
-		background: #fff;
+		background: var(--color-paper);
 		outline: 1px solid var(--color-border);
-		box-shadow: var(--shadow-card);
+		box-shadow: var(--shadow-paper);
 	}
 	.paper {
+		--color-focus: var(--color-paper-focus);
+		color: var(--color-paper-ink);
+		color-scheme: light;
 		width: 210mm;
 		min-height: 297mm;
 		transform-origin: top left;
-		background: #fff;
+		background: var(--color-paper);
 	}
 	.print-status,
 	.missing {
@@ -301,7 +304,7 @@
 		:global(.cv-print-route body) {
 			margin: 0;
 			padding: 0;
-			background: #fff;
+			background: var(--color-paper);
 		}
 		:global(.cv-print-route .app-header),
 		:global(.cv-print-route .app-notice),
