@@ -13,6 +13,7 @@
 	const links = $derived([
 		{ href: resolve('/(site)'), label: t('nav.home') },
 		{ href: resolve('/(app)/buat'), label: t('nav.create') },
+		{ href: resolve('/(site)/cek-ats'), label: t('nav.atsCheck') },
 		{ href: resolve('/(site)/faq'), label: t('nav.faq') },
 		{ href: resolve('/(site)/tentang'), label: t('nav.about') }
 	]);

@@ -31,6 +31,10 @@
 		<p>{t('privacy.aiCopy')}</p>
 	</section>
 	<section>
+		<h2>{t('privacy.scanTitle')}</h2>
+		<p>{t('privacy.scanCopy')}</p>
+	</section>
+	<section>
 		<h2>{t('privacy.adsTitle')}</h2>
 		<p>{t('privacy.adsCopy')}</p>
 	</section>

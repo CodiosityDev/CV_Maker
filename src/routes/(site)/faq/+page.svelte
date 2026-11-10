@@ -4,6 +4,8 @@
 	import Button from '#lib/ui/Button.svelte';
 	const questions = [
 		'ats',
+		'scanUpload',
+		'scanScore',
 		'free',
 		'storage',
 		'deleted',

@@ -1,6 +1,80 @@
 ﻿/** Site content — Bahasa Indonesia. */
 export const siteId = {
+	atsCheck: {
+		pageTitle: 'Cek ATS',
+		description:
+			'Periksa keterbacaan CV dan kata kunci lowongan, dari file atau CV yang dibuat di CV Maker.',
+		loading: 'Menyiapkan pemeriksaan…',
+		loadFailed: 'Pemeriksaan belum bisa dimuat. Coba lagi.',
+		retry: 'Coba lagi',
+		needsJavaScript: 'Nyalakan JavaScript untuk memeriksa CV di perangkat ini.',
+		source: 'Sumber CV',
+		uploadTab: 'Upload file CV',
+		savedTab: 'CV dari CV Maker',
+		fileLabel: 'Pilih file CV',
+		fileHint: 'PDF, DOCX, atau TXT · maks 5 MB',
+		filePrivacy: 'File dibaca di perangkatmu dan tidak di-upload ke server.',
+		anotherFile: 'Scan file lain',
+		chooseCv: 'Pilih CV yang ingin diperiksa',
+		untitled: 'CV tanpa judul',
+		modified: 'Diubah {date}',
+		noSaved: 'Belum punya CV di perangkat ini?',
+		listFailed: 'Daftar CV belum bisa dimuat.',
+		targetRole: 'Posisi yang dituju',
+		jobLabel: 'Tempel lowongan (opsional)',
+		characterCount: '{count}/{max} karakter',
+		jobPrivacy:
+			'Lowongan diperiksa di perangkat. Teks hanya dikirim jika kamu memilih saran AI dan menyetujuinya.',
+		reading: 'Membaca file…',
+		loadingCv: 'Membuka CV…',
+		analyzing: 'Menganalisis…',
+		readFailed: 'File belum bisa dibaca. Pilih ulang file untuk mencoba lagi.',
+		cvMissing: 'CV ini sudah tidak tersedia. Pilih CV lain.',
+		cvLoadFailed: 'CV belum bisa dibuka. Pilih ulang untuk mencoba lagi.',
+		analysisFailed: 'Pemeriksaan belum berhasil. Coba lagi.',
+		fix: 'Perbaiki',
+		scanResultsTitle: 'Hasil pemeriksaan file',
+		imageOnlyTitle: 'CV ini berupa gambar atau hasil scan',
+		sectionsTitle: 'Bagian yang ditemukan',
+		noSections: 'Belum ada bagian yang dikenali.',
+		contactsTitle: 'Kontak yang ditemukan',
+		contactLinkedIn: 'LinkedIn',
+		contactFound: '{label}: ditemukan',
+		contactMissing: '{label}: tidak ditemukan',
+		statsTitle: 'Ringkasan file',
+		pagesLabel: 'Halaman',
+		wordsLabel: 'Kata',
+		createCta: 'Mau CV yang mudah dibaca ATS? Buat di CV Maker.',
+		createAts: 'Buat CV ATS di CV Maker',
+		ai: {
+			title: 'Saran AI',
+			request: 'Minta saran AI',
+			busy: 'Meminta saran AI…',
+			quota: 'Memakai 1 dari jatah bantuan AI hari ini (sisa {remaining})',
+			quotaUnknown: 'Saran ini memakai 1 jatah bantuan AI.',
+			consentTitle: 'Saran AI untuk CV',
+			consentIntro:
+				'Teks CV berikut akan dikirim ke server CV Maker lalu ke penyedia AI. Teks tidak disimpan.',
+			sentText: 'Teks yang akan dikirim',
+			redacted: 'Nama, email, nomor HP, tautan, dan alamat sudah dihapus otomatis.',
+			contextSent: 'Posisi tujuan dan lowongan, bila diisi, juga dikirim.',
+			send: 'Kirim & pakai 1 jatah',
+			strengths: 'Yang sudah bagus',
+			improvements: 'Yang perlu diperbaiki',
+			rewrites: 'Contoh tulis ulang',
+			before: 'Sebelum',
+			after: 'Sesudah',
+			missingKeywords: 'Kata kunci lowongan yang belum ada',
+			copy: 'Salin',
+			copied: 'Teks disalin',
+			copyFailed: 'Tidak bisa menyalin otomatis. Pilih teks di bawah untuk menyalinnya.',
+			copyText: 'Teks untuk disalin',
+			retry: 'Coba lagi',
+			noText: 'Tidak ada teks CV yang bisa dikirim.'
+		}
+	},
 	landing: {
+		atsCheck: 'Sudah punya CV? Cek skor ATS-nya',
 		title: 'CV Maker — Buat CV gratis untuk lamaran pertamamu',
 		description:
 			'Buat CV ATS atau Creative dengan panduan untuk fresh graduate. Gratis, tanpa daftar, dan data tersimpan di perangkatmu.',
@@ -49,6 +123,12 @@ export const siteId = {
 		faqLink: 'Baca FAQ'
 	},
 	faq: {
+		scanUploadQuestion: 'Apakah file CV saya di-upload?',
+		scanUploadAnswer:
+			'Tidak. File PDF, DOCX, atau TXT dibaca di perangkat dan tidak disimpan. Hanya jika kamu memilih Minta saran AI dan menyetujuinya, teks tanpa nama, kontak, tautan, dan alamat dikirim untuk diproses AI.',
+		scanScoreQuestion: 'Kenapa skor file saya berbeda dari CV yang dibuat di CV Maker?',
+		scanScoreAnswer:
+			'File dari luar dinilai dari teks dan susunan yang bisa dibaca ATS. CV dari CV Maker diperiksa dari data terstruktur, sehingga bagian dan isinya dikenali lebih tepat. Skor merupakan panduan perbaikan, bukan jaminan lolos seleksi.',
 		title: 'FAQ — CV Maker',
 		description:
 			'Jawaban tentang CV ATS, biaya, penyimpanan data, penggunaan di HP, bahasa, dan pembuat CV Maker.',
@@ -85,6 +165,9 @@ export const siteId = {
 		back: 'Kembali ke beranda'
 	},
 	privacy: {
+		scanTitle: 'Cek ATS',
+		scanCopy:
+			'File CV dibaca di perangkat, tidak dikirim ke server, dan tidak disimpan. Hanya bila kamu menekan Minta saran AI dan setuju, teks CV tanpa nama, kontak, tautan, dan alamat dikirim melalui server CV Maker ke penyedia AI. Teks tidak disimpan.',
 		title: 'Privasi — CV Maker',
 		description:
 			'Cara CV Maker menyimpan data di perangkatmu dan menghapusnya melalui pengaturan browser.',

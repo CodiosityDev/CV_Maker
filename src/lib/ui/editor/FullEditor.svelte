@@ -2,6 +2,8 @@
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { atsEditTarget } from '#lib/ui/ats-check/navigation.ts';
 	import type { CVDocument } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import { newId } from '#lib/core/schema/ids.ts';
@@ -70,6 +72,8 @@
 	let keywordSignature: string | undefined;
 
 	onMount(() => {
+		const target = atsEditTarget(page.url.searchParams);
+		if (target) void jump(target);
 		const beforeStart = incognitoUi?.registerBeforeStart(async () => {
 			await store.flush();
 			return store.saveState !== 'error';
@@ -257,7 +261,7 @@
 		toolOpen = false;
 		view = 'edit';
 		await tick();
-		if (removed) return;
+		if (!mounted || removed || !container?.isConnected) return;
 		const control =
 			document.getElementById(field) ??
 			document.getElementById(`${field}-month`) ??
@@ -276,6 +280,7 @@
 			disclosure = disclosure.parentElement?.closest('details') ?? null;
 		}
 		await tick();
+		if (!mounted || removed || !container?.isConnected) return;
 		const target = control ?? toggle ?? row?.querySelector<HTMLElement>('summary');
 		target?.focus();
 		target?.scrollIntoView({ block: 'center' });
