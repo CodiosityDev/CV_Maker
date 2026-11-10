@@ -23,7 +23,7 @@ function trimDots(word: string): string {
 
 /** Like the suggestion normalizer, but drops sentence dots ("Excel." → "excel", ".NET" → "net")
  * while keeping inner dots ("node.js"). Linear time: pasted job posts are untrusted input. */
-function normalize(text: string): string {
+export function normalize(text: string): string {
 	return baseNormalize(text).split(' ').map(trimDots).filter(Boolean).join(' ');
 }
 export const MAX_JOB_POST_CHARS = 20_000;

@@ -5,7 +5,7 @@
 import * as v from 'valibot';
 import { EXPERIENCE_TYPES } from '../schema/types';
 import { LIMITS } from '../schema/limits';
-import { AI_PROFILE_LIMITS, AI_TASKS, type AiRequest } from './types';
+import { AI_PROFILE_LIMITS, AI_REVIEW_LIMITS, AI_TASKS, type AiRequest } from './types';
 
 const text = (max: number) => v.pipe(v.string(), v.maxLength(max));
 const list = <T extends v.GenericSchema>(item: T, max: number) =>
@@ -47,10 +47,17 @@ export const AiProfileSchema = v.strictObject({
 	summary: text(LIMITS.summary)
 });
 
-export const AiRequestSchema = v.strictObject({
-	task: v.picklist(AI_TASKS),
-	profile: AiProfileSchema
+export const AiReviewInputSchema = v.strictObject({
+	locale: v.picklist(['id', 'en']),
+	targetRole: text(LIMITS.title),
+	cvText: v.pipe(v.string(), v.minLength(1), v.maxLength(AI_REVIEW_LIMITS.cvText)),
+	jobPost: text(AI_REVIEW_LIMITS.jobPost)
 });
+
+export const AiRequestSchema = v.union([
+	v.strictObject({ task: v.picklist(AI_TASKS), profile: AiProfileSchema }),
+	v.strictObject({ task: v.literal('review'), review: AiReviewInputSchema })
+]);
 
 /** Parses an untrusted request body; `undefined` when it does not match the contract. */
 export function parseAiRequest(input: unknown): AiRequest | undefined {

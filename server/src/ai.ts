@@ -9,7 +9,10 @@ export interface ChatMessage {
 
 export interface ChatProvider {
 	/** The model's text answer; throws when every model failed. */
-	complete(messages: ChatMessage[]): Promise<{ text: string; model: string }>;
+	complete(
+		messages: ChatMessage[],
+		options?: { maxTokens?: number }
+	): Promise<{ text: string; model: string }>;
 }
 
 export interface OpenAiCompatibleOptions {
@@ -29,7 +32,7 @@ interface CompletionBody {
 export function openAiCompatibleProvider(options: OpenAiCompatibleOptions): ChatProvider {
 	const doFetch = options.fetch ?? globalThis.fetch;
 	return {
-		async complete(messages) {
+		async complete(messages, completeOptions) {
 			for (const model of options.models) {
 				const started = Date.now();
 				const controller = new AbortController();
@@ -41,7 +44,12 @@ export function openAiCompatibleProvider(options: OpenAiCompatibleOptions): Chat
 							'Content-Type': 'application/json',
 							Authorization: `Bearer ${options.apiKey}`
 						},
-						body: JSON.stringify({ model, messages, temperature: 0.4, max_tokens: 700 }),
+						body: JSON.stringify({
+							model,
+							messages,
+							temperature: 0.4,
+							max_tokens: completeOptions?.maxTokens ?? 700
+						}),
 						signal: controller.signal
 					});
 					if (!response.ok) {

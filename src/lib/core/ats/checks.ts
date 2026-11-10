@@ -92,12 +92,20 @@ const ACTION_VERBS = new Set([
 ]);
 /** Indonesian verb prefixes: me-, mem-, men-, meng-, meny-, ber-, ter-, di- (e.g. Mengelola, Berhasil). */
 const ID_VERB = /^(me(m|n|ng|ny)?|ber|ter|di)[a-z]{3,}$/;
-const FIRST_PERSON = /(^|\s)(saya|aku|gue|gw|i|my|me)(\s|$)/i;
+export const FIRST_PERSON = /(^|\s)(saya|aku|gue|gw|i|my|me)(\s|$)/i;
 const HAS_NUMBER = /\d/;
+
+/** Email that looks unprofessional to a recruiter (many digits or casual words before the @). */
+export function isCasualEmail(email: string): boolean {
+	const local = email.split('@')[0]?.toLowerCase() ?? '';
+	const digits = (local.match(/\d/g) ?? []).length;
+	return digits >= 4 || CASUAL_EMAIL_WORDS.some((word) => local.includes(word));
+}
 
 const blank = (value: string | undefined): boolean => !value || value.trim() === '';
 
-function startsWithActionVerb(bullet: string): boolean {
+/** True when the first word is an action verb (English list, Indonesian prefixes, "-ed"). */
+export function startsWithActionVerb(bullet: string): boolean {
 	const first =
 		bullet
 			.trim()
@@ -210,9 +218,7 @@ export function analyzeCv(cv: CVDocument): AtsReport {
 	else if (!EMAIL.test(p.email.trim()))
 		add('invalidEmail', 'error', { step: 'personal', field: 'email' });
 	else {
-		const local = p.email.split('@')[0]?.toLowerCase() ?? '';
-		const digits = (local.match(/\d/g) ?? []).length;
-		if (digits >= 4 || CASUAL_EMAIL_WORDS.some((word) => local.includes(word)))
+		if (isCasualEmail(p.email))
 			add('unprofessionalEmail', 'warn', { step: 'personal', field: 'email' });
 	}
 	if (blank(p.phone)) add('missingPhone', 'error', { step: 'personal', field: 'phone' });

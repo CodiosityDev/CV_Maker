@@ -9,6 +9,7 @@ import type { ExperienceType, Locale } from '../schema/types';
 /** localStorage key of the anonymous AI device token (cleared by storage.wipeAll). */
 export const AI_DEVICE_STORAGE_KEY = 'cvmaker.aiDevice';
 
+/** Tasks that work on a CV made in the app (`aiClient.run`). */
 export const AI_TASKS = ['headline', 'summary', 'skills'] as const;
 export type AiTask = (typeof AI_TASKS)[number];
 
@@ -27,10 +28,21 @@ export interface AiProfile {
 	summary: string;
 }
 
-export interface AiRequest {
-	task: AiTask;
-	profile: AiProfile;
+/**
+ * Input of the CV review (`aiClient.review`, the "Cek ATS" page): CV TEXT with contact details
+ * removed (`redactCvText`), from an uploaded file or a CV made in the app.
+ */
+export interface AiReviewInput {
+	locale: Locale;
+	/** Position the user is aiming for ('' when unknown). */
+	targetRole: string;
+	cvText: string;
+	/** Pasted job post ('' when none): enables missing-keyword suggestions. */
+	jobPost: string;
 }
+
+export type AiRequest =
+	{ task: AiTask; profile: AiProfile } | { task: 'review'; review: AiReviewInput };
 
 export interface HeadlineResult {
 	task: 'headline';
@@ -48,7 +60,20 @@ export interface SkillsResult {
 	tools: string[];
 	soft: string[];
 }
-export type AiResult = HeadlineResult | SummaryResult | SkillsResult;
+export interface ReviewResult {
+	task: 'review';
+	/** 2–3 sentences: the overall impression. */
+	overview: string;
+	/** Up to AI_REVIEW_LIMITS.strengths. */
+	strengths: string[];
+	/** Most important first; up to AI_REVIEW_LIMITS.improvements. */
+	improvements: { title: string; detail: string }[];
+	/** Weak lines of the CV (`before`, found in the CV text) rewritten; numbers never invented. */
+	rewrites: { before: string; after: string }[];
+	/** Skills/keywords from the job post the CV lacks (empty without a job post). */
+	missingKeywords: string[];
+}
+export type AiResult = HeadlineResult | SummaryResult | SkillsResult | ReviewResult;
 
 export interface AiQuota {
 	/** Uses per device today: the free uses plus extra uses earned by watching ads. */
@@ -96,3 +121,13 @@ export const AI_PROFILE_LIMITS = {
 
 /** Max suggestions per skills group returned by the server. */
 export const AI_SKILL_SUGGESTIONS = { hard: 6, tools: 6, soft: 4 } as const;
+
+/** Limits of the CV review request and answer. */
+export const AI_REVIEW_LIMITS = {
+	cvText: 8000,
+	jobPost: 4000,
+	strengths: 3,
+	improvements: 5,
+	rewrites: 3,
+	missingKeywords: 8
+} as const;

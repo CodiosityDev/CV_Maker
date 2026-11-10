@@ -13,6 +13,7 @@
  * `analyzeCv(cv)` is also exported for synchronous use (cheap, no job post).
  */
 import type { CVDocument } from '../schema/types';
+import type { ExtractedCv, ScanAnalysis } from '../scan/types';
 import type { FullAnalysis } from './analyze';
 
 export { analyzeCv } from './checks';
@@ -31,13 +32,17 @@ export type {
 
 export interface AtsAnalyzer {
 	analyze(cv: CVDocument, jobPost?: string): Promise<FullAnalysis>;
+	/** Same for a CV FILE: pass the result of `extractCvText(file)` (core/scan). */
+	analyzeScan(cv: ExtractedCv, jobPost?: string): Promise<ScanAnalysis>;
 	dispose(): void;
 }
 
 interface Pending {
-	resolve: (value: FullAnalysis) => void;
+	resolve: (value: unknown) => void;
 	reject: (reason: unknown) => void;
 }
+
+type Job = { cv: CVDocument; scan?: undefined } | { scan: ExtractedCv; cv?: undefined };
 
 /** Uses a Web Worker when available; falls back to the main thread (e.g. tests, old browsers). */
 export function createAtsAnalyzer(): AtsAnalyzer {
@@ -46,8 +51,12 @@ export function createAtsAnalyzer(): AtsAnalyzer {
 	let nextId = 1;
 	const pending = new Map<number, Pending>();
 
-	const mainThread = async (cv: CVDocument, jobPost?: string) =>
-		(await import('./analyze')).analyzeFull(cv, jobPost);
+	const mainThread = async (job: Job, jobPost?: string): Promise<unknown> => {
+		const analysis = await import('./analyze');
+		return job.scan
+			? analysis.analyzeScanFull(job.scan, jobPost)
+			: analysis.analyzeFull(job.cv, jobPost);
+	};
 
 	function failAll(): void {
 		workerFailed = true;
@@ -67,7 +76,7 @@ export function createAtsAnalyzer(): AtsAnalyzer {
 				return undefined;
 			}
 			worker.addEventListener('message', (event: MessageEvent) => {
-				const data = event.data as { id?: unknown; ok?: unknown; result?: FullAnalysis };
+				const data = event.data as { id?: unknown; ok?: unknown; result?: unknown };
 				if (typeof data?.id !== 'number') return;
 				const entry = pending.get(data.id);
 				if (!entry) return;
@@ -80,19 +89,26 @@ export function createAtsAnalyzer(): AtsAnalyzer {
 		return worker;
 	}
 
+	async function run(job: Job, jobPost?: string): Promise<unknown> {
+		const w = getWorker();
+		if (!w) return mainThread(job, jobPost);
+		const id = nextId++;
+		try {
+			return await new Promise<unknown>((resolve, reject) => {
+				pending.set(id, { resolve, reject });
+				w.postMessage({ id, ...job, jobPost });
+			});
+		} catch {
+			return mainThread(job, jobPost); // worker crashed → still give the user a result
+		}
+	}
+
 	return {
 		async analyze(cv, jobPost) {
-			const w = getWorker();
-			if (!w) return mainThread(cv, jobPost);
-			const id = nextId++;
-			try {
-				return await new Promise<FullAnalysis>((resolve, reject) => {
-					pending.set(id, { resolve, reject });
-					w.postMessage({ id, cv, jobPost });
-				});
-			} catch {
-				return mainThread(cv, jobPost); // worker crashed → still give the user a result
-			}
+			return (await run({ cv }, jobPost)) as FullAnalysis;
+		},
+		async analyzeScan(scan, jobPost) {
+			return (await run({ scan }, jobPost)) as ScanAnalysis;
 		},
 		dispose() {
 			worker?.terminate();

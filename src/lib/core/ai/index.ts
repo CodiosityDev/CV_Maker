@@ -12,23 +12,35 @@
  *   }
  *
  * Results are SUGGESTIONS: show them, let the user pick/edit, then apply with one `store.update`.
+ *
+ * CV review ("Cek ATS" page, also 1 of today's uses):
+ *   const input = aiReviewInputFromScan(extracted, jobPost, targetRole);   // a CV file (core/scan)
+ *   const input = aiReviewInputFromCv(cv, jobPost);                        // a CV made in the app
+ *   const { result } = await aiClient.review(input);   // result.task === 'review'
+ *   Show `input.cvText` in the consent dialog ("this is what is sent") — contact details are removed.
  */
 import { incognito } from '../storage/index';
 import { LIMITS } from '../schema/limits';
-import type { CVDocument } from '../schema/types';
+import type { CVDocument, Locale } from '../schema/types';
+import type { ExtractedCv } from '../scan/types';
+import { redactContacts as redactContactsOnly, redactCvText } from './redact';
 import {
 	AI_DEVICE_STORAGE_KEY,
 	AI_ERROR_CODES,
 	AI_PROFILE_LIMITS,
+	AI_REVIEW_LIMITS,
 	type AiErrorCode,
 	type AiProfile,
 	type AiQuota,
 	type AiResult,
+	type AiReviewInput,
+	type ReviewResult,
 	type AiRewardStart,
 	type AiTask
 } from './types';
 
 export * from './types';
+export { redactContacts, redactCvText } from './redact';
 
 const API_BASE = '/api/ai';
 const REQUEST_TIMEOUT_MS = 70_000;
@@ -110,6 +122,87 @@ export function aiCanRun(task: AiTask, cv: CVDocument): boolean {
 	return Boolean(p.targetRole) && background;
 }
 
+/** Review input for a CV FILE (see core/scan). Contact details are removed. */
+export function aiReviewInputFromScan(
+	cv: Pick<ExtractedCv, 'text'>,
+	jobPost = '',
+	targetRole = '',
+	locale?: Locale
+): AiReviewInput {
+	const cvText = redactCvText(cv.text, AI_REVIEW_LIMITS.cvText);
+	return {
+		locale: locale ?? guessLocale(cvText),
+		targetRole: clip(targetRole, LIMITS.title),
+		cvText,
+		jobPost: jobPost.trim().slice(0, AI_REVIEW_LIMITS.jobPost)
+	};
+}
+
+/** Review input for a CV made in the app: built from `aiProfileFromCv` (never contact details). */
+export function aiReviewInputFromCv(cv: CVDocument, jobPost = ''): AiReviewInput {
+	const p = aiProfileFromCv(cv);
+	const lines: string[] = [];
+	const section = (title: string, body: string[]) => {
+		if (body.length) lines.push(title, ...body, '');
+	};
+	section('SUMMARY', p.summary ? [p.summary] : []);
+	section(
+		'EDUCATION',
+		p.education.map((e) =>
+			[e.degree, e.major, e.institution, e.gpa && `GPA ${e.gpa}`].filter(Boolean).join(', ')
+		)
+	);
+	const items = (list: { title: string; bullets: string[] }[]) =>
+		list.flatMap((item) => [item.title, ...item.bullets.map((b) => `• ${b}`)]);
+	section(
+		'EXPERIENCE',
+		items(
+			p.experience.map((e) => ({
+				title: [e.role, e.company].filter(Boolean).join(' — '),
+				bullets: e.bullets
+			}))
+		)
+	);
+	section(
+		'ORGANIZATIONS',
+		items(
+			p.organizations.map((o) => ({
+				title: [o.role, o.name].filter(Boolean).join(' — '),
+				bullets: o.bullets
+			}))
+		)
+	);
+	section(
+		'PROJECTS',
+		items(
+			p.projects.map((x) => ({
+				title: [x.name, x.role].filter(Boolean).join(' — '),
+				bullets: x.bullets
+			}))
+		)
+	);
+	section(
+		'SKILLS',
+		[p.skills.hard, p.skills.tools, p.skills.soft].filter((g) => g.length).map((g) => g.join(', '))
+	);
+	section('CERTIFICATIONS', p.certifications);
+	return {
+		locale: p.locale,
+		targetRole: p.targetRole,
+		cvText: redactContactsOnly(lines.join('\n').trim()).slice(0, AI_REVIEW_LIMITS.cvText),
+		jobPost: jobPost.trim().slice(0, AI_REVIEW_LIMITS.jobPost)
+	};
+}
+
+function guessLocale(text: string): Locale {
+	const words = text.toLowerCase().split(/[^a-z]+/);
+	const id = words.filter((w) =>
+		['dan', 'yang', 'dengan', 'untuk', 'dalam', 'sebagai'].includes(w)
+	).length;
+	const en = words.filter((w) => ['and', 'the', 'with', 'for', 'of', 'as'].includes(w)).length;
+	return en > id ? 'en' : 'id';
+}
+
 export class AiError extends Error {
 	constructor(
 		readonly code: AiErrorCode,
@@ -165,6 +258,8 @@ export interface AiClient {
 	quota(): Promise<AiQuota>;
 	/** Runs one task (uses 1 of today's quota on success only). Throws AiError. */
 	run(task: AiTask, cv: CVDocument): Promise<{ result: AiResult; quota: AiQuota }>;
+	/** CV review for the "Cek ATS" page (uses 1 of today's quota on success only). Throws AiError. */
+	review(input: AiReviewInput): Promise<{ result: ReviewResult; quota: AiQuota }>;
 	/**
 	 * Watch an ad for one more use (only when `quota.rewards.remaining > 0`). Opens the ad page
 	 * (separate origin: ad scripts never see CV data) in a NEW TAB. Call it DIRECTLY in the click
@@ -222,6 +317,25 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 		throw new AiError(response.status >= 500 ? 'unavailable' : 'failed');
 	}
 
+	async function runTask(body: string): Promise<{ result: AiResult; quota: AiQuota }> {
+		const send = async () =>
+			request<{ result: AiResult; quota: AiQuota }>('/run', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'X-Device-Token': await deviceToken() },
+				body
+			});
+		try {
+			return await send();
+		} catch (error) {
+			// Token rejected (server secret rotated, or tampered): get a fresh one and retry once.
+			if (error instanceof AiError && error.code === 'invalid' && readToken()) {
+				writeToken(undefined);
+				return send();
+			}
+			throw error;
+		}
+	}
+
 	async function deviceToken(): Promise<string> {
 		const existing = readToken();
 		if (existing) return existing;
@@ -236,23 +350,20 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 			return request<AiQuota>('/quota', token ? { headers: { 'X-Device-Token': token } } : {});
 		},
 		async run(task, cv) {
-			const body = JSON.stringify({ task, profile: aiProfileFromCv(cv) });
-			const send = async () =>
-				request<{ result: AiResult; quota: AiQuota }>('/run', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json', 'X-Device-Token': await deviceToken() },
-					body
-				});
-			try {
-				return await send();
-			} catch (error) {
-				// Token rejected (server secret rotated, or tampered): get a fresh one and retry once.
-				if (error instanceof AiError && error.code === 'invalid' && readToken()) {
-					writeToken(undefined);
-					return send();
-				}
-				throw error;
-			}
+			return runTask(JSON.stringify({ task, profile: aiProfileFromCv(cv) }));
+		},
+		async review(input) {
+			const review: AiReviewInput = {
+				locale: input.locale,
+				targetRole: clip(input.targetRole, LIMITS.title),
+				// Redacted again here: callers may build the input by hand.
+				cvText: redactCvText(input.cvText, AI_REVIEW_LIMITS.cvText),
+				jobPost: input.jobPost.trim().slice(0, AI_REVIEW_LIMITS.jobPost)
+			};
+			if (!review.cvText) throw new AiError('invalid');
+			const answer = await runTask(JSON.stringify({ task: 'review', review }));
+			if (answer.result.task !== 'review') throw new AiError('failed');
+			return { result: answer.result, quota: answer.quota };
 		},
 		async openRewardAd(locale) {
 			// Synchronously, inside the user's click: an empty tab is never blocked.
