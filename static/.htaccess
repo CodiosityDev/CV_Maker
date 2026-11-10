@@ -9,6 +9,11 @@
 <IfModule mod_rewrite.c>
 	RewriteEngine On
 
+	# Never serve secrets that land in public_html by mistake (.env, dumps, keys) or hidden files.
+	# Let's Encrypt's /.well-known/ stays reachable.
+	RewriteRule (^|/)\.(?!well-known(/|$)) - [R=404,L]
+	RewriteRule \.(env|sql|bak|pem|key|log|ini|sh)$ - [NC,R=404,L]
+
 	# AI API → the Node server on 127.0.0.1:8787 (only when Apache can proxy).
 	<IfModule mod_proxy_http.c>
 		RewriteRule ^api/(.*)$ http://127.0.0.1:8787/api/$1 [P,L]

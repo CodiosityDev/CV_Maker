@@ -32,6 +32,12 @@ server {
 		return 404;
 	}
 
+	# Secrets copied into public_html by mistake (cvmaker-api.env, dumps, keys) are never served.
+	location ~* \.(env|sql|bak|pem|key|log|ini|sh)$ {
+		deny all;
+		return 404;
+	}
+
 	# Cloudflare-only files that adapter-static copies into the build.
 	location ~ ^/_(headers|redirects)$ {
 		return 404;
