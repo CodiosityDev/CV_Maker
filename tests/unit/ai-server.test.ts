@@ -421,14 +421,14 @@ describe('visitor counter (from 0, never resets)', () => {
 	it('starts at 0 and counts each visitor once per day, adding up across days', async () => {
 		let time = Date.UTC(2026, 10, 9, 3, 0);
 		const { call } = await startApi(goodProvider(), { now: () => time });
-		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 0 });
-		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 1 });
-		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 1 });
-		expect(await (await hello(call, visitor(2))).json()).toEqual({ visitors: 2 });
+		expect(await (await call('/api/hello')).json()).toMatchObject({ visitors: 0 });
+		expect(await (await hello(call, visitor(1))).json()).toMatchObject({ visitors: 1 });
+		expect(await (await hello(call, visitor(1))).json()).toMatchObject({ visitors: 1 });
+		expect(await (await hello(call, visitor(2))).json()).toMatchObject({ visitors: 2 });
 		time += 24 * 60 * 60 * 1000;
 		// Next day: the same visitor counts again; the total keeps growing.
-		expect(await (await hello(call, visitor(1))).json()).toEqual({ visitors: 3 });
-		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 3 });
+		expect(await (await hello(call, visitor(1))).json()).toMatchObject({ visitors: 3 });
+		expect(await (await call('/api/hello')).json()).toMatchObject({ visitors: 3 });
 	});
 
 	it('never stores the visitor id or the IP', async () => {
@@ -448,8 +448,8 @@ describe('visitor counter (from 0, never resets)', () => {
 	it('caps new visitors per IP so a script cannot inflate the count', async () => {
 		const { call } = await startApi(goodProvider());
 		for (let n = 1; n <= 5; n++) await hello(call, visitor(n), '198.51.100.20');
-		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 3 });
-		expect(await (await hello(call, visitor(9), '198.51.100.21')).json()).toEqual({
+		expect(await (await call('/api/hello')).json()).toMatchObject({ visitors: 3 });
+		expect(await (await hello(call, visitor(9), '198.51.100.21')).json()).toMatchObject({
 			visitors: 4
 		});
 	});
@@ -469,6 +469,6 @@ describe('visitor counter (from 0, never resets)', () => {
 			});
 			expect(response.status).toBe(400);
 		}
-		expect(await (await call('/api/hello')).json()).toEqual({ visitors: 0 });
+		expect(await (await call('/api/hello')).json()).toMatchObject({ visitors: 0 });
 	});
 });

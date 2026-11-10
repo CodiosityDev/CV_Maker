@@ -8,8 +8,9 @@
  *   GET  /api/ai/job?id=      → { status: 'pending' } | { status: 'done', result, quota } (same token)
  *   POST /api/ai/reward/start → { adUrl }          (header X-Device-Token; open adUrl in a new tab)
  *   POST /api/ai/reward/claim → { quota }          (body { ticket }; called by the AD PAGE origin)
- *   GET  /api/hello           → { visitors }       (all-time visitor count, counts nothing)
- *   POST /api/hello           → { visitors }       (body { visitor }; counts this visitor once a day)
+ *   GET  /api/hello           → { visitors, online } (all-time count + online now, counts nothing)
+ *   POST /api/hello           → { visitors, online } (body { visitor }; counts this visitor once a day)
+ *                               body { visitor, beat: true } → heartbeat only (memory, no database)
  * Errors: { error: AiErrorCode, quota? } with 400/401/403/413/429/502/503.
  *
  * Rewarded ads (owner: +1 use per ad, max 10 ads per device per day): Google gives no server-side
@@ -39,6 +40,7 @@ import {
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
 import { buildMessages, maxTokensFor, parseAnswer } from './tasks';
 import { createJobStore } from './jobs';
+import { createPresence } from './presence';
 import { parseAiRequest } from '../../src/lib/core/ai/schema';
 import type { AiErrorCode, AiQuota, AiRequest, AiResult } from '../../src/lib/core/ai/types';
 
@@ -46,7 +48,9 @@ const MAX_BODY_BYTES = 32 * 1024;
 /** A ticket older than this cannot be claimed (the ad tab was left open too long). */
 const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
-const BURST = { run: 6, other: 30, poll: 90 } as const;
+const BURST = { run: 6, other: 30, poll: 90, beat: 60 } as const;
+/** The all-time total is read from the database at most this often for heartbeats. */
+const TOTAL_CACHE_MS = 30_000;
 /** Long tasks get more time per model (they write a whole CV). */
 const LONG_TASK_TIMEOUT_MS = 60_000;
 const JOB_ID_PATTERN = /^[\w-]{22}$/;
@@ -125,6 +129,15 @@ export function createApp(deps: AppDeps) {
 	const log = deps.log ?? (() => {});
 	const bursts = new Map<string, { minute: number; count: number }>();
 	const jobs = createJobStore<{ result: AiResult; quota: AiQuota }>(now);
+	const presence = createPresence(now);
+	let cachedTotal: { value: number; at: number } | undefined;
+
+	async function visitorsTotal(fresh = false): Promise<number> {
+		if (!fresh && cachedTotal && now() - cachedTotal.at < TOTAL_CACHE_MS) return cachedTotal.value;
+		const value = await store.total('visitors');
+		cachedTotal = { value, at: now() };
+		return value;
+	}
 
 	function burst(ip: string, kind: keyof typeof BURST): void {
 		const minute = Math.floor(now() / 60_000);
@@ -308,21 +321,25 @@ export function createApp(deps: AppDeps) {
 		return { quota: await quotaFor(ticket.device) };
 	}
 
-	async function hello(req: IncomingMessage, ip: string): Promise<{ visitors: number }> {
+	async function hello(
+		req: IncomingMessage,
+		ip: string
+	): Promise<{ visitors: number; online: number }> {
 		sameOrigin(req);
-		burst(ip, 'other');
-		const body = (await readJson(req)) as { visitor?: unknown } | null;
+		const body = (await readJson(req)) as { visitor?: unknown; beat?: unknown } | null;
+		const beat = body?.beat === true;
+		burst(ip, beat ? 'beat' : 'other');
 		const visitor = body?.visitor;
 		if (typeof visitor !== 'string' || !VISITOR_ID_PATTERN.test(visitor)) {
 			throw new HttpError(400, 'invalid');
 		}
+		const subject = visitorSubject(config.appSecret, visitor);
+		presence.seen(subject, ipSubject(config.appSecret, ip));
+		// Heartbeat: memory only, no database write.
+		if (beat) return { visitors: await visitorsTotal(), online: presence.online() };
+
 		const day = wibDay(now());
-		const firstToday = await store.increment(
-			'visit',
-			visitorSubject(config.appSecret, visitor),
-			day,
-			1
-		);
+		const firstToday = await store.increment('visit', subject, day, 1);
 		if (
 			firstToday &&
 			(await store.increment(
@@ -332,9 +349,11 @@ export function createApp(deps: AppDeps) {
 				config.limits.visitorsPerIp
 			))
 		) {
-			return { visitors: await store.addTotal('visitors') };
+			const visitors = await store.addTotal('visitors');
+			cachedTotal = { value: visitors, at: now() };
+			return { visitors, online: presence.online() };
 		}
-		return { visitors: await store.total('visitors') };
+		return { visitors: await visitorsTotal(true), online: presence.online() };
 	}
 
 	/** CORS only for the claim endpoint and only for the ad page's origin (no credentials). */
@@ -375,7 +394,7 @@ export function createApp(deps: AppDeps) {
 			}
 			if (req.method === 'GET' && path === HELLO_PATH) {
 				burst(ip, 'other');
-				return send(res, 200, { visitors: await store.total('visitors') });
+				return send(res, 200, { visitors: await visitorsTotal(), online: presence.online() });
 			}
 			if (req.method === 'POST' && path === HELLO_PATH) {
 				return send(res, 200, await hello(req, ip));

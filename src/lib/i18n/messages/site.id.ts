@@ -84,6 +84,8 @@ export const siteId = {
 		visitors: 'pengunjung',
 		visitorCount: '{count} pengunjung',
 		visitorsCount: '{count} pengunjung',
+		online: 'sedang online',
+		onlineCount: '{count} sedang online',
 		mockupLabel: 'Contoh tampilan CV',
 		mockupName: 'Alya Putri',
 		mockupRole: 'Lulusan Sistem Informasi',

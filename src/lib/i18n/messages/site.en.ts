@@ -86,6 +86,8 @@ export const siteEn: SiteMessages = {
 		visitors: 'visitors',
 		visitorCount: '{count} visitor',
 		visitorsCount: '{count} visitors',
+		online: 'online now',
+		onlineCount: '{count} online now',
 		mockupLabel: 'Example CV layout',
 		mockupName: 'Alya Putri',
 		mockupRole: 'Information Systems Graduate',
