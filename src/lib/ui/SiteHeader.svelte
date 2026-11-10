@@ -183,9 +183,12 @@
 		background: var(--color-mint-50);
 		color: var(--color-brand-ink);
 	}
+	/* The current page must stand out in both themes, and not by colour alone: a brand bar under
+	   the label plus a stronger background and text. */
 	nav a[aria-current='page'] {
-		background: var(--color-brand-50);
-		color: var(--color-brand-ink);
+		background: var(--color-brand-100);
+		color: var(--color-text);
+		box-shadow: inset 0 -3px 0 var(--color-brand);
 	}
 	@media (min-width: 480px) {
 		.header-inner {
