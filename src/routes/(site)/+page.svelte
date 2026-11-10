@@ -3,6 +3,7 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CvMockup from '#lib/ui/CvMockup.svelte';
+	import VisitorCounter from '#lib/ui/VisitorCounter.svelte';
 </script>
 
 <svelte:head>
@@ -16,6 +17,7 @@
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
 			<Button href="/buat" size="lg">{t('nav.create')}</Button>
+			<VisitorCounter />
 		</div>
 		<CvMockup />
 	</section>

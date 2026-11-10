@@ -6,6 +6,10 @@ export const siteId = {
 			'Buat CV ATS atau Creative dengan panduan untuk fresh graduate. Gratis, tanpa daftar, dan data tersimpan di perangkatmu.',
 		headline: 'Buat CV untuk lamaran pertamamu.',
 		intro: 'Gratis, tanpa daftar. Pilih CV ATS atau Creative, lalu isi dengan panduan.',
+		visitor: 'pengunjung',
+		visitors: 'pengunjung',
+		visitorCount: '{count} pengunjung',
+		visitorsCount: '{count} pengunjung',
 		mockupLabel: 'Contoh tampilan CV',
 		mockupName: 'Alya Putri',
 		mockupRole: 'Lulusan Sistem Informasi',
@@ -98,6 +102,8 @@ export const siteId = {
 		adsTitle: 'Iklan',
 		adsCopy:
 			'Iklan hanya dibuka di tab terpisah pada iklan.codiosity.com jika kamu memilih menonton iklan untuk tambahan jatah AI. Iklan disediakan Google Ad Manager dan tidak dipersonalisasi. Halaman iklan tidak dapat melihat isi CV-mu. Halaman CV Maker sendiri tidak memuat script iklan.',
+		visitorsCopy:
+			'Untuk menghitung pengunjung, browser menyimpan ID acak tanpa nama atau data CV dan tanpa cookie. Penghitung di server hanya menyimpan hash dari ID dan alamat IP, bukan ID atau IP aslinya. ID di browser ikut dihapus saat kamu memilih Hapus semua data. Dalam Mode Incognito, ID hanya ada di memori tab dan tidak disimpan di browser.',
 		photoTitle: 'Foto dan metadata lokasi',
 		photoCopy:
 			'Foto untuk CV Creative diproses di perangkat: ukurannya diperkecil dan dikodekan ulang untuk membuang metadata EXIF, termasuk lokasi GPS. Foto tetap disimpan di browser.',

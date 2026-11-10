@@ -8,6 +8,10 @@ export const siteEn: SiteMessages = {
 			'Build an ATS or Creative CV with guidance for fresh graduates. Free, no sign-up, and your data stays on your device.',
 		headline: 'Create a CV for your first job application.',
 		intro: 'Free, no sign-up. Choose an ATS or Creative CV, then follow the guidance.',
+		visitor: 'visitor',
+		visitors: 'visitors',
+		visitorCount: '{count} visitor',
+		visitorsCount: '{count} visitors',
 		mockupLabel: 'Example CV layout',
 		mockupName: 'Alya Putri',
 		mockupRole: 'Information Systems Graduate',
@@ -101,6 +105,8 @@ export const siteEn: SiteMessages = {
 		adsTitle: 'Advertising',
 		adsCopy:
 			'An ad only opens in a separate tab at iklan.codiosity.com when you choose to watch one for an extra AI use. Google Ad Manager supplies non-personalised ads. The ad page cannot see your CV content. CV Maker pages do not load ad scripts.',
+		visitorsCopy:
+			'To count visitors, your browser stores a random ID without your name or CV data and without cookies. The server counter stores only hashes of the ID and IP address, never the original ID or IP address. The browser ID is removed when you choose Delete all data. In Incognito Mode, the ID stays only in tab memory and is not saved in browser storage.',
 		photoTitle: 'Photos and location metadata',
 		photoCopy:
 			'Photos for Creative CVs are processed on your device: resized and re-encoded to remove EXIF metadata, including GPS locations. Photos stay in browser storage.',

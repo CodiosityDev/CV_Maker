@@ -9,7 +9,12 @@
 	let { children }: LayoutProps = $props();
 
 	onMount(() => {
-		initLocale();
+		void initLocale();
+		void import('#lib/core/stats/index.ts')
+			.then(({ visitorCount }) => visitorCount())
+			.catch(() => {
+				// An unavailable counter must not interrupt the rest of the application.
+			});
 	});
 </script>
 
