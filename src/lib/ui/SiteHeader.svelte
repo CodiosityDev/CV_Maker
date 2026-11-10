@@ -4,6 +4,7 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
+	import Logo from '#lib/ui/Logo.svelte';
 
 	const menuId = $props.id();
 	let menuOpen = $state(false);
@@ -30,7 +31,7 @@
 <header class="site-header">
 	<div class="site-container header-inner">
 		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
-			>{t('app.name')}</a
+			><Logo size={28} /><span>{t('app.name')}</span></a
 		>
 		<button
 			type="button"
@@ -92,6 +93,7 @@
 		grid-area: brand;
 		display: inline-flex;
 		align-items: center;
+		gap: 8px;
 		min-height: 44px;
 		width: fit-content;
 		color: var(--color-ink);

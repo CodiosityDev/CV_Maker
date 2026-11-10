@@ -8,6 +8,7 @@
 	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
 	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
+	import Logo from '#lib/ui/Logo.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -55,7 +56,7 @@
 <header class="app-header">
 	<div class="site-container header-inner">
 		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
-			<span>{t('app.name')}</span>
+			<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
 		</a>
 		<LanguageSwitcher />
 		<IncognitoHeader />
@@ -107,7 +108,10 @@
 	.brand {
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
+		gap: 8px;
 		margin-right: auto;
+		min-width: 44px;
 		min-height: 44px;
 		color: var(--color-ink);
 		font-size: 20px;
@@ -115,6 +119,19 @@
 		letter-spacing: -0.06em;
 		text-decoration: none;
 		white-space: nowrap;
+	}
+	@media (max-width: 479px) {
+		.brand-name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
 	}
 	.app-menu {
 		position: relative;
