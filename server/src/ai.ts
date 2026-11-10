@@ -11,7 +11,7 @@ export interface ChatProvider {
 	/** The model's text answer; throws when every model failed. */
 	complete(
 		messages: ChatMessage[],
-		options?: { maxTokens?: number }
+		options?: { maxTokens?: number; timeoutMs?: number }
 	): Promise<{ text: string; model: string }>;
 }
 
@@ -36,7 +36,10 @@ export function openAiCompatibleProvider(options: OpenAiCompatibleOptions): Chat
 			for (const model of options.models) {
 				const started = Date.now();
 				const controller = new AbortController();
-				const timer = setTimeout(() => controller.abort(), options.timeoutMs);
+				const timer = setTimeout(
+					() => controller.abort(),
+					completeOptions?.timeoutMs ?? options.timeoutMs
+				);
 				try {
 					const response = await doFetch(`${options.baseUrl}/chat/completions`, {
 						method: 'POST',

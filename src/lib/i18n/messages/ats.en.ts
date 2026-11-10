@@ -13,6 +13,16 @@ export const atsEn: AtsMessages = {
 			ok: 'Fairly good',
 			needsWork: 'Needs work'
 		},
+		convert: {
+			notes: {
+				monthGuessed:
+					'{count} dates only had a year, so the month was set to January. Check and fix the month.',
+				missingName: 'No full name found. Add it under Personal details.',
+				missingContact: 'No email or phone number found. Add them so recruiters can reach you.',
+				notParsed:
+					'{count} lines could not be placed automatically. Copy them into the right section if you still need them.'
+			}
+		},
 		scan: {
 			checks: {
 				imageOnly:

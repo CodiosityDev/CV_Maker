@@ -15,6 +15,16 @@ export const atsId = {
 			ok: 'Cukup baik',
 			needsWork: 'Perlu diperbaiki'
 		},
+		convert: {
+			notes: {
+				monthGuessed:
+					'{count} tanggal hanya berisi tahun, jadi bulannya diisi Januari. Periksa dan perbaiki bulannya.',
+				missingName: 'Nama lengkap tidak ditemukan. Isi di bagian Data diri.',
+				missingContact: 'Email dan nomor HP tidak ditemukan. Isi agar perekrut bisa menghubungimu.',
+				notParsed:
+					'{count} baris tidak bisa ditempatkan otomatis. Salin ke bagian yang sesuai bila masih diperlukan.'
+			}
+		},
 		scan: {
 			checks: {
 				imageOnly:

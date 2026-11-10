@@ -35,6 +35,8 @@ import {
 	type AiResult,
 	type AiReviewInput,
 	type ReviewResult,
+	type ConvertResult,
+	type AiJobStarted,
 	type AiRewardStart,
 	type AiTask
 } from './types';
@@ -44,6 +46,10 @@ export { redactContacts, redactCvText } from './redact';
 
 const API_BASE = '/api/ai';
 const REQUEST_TIMEOUT_MS = 70_000;
+/** CV conversion: how often and how long the browser asks for the background result. */
+const JOB_POLL_MS = 2_000;
+const JOB_MAX_WAIT_MS = 180_000;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const clip = (value: string | undefined, max: number): string =>
 	(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max).trim();
@@ -261,6 +267,15 @@ export interface AiClient {
 	/** CV review for the "Cek ATS" page (uses 1 of today's quota on success only). Throws AiError. */
 	review(input: AiReviewInput): Promise<{ result: ReviewResult; quota: AiQuota }>;
 	/**
+	 * "Ubah jadi CV ATS" (uses 1 of today's quota on success only). Runs as a background job on the
+	 * server; this promise resolves when it is done (usually 15–40 s). `onStarted` fires once the
+	 * use is counted (show the new quota). Throws AiError. Prefer `convertWithAi` (core/convert).
+	 */
+	convert(
+		input: AiReviewInput,
+		options?: { onStarted?: (quota: AiQuota) => void; pollMs?: number; maxWaitMs?: number }
+	): Promise<{ result: ConvertResult; quota: AiQuota }>;
+	/**
 	 * Watch an ad for one more use (only when `quota.rewards.remaining > 0`). Opens the ad page
 	 * (separate origin: ad scripts never see CV data) in a NEW TAB. Call it DIRECTLY in the click
 	 * handler — the tab is opened before any `await`, otherwise browsers block it. The reward is
@@ -317,9 +332,9 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 		throw new AiError(response.status >= 500 ? 'unavailable' : 'failed');
 	}
 
-	async function runTask(body: string): Promise<{ result: AiResult; quota: AiQuota }> {
+	async function runTask<T = { result: AiResult; quota: AiQuota }>(body: string): Promise<T> {
 		const send = async () =>
-			request<{ result: AiResult; quota: AiQuota }>('/run', {
+			request<T>('/run', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'X-Device-Token': await deviceToken() },
 				body
@@ -334,6 +349,19 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 			}
 			throw error;
 		}
+	}
+
+	/** Same input rules for review and convert: contact details removed again, lengths capped. */
+	function prepareText(input: AiReviewInput): AiReviewInput {
+		const text: AiReviewInput = {
+			locale: input.locale,
+			targetRole: clip(input.targetRole, LIMITS.title),
+			// Redacted again here: callers may build the input by hand.
+			cvText: redactCvText(input.cvText, AI_REVIEW_LIMITS.cvText),
+			jobPost: input.jobPost.trim().slice(0, AI_REVIEW_LIMITS.jobPost)
+		};
+		if (!text.cvText) throw new AiError('invalid');
+		return text;
 	}
 
 	async function deviceToken(): Promise<string> {
@@ -353,17 +381,41 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 			return runTask(JSON.stringify({ task, profile: aiProfileFromCv(cv) }));
 		},
 		async review(input) {
-			const review: AiReviewInput = {
-				locale: input.locale,
-				targetRole: clip(input.targetRole, LIMITS.title),
-				// Redacted again here: callers may build the input by hand.
-				cvText: redactCvText(input.cvText, AI_REVIEW_LIMITS.cvText),
-				jobPost: input.jobPost.trim().slice(0, AI_REVIEW_LIMITS.jobPost)
-			};
-			if (!review.cvText) throw new AiError('invalid');
+			const review = prepareText(input);
 			const answer = await runTask(JSON.stringify({ task: 'review', review }));
 			if (answer.result.task !== 'review') throw new AiError('failed');
 			return { result: answer.result, quota: answer.quota };
+		},
+		async convert(input, options = {}) {
+			const convert = prepareText(input);
+			const { job, quota } = await runTask<AiJobStarted>(
+				JSON.stringify({ task: 'convert', convert })
+			);
+			options.onStarted?.(quota);
+			const deadline = Date.now() + (options.maxWaitMs ?? JOB_MAX_WAIT_MS);
+			let transportErrors = 0;
+			for (;;) {
+				await sleep(options.pollMs ?? JOB_POLL_MS);
+				let status: { status?: string; result?: AiResult; quota?: AiQuota };
+				try {
+					status = await request(`/job?id=${encodeURIComponent(job)}`, {
+						headers: { 'X-Device-Token': readToken() ?? '' }
+					});
+					transportErrors = 0;
+				} catch (error) {
+					// A dropped connection (no answer from our API) is retried; a real job failure is not.
+					const transport =
+						error instanceof AiError &&
+						error.quota === undefined &&
+						(error.code === 'offline' || error.code === 'unavailable');
+					if (!transport || ++transportErrors > 5 || Date.now() > deadline) throw error;
+					continue;
+				}
+				if (status.status === 'done' && status.result?.task === 'convert' && status.quota)
+					return { result: status.result, quota: status.quota };
+				if (status.status !== 'pending') throw new AiError('failed');
+				if (Date.now() > deadline) throw new AiError('unavailable');
+			}
 		},
 		async openRewardAd(locale) {
 			// Synchronously, inside the user's click: an empty tab is never blocked.
