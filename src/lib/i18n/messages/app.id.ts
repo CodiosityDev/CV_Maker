@@ -137,6 +137,7 @@ export const appId = {
 		skillsLimit: 'Maksimal {max} keahlian per kelompok.',
 		hints: {
 			gpa: 'Contoh: 3.65 dari 4.00.',
+			reportGrade: 'Contoh: 85 dari 100.',
 			photo: 'Pilih foto formal berlatar polos.'
 		},
 		newItems: {
@@ -199,6 +200,8 @@ export const appId = {
 			major: 'Jurusan',
 			gpa: 'IPK',
 			gpaScale: 'Skala IPK',
+			reportGrade: 'Nilai rata-rata rapor',
+			scoreMaximum: 'Nilai maksimal',
 			start: 'Mulai',
 			end: 'Selesai',
 			thesisTitle: 'Judul skripsi / tugas akhir',
