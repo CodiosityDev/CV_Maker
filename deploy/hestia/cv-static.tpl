@@ -19,6 +19,12 @@ server {
 		return 404;
 	}
 
+	# Secrets copied into public_html by mistake (cvmaker-api.env, dumps, keys) are never served.
+	location ~* \.(env|sql|bak|pem|key|log|ini|sh)$ {
+		deny all;
+		return 404;
+	}
+
 	# A location-level return keeps Let's Encrypt renewals working: Hestia's ACME
 	# challenge location (included below) is a regex and wins over this prefix match.
 	location / {
