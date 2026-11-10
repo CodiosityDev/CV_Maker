@@ -265,3 +265,12 @@ B e r p e n g a l a m a n d i t o k o`;
 		);
 	});
 });
+
+describe('hostile files', () => {
+	it('stays fast on a long line without spaces (no regex backtracking blow-up)', () => {
+		const junk = `${'a.b-c'.repeat(8000)}\n${'1-'.repeat(10000)}`;
+		const started = performance.now();
+		analyzeScan(extracted(junk));
+		expect(performance.now() - started).toBeLessThan(1000);
+	});
+});
