@@ -123,6 +123,8 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-paper);
+		/* Dark theme only (token unset otherwise); never applies to print. */
+		filter: var(--paper-dim, none);
 	}
 	.paper {
 		--color-focus: var(--color-paper-focus);

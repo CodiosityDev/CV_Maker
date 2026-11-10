@@ -80,7 +80,7 @@ test('new visitors get dark even on a light system, and the explicit light choic
 	await expect(theme(page)).toHaveAttribute('data-theme', 'dark');
 	await expect(theme(page)).toHaveCSS('color-scheme', 'dark');
 	await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'dark');
-	await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#17152b');
+	await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#1c1b22');
 	const bootstrap = page.locator('head script[src$="/theme-init.js"]');
 	await expect(bootstrap).toHaveCount(1);
 	expect(await bootstrap.getAttribute('defer')).toBeNull();

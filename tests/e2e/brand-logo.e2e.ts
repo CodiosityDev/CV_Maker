@@ -47,6 +47,10 @@ test('the chosen mark fits site and app headers and browser icons are served', a
 	const iconUrl = new URL(iconHref!, page.url());
 	expect(iconUrl.origin).toBe(new URL(page.url()).origin);
 	expect(iconUrl.pathname).toBe('/icons/apple-touch-icon.png');
+	// Icons are cached for years: the links carry a version so a new logo shows up at once.
+	expect(iconUrl.searchParams.get('v')).toBeTruthy();
+	const faviconHref = await page.locator('link[rel="icon"]').getAttribute('href');
+	expect(new URL(faviconHref!, page.url()).searchParams.get('v')).toBeTruthy();
 	const appleIcon = await request.get(iconUrl.href);
 	expect(appleIcon.status()).toBe(200);
 	expect(appleIcon.headers()['content-type']).toContain('image/png');
