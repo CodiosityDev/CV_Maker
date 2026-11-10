@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { assetRepo, incognito } from '#lib/core/storage/index.ts';
+	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import { initIncognitoUiContext } from '#lib/ui/incognito-context.ts';
+	import { initIncognitoUiContext, getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
+	import { resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
 	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
 	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
@@ -11,6 +12,10 @@
 
 	let { children }: LayoutProps = $props();
 	initIncognitoUiContext();
+	const incognitoUi = getIncognitoUiContext();
+	$effect(() => {
+		syncAiSession();
+	});
 	let menuOpen = $state(false);
 	let menu: HTMLDetailsElement | undefined = $state();
 	function closeMenu(event: KeyboardEvent) {
@@ -24,6 +29,16 @@
 	onMount(() => {
 		// Housekeeping: delete photos no CV uses anymore (older than 24 h, so undo stays safe).
 		void assetRepo.removeOrphans().catch(() => {});
+		const stopExpire = incognito.onExpire(resetAiSession);
+		const stopEnd = incognitoUi?.registerBeforeEnd(resetAiSession);
+		const stopExternal = onExternalChange((event) => {
+			if (event.type === 'wiped') resetAiSession();
+		});
+		return () => {
+			stopExpire();
+			stopEnd?.();
+			stopExternal();
+		};
 	});
 </script>
 

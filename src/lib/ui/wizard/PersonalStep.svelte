@@ -12,6 +12,7 @@
 	import Autocomplete from '../Autocomplete.svelte';
 	import ListEditor from '../ListEditor.svelte';
 	import Button from '../Button.svelte';
+	import AiAssist from '../AiAssist.svelte';
 
 	let {
 		store,
@@ -134,6 +135,7 @@
 		showCounter
 		bind:value={() => store.cv.personal.headline, (value) => set('headline', value)}
 	/>
+	<AiAssist {store} task="headline" />
 	<Input
 		id="personal.email"
 		label={t('wizard.fields.email')}

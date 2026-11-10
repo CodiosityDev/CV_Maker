@@ -15,6 +15,7 @@
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
+	import { resetAiSession } from '#lib/ui/ai/session.svelte.ts';
 
 	let cvs = $state<CVMeta[]>([]);
 	let loading = $state(true);
@@ -360,6 +361,7 @@
 		busy = true;
 		try {
 			await storage.wipeAll();
+			resetAiSession();
 			if (!active) return;
 			forgetCv();
 			toast.success(t('dashboard.wipeDone'));

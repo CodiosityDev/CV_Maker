@@ -41,6 +41,42 @@ export const appEn: AppMessages = {
 			newItem: 'New item'
 		}
 	},
+	aiAssist: {
+		headline: 'Suggest headlines with AI',
+		write: 'Write with AI',
+		improve: 'Improve with AI',
+		skills: 'Suggest skills with AI',
+		busy: 'Drafting…',
+		needBackground:
+			'Add a target role and at least one education, experience, organisation, or project entry first.',
+		needSkills: 'Add a target role or one background entry first.',
+		quota: '{remaining} of {limit} uses left today',
+		reset: 'Uses reset at 00:00 WIB.',
+		reward: 'Watch an ad for +1 AI use ({count} ads left today)',
+		rewardHint: 'The ad opens in a new tab separate from your CV.',
+		quotaAdded: 'An AI use has been added.',
+		headlineChoices: 'AI headline suggestions',
+		preview: 'AI summary preview',
+		use: 'Use this text',
+		discard: 'Dismiss',
+		placeholder: 'Replace this with a correct number or remove it.',
+		applied: 'AI suggestion applied.',
+		consentTitle: 'AI assistance',
+		consentIntro:
+			'What is sent: target role, education and grades, experience, organisations, projects, skills, certifications, and summary. The CV language is included.',
+		notSent: 'Your name, email, phone, city, links, and photo are not sent.',
+		processing:
+			'After you agree, this content goes through the CV Maker server to a third-party AI provider. CV content is not stored on the server; only anonymous usage counters are kept for 7 days.',
+		freeQuota: 'You get 3 free uses per device per day, resetting at 00:00 WIB.',
+		agree: 'Agree & continue',
+		noTarget: 'Not filled in',
+		background: 'Background sent',
+		backgroundCount:
+			'{education} education · {experience} experience · {organizations} organisations · {projects} projects',
+		skillsAndSummary: 'Skills, certifications, and summary',
+		contentCount:
+			'{skills} skills · {certificates} certifications · {characters} summary characters'
+	},
 	atsPanel: {
 		title: 'Check ATS',
 		summary: '{error} must fix · {warn} recommended · {tip} tips',

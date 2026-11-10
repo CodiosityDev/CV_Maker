@@ -9,7 +9,9 @@
 		'deleted',
 		'incognito',
 		'mobile',
-		'english'
+		'english',
+		'ai',
+		'aiQuota'
 	] as const;
 </script>
 

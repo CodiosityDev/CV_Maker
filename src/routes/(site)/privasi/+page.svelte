@@ -26,6 +26,14 @@
 		<p>{t('privacy.photoCopy')}</p>
 	</section>
 	<section>
+		<h2>{t('privacy.aiTitle')}</h2>
+		<p>{t('privacy.aiCopy')}</p>
+	</section>
+	<section>
+		<h2>{t('privacy.adsTitle')}</h2>
+		<p>{t('privacy.adsCopy')}</p>
+	</section>
+	<section>
 		<h2>{t('privacy.deleteTitle')}</h2>
 		<p>{t('privacy.deleteCopy')}</p>
 	</section>

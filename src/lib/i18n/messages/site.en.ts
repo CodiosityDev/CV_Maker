@@ -41,7 +41,8 @@ export const siteEn: SiteMessages = {
 		creativeCopy: 'For direct applications or portfolios, with an optional photo.',
 		creativeWarning: 'Less suited to ATS portals',
 		creativeDetail: 'Choose from three Creative designs and accent colors at the review step.',
-		privacyCopy: 'Your CV is stored in the browser on your device, without being sent to a server.',
+		privacyCopy:
+			'Your CV is stored in your browser. Content is only sent to an AI provider if you choose AI assistance and agree.',
 		privacyLink: 'Read the privacy policy',
 		faqCopy: 'Have a question before you start?',
 		faqLink: 'Read the FAQ'
@@ -60,7 +61,7 @@ export const siteEn: SiteMessages = {
 		freeAnswer: 'Yes. Creating and downloading a CV is free and does not require an account.',
 		storageQuestion: 'Where is my data stored?',
 		storageAnswer:
-			'CV data is stored in your browser on the device you are using. It is not sent to a server and does not automatically move to another device.',
+			'CV data is stored in your browser and does not automatically move to another device. If you choose AI assistance and agree, some content is sent for AI processing.',
 		deletedQuestion: 'What if my browser data is erased?',
 		deletedAnswer:
 			'CVs stored in that browser will be lost. Download PDF/Word files for your records before clearing browser data.',
@@ -72,6 +73,12 @@ export const siteEn: SiteMessages = {
 		englishQuestion: 'Is English available?',
 		englishAnswer: 'Yes. Choose ID or EN for the interface; choose the CV language separately.',
 		makerQuestion: 'Who makes CV Maker?',
+		aiQuestion: 'What is sent when I use AI assistance?',
+		aiAnswer:
+			'Only after you agree: target role, education, experience, organisations, projects, skills, certifications, and summary. Your name, email, phone, city, links, and photo are not sent. CV content is not stored on the server.',
+		aiQuotaQuestion: 'How many AI uses do I get?',
+		aiQuotaAnswer:
+			'You get 3 free uses per device per day, resetting at 00:00 WIB. When no uses remain and ads are available, you can choose an ad in a separate tab for 1 extra use, up to 10 ads a day.',
 		makerAnswer: 'CV Maker is created by Codiosity.',
 		makerLink: 'Visit Codiosity',
 		back: 'Back to home'
@@ -87,7 +94,13 @@ export const siteEn: SiteMessages = {
 			'CV data and your language preference are stored in your browser. This version has no accounts or CV storage server, and does not sync data between devices.',
 		trackingTitle: 'No third-party trackers',
 		trackingCopy:
-			'We do not include analytics, advertising pixels, scripts, or fonts from third-party services. Fonts are served by this site. CV data is not sent to a server.',
+			'CV Maker pages do not include third-party trackers. Fonts are served by this site. CV content is sent only if you agree to AI assistance.',
+		aiTitle: 'AI assistance',
+		aiCopy:
+			'AI assistance is optional and only runs after you click its button and agree. Your target role, education and grades, experience, organisations, projects, skills, certifications, summary, and CV language go through the CV Maker server to a third-party AI provider. Your name, email, phone, city, links, and photo are not sent. CV content is not stored on the server. Anonymous usage counters are kept for 7 days.',
+		adsTitle: 'Advertising',
+		adsCopy:
+			'An ad only opens in a separate tab at iklan.codiosity.com when you choose to watch one for an extra AI use. Google Ad Manager supplies non-personalised ads. The ad page cannot see your CV content. CV Maker pages do not load ad scripts.',
 		photoTitle: 'Photos and location metadata',
 		photoCopy:
 			'Photos for Creative CVs are processed on your device: resized and re-encoded to remove EXIF metadata, including GPS locations. Photos stay in browser storage.',

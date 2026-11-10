@@ -38,7 +38,8 @@ export const siteId = {
 		creativeCopy: 'Untuk lamaran langsung atau portofolio, dengan foto opsional.',
 		creativeWarning: 'Kurang cocok untuk portal ATS',
 		creativeDetail: 'Pilih tiga desain Creative dan warna aksen di langkah tinjau.',
-		privacyCopy: 'Data CV tersimpan di browser pada perangkatmu, tanpa dikirim ke server.',
+		privacyCopy:
+			'Data CV tersimpan di browser. Isi hanya dikirim ke penyedia AI jika kamu memilih Bantuan AI dan menyetujuinya.',
 		privacyLink: 'Baca kebijakan privasi',
 		faqCopy: 'Ada pertanyaan sebelum mulai?',
 		faqLink: 'Baca FAQ'
@@ -57,7 +58,7 @@ export const siteId = {
 		freeAnswer: 'Ya. Membuat dan mengunduh CV gratis dan tidak memerlukan akun.',
 		storageQuestion: 'Di mana data saya disimpan?',
 		storageAnswer:
-			'Data CV disimpan di penyimpanan browser pada perangkat yang kamu gunakan. Data tersebut tidak dikirim ke server dan tidak otomatis berpindah ke perangkat lain.',
+			'Data CV disimpan di browser pada perangkatmu dan tidak otomatis berpindah ke perangkat lain. Jika kamu memilih Bantuan AI dan menyetujuinya, sebagian isi dikirim untuk diproses AI.',
 		deletedQuestion: 'Bagaimana jika data browser terhapus?',
 		deletedAnswer:
 			'CV yang tersimpan di browser ikut hilang. Unduh PDF/Word sebagai arsip sebelum menghapus data browser.',
@@ -69,6 +70,12 @@ export const siteId = {
 		englishQuestion: 'Ada bahasa Inggris?',
 		englishAnswer: 'Ada. Pilih ID atau EN untuk tampilan; bahasa isi CV dipilih terpisah.',
 		makerQuestion: 'Siapa yang membuat CV Maker?',
+		aiQuestion: 'Apa yang dikirim saat memakai Bantuan AI?',
+		aiAnswer:
+			'Hanya setelah kamu setuju: posisi tujuan, pendidikan, pengalaman, organisasi, proyek, skill, sertifikasi, dan ringkasan. Nama, email, telepon, kota, link, dan foto tidak dikirim. Isi CV tidak disimpan di server.',
+		aiQuotaQuestion: 'Berapa jatah Bantuan AI?',
+		aiQuotaAnswer:
+			'Ada 3 bantuan gratis per perangkat per hari, direset pukul 00.00 WIB. Jika jatah habis dan iklan tersedia, kamu bisa memilih menonton iklan di tab terpisah untuk tambahan 1 bantuan, maksimal 10 iklan per hari.',
 		makerAnswer: 'CV Maker dibuat oleh Codiosity.',
 		makerLink: 'Kunjungi Codiosity',
 		back: 'Kembali ke beranda'
@@ -84,7 +91,13 @@ export const siteId = {
 			'Data CV dan preferensi bahasa tersimpan di browser. Versi ini tidak memakai akun atau server penyimpanan CV, dan tidak menyinkronkan data antarperangkat.',
 		trackingTitle: 'Tanpa pelacak pihak ketiga',
 		trackingCopy:
-			'Kami tidak memasang analytics, pixel iklan, script, atau font dari layanan pihak ketiga. Font dimuat dari situs ini. Data CV tidak dikirim ke server.',
+			'Kami tidak memasang pelacak pihak ketiga di halaman CV Maker. Font dimuat dari situs ini. Isi CV hanya dikirim jika kamu menyetujui Bantuan AI.',
+		aiTitle: 'Bantuan AI',
+		aiCopy:
+			'Bantuan AI bersifat opsional, hanya dipanggil setelah tombol diklik dan kamu memberi persetujuan. Posisi tujuan, pendidikan dan nilai, pengalaman, organisasi, proyek, skill, sertifikasi, ringkasan, serta bahasa CV dikirim melalui server CV Maker ke penyedia AI pihak ketiga. Nama, email, telepon, kota, link, dan foto tidak dikirim. Isi CV tidak disimpan di server. Penghitung jatah anonim disimpan selama 7 hari.',
+		adsTitle: 'Iklan',
+		adsCopy:
+			'Iklan hanya dibuka di tab terpisah pada iklan.codiosity.com jika kamu memilih menonton iklan untuk tambahan jatah AI. Iklan disediakan Google Ad Manager dan tidak dipersonalisasi. Halaman iklan tidak dapat melihat isi CV-mu. Halaman CV Maker sendiri tidak memuat script iklan.',
 		photoTitle: 'Foto dan metadata lokasi',
 		photoCopy:
 			'Foto untuk CV Creative diproses di perangkat: ukurannya diperkecil dan dikodekan ulang untuk membuang metadata EXIF, termasuk lokasi GPS. Foto tetap disimpan di browser.',
