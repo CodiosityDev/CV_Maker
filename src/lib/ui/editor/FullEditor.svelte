@@ -282,8 +282,8 @@
 		await tick();
 		if (!mounted || removed || !container?.isConnected) return;
 		const target = control ?? toggle ?? row?.querySelector<HTMLElement>('summary');
-		target?.focus();
-		target?.scrollIntoView({ block: 'center' });
+		target?.focus({ preventScroll: true });
+		target?.scrollIntoView({ block: 'center', behavior: 'instant' });
 	}
 	async function jump(target: CheckTarget) {
 		const field =
@@ -657,12 +657,16 @@
 	}
 	.fixed-section > summary {
 		padding: 1rem;
+		scroll-margin-top: 6rem;
 		min-height: 52px;
 		cursor: pointer;
 		font-weight: 600;
 	}
 	.section-body {
 		padding: 0 1rem 1.25rem;
+	}
+	.fixed-section[open] > .section-body {
+		animation: ui-content-reveal 160ms ease-out;
 	}
 	.removed-notice {
 		padding: 0.5rem;

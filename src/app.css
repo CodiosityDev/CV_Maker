@@ -193,6 +193,42 @@ main:focus {
 	outline: none;
 }
 
+::view-transition-group(root),
+::view-transition-group(app-header),
+::view-transition-old(app-header),
+::view-transition-new(app-header) {
+	animation: none;
+}
+::view-transition-old(root) {
+	animation: page-fade-out 180ms ease-out both;
+}
+::view-transition-new(root) {
+	animation: page-fade-in 180ms ease-out both;
+}
+::view-transition-old(app-header) {
+	display: none;
+}
+@keyframes page-fade-out {
+	to {
+		opacity: 0;
+	}
+}
+@keyframes page-fade-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes ui-content-reveal {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 .site-container {
 	width: min(var(--content-width), calc(100% - 32px));
 	margin-inline: auto;
@@ -281,6 +317,11 @@ main:focus {
 	}
 }
 @media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
 	*,
 	*::before,
 	*::after {

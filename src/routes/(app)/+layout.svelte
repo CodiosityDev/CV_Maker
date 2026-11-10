@@ -56,7 +56,12 @@
 
 <header class="app-header">
 	<div class="site-container header-inner">
-		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
+		<a
+			class="brand"
+			href={resolve('/(site)')}
+			data-sveltekit-preload-code="viewport"
+			aria-label={t('nav.home')}
+		>
 			<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
 		</a>
 		<LanguageSwitcher />
@@ -73,10 +78,26 @@
 				>
 			</summary>
 			<nav aria-label={t('nav.label')}>
-				<a href={resolve('/(app)/buat')} onclick={() => (menuOpen = false)}>{t('nav.create')}</a>
-				<a href={resolve('/(app)/cv')} onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a>
-				<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
-				<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
+				<a
+					href={resolve('/(app)/buat')}
+					data-sveltekit-preload-code="viewport"
+					onclick={() => (menuOpen = false)}>{t('nav.create')}</a
+				>
+				<a
+					href={resolve('/(app)/cv')}
+					data-sveltekit-preload-code="viewport"
+					onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a
+				>
+				<a
+					href={resolve('/(site)')}
+					data-sveltekit-preload-code="viewport"
+					onclick={() => (menuOpen = false)}>{t('nav.home')}</a
+				>
+				<a
+					href={resolve('/(site)/faq')}
+					data-sveltekit-preload-code="viewport"
+					onclick={() => (menuOpen = false)}>{t('nav.faq')}</a
+				>
 			</nav>
 		</details>
 	</div>
@@ -91,6 +112,7 @@
 		}
 	}
 	.app-header {
+		view-transition-name: app-header;
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-surface);
 	}

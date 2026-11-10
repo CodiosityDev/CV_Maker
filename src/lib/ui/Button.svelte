@@ -20,6 +20,7 @@
 		'aria-expanded'?: boolean;
 		target?: '_blank' | '_self';
 		rel?: string;
+		'data-sveltekit-preload-code'?: 'viewport';
 	};
 
 	let {
@@ -38,7 +39,8 @@
 		'aria-controls': ariaControls,
 		'aria-expanded': ariaExpanded,
 		target,
-		rel
+		rel,
+		'data-sveltekit-preload-code': preloadCode
 	}: Props = $props();
 	let blocked = $derived(disabled || loading);
 
@@ -70,6 +72,7 @@
 		{title}
 		{target}
 		rel={`external noopener noreferrer ${rel ?? ''}`}
+		data-sveltekit-preload-code={preloadCode}
 		class={`button ${variant} ${size} ${className}`}
 		aria-label={ariaLabel}
 		aria-controls={ariaControls}
@@ -91,6 +94,7 @@
 		{title}
 		{target}
 		rel={target === '_blank' ? `noopener noreferrer ${rel ?? ''}` : rel}
+		data-sveltekit-preload-code={preloadCode}
 		class={`button ${variant} ${size} ${className}`}
 		aria-label={ariaLabel}
 		aria-controls={ariaControls}
