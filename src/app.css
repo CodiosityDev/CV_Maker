@@ -38,6 +38,8 @@
 	--color-control-border: #857bab;
 	--color-focus: #7166b1;
 	--color-success: var(--color-brand-ink);
+	/* "Online now" dot: a calm green that reads as live in both themes. */
+	--color-live: #2f8f68;
 	--color-success-surface: var(--color-mint-50);
 	--color-warning: var(--color-coral-ink);
 	--color-warning-surface: var(--color-cream-50);
@@ -97,6 +99,7 @@
 	--color-control-border: #8c87a3;
 	--color-focus: #bdb6f2;
 	--color-success: #a4cfc7;
+	--color-live: #8fdcb4;
 	--color-warning: #f0c79f;
 	--color-backdrop: rgb(10 10 14 / 62%);
 	--shadow-card: 0 1px 2px rgb(0 0 0 / 18%), 0 8px 24px rgb(0 0 0 / 22%);
