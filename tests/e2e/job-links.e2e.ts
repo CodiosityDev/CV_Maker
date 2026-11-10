@@ -198,7 +198,7 @@ test('done offers five accessible local-query job links and related titles never
 	await expect(panel(page)).toContainText('Hanya posisi dan kota yang dikirim');
 	await assertLinks(panel(page));
 	await fitsReferenceWidths(page, panel(page));
-	const choice = panel(page).getByRole('button').first();
+	const choice = panel(page).locator('.related-list button').first();
 	await expect(choice).toBeVisible();
 	const related = (await choice.innerText()).trim();
 	expect(related).not.toBe(keyword);
@@ -306,4 +306,38 @@ test('incognito warns about browser history and expiry removes an open job dialo
 	await expect(panel(page)).toHaveCount(0);
 	await expect(page.getByText(name, { exact: true })).toHaveCount(0);
 	await expect(page.getByText(keyword, { exact: true })).toHaveCount(0);
+});
+
+test('the city is free text: any city, or empty for all of Indonesia, and the CV is not changed', async ({
+	page
+}) => {
+	await reachDone(page);
+	const input = panel(page).getByLabel('Kota', { exact: true });
+	await expect(input).toHaveValue(city);
+	const linkedin = panel(page).locator('a[data-job-site="linkedin"]');
+	await expect(linkedin).toHaveAttribute('href', /location=Bandung/);
+
+	await input.fill('Surabaya');
+	await expect(linkedin).toHaveAttribute('href', /location=Surabaya/);
+	await expect(linkedin).toContainText('di Surabaya');
+	await expect(panel(page).locator('a[data-job-site="indeed"]')).toHaveAttribute(
+		'href',
+		/l=Surabaya/
+	);
+
+	await panel(page).getByRole('button', { name: 'Seluruh Indonesia', exact: true }).click();
+	await expect(input).toHaveValue('');
+	await expect(linkedin).toHaveAttribute('href', /location=Indonesia(&|$)/);
+	await expect(linkedin).toContainText('seluruh Indonesia');
+	await expect(panel(page).locator('a[data-job-site="indeed"]')).not.toHaveAttribute(
+		'href',
+		/[?&]l=/
+	);
+
+	// Only for this search: the CV keeps its own city.
+	await expect(page.getByTestId('save-status')).toHaveAttribute('data-save-state', 'saved');
+	await page.reload();
+	await expect(heading(page)).toHaveText('CV-mu tersimpan');
+	await expect(panel(page).getByLabel('Kota', { exact: true })).toHaveValue(city);
+	await expect(linkedin).toHaveAttribute('href', /location=Bandung/);
 });
