@@ -32,7 +32,8 @@
 		issues,
 		suggestionsData,
 		onTarget,
-		examples
+		examples,
+		skillSection
 	}: {
 		store: CvStore;
 		step: WizardStepId;
@@ -40,6 +41,7 @@
 		suggestionsData?: SuggestionData;
 		onTarget?: () => void;
 		examples?: Guidance;
+		skillSection?: 'skills' | 'languages' | 'certifications' | 'awards';
 	} = $props();
 
 	function fieldSuggestions(field: SuggestField, query: string, popularWhenEmpty = false) {
@@ -563,202 +565,216 @@
 		</ListEditor>
 	{:else if step === 'skills'}
 		<div class="skills-sections">
-			{#if suggestionsData}<SkillRecommendations {store} data={suggestionsData} {onTarget} />{/if}
-			{#each ['hard', 'soft', 'tools'] as field (field)}
-				{@const group = field as 'hard' | 'soft' | 'tools'}
-				<SkillTags
-					id={`skills.${group}`}
-					label={t(`wizard.fields.${group}`)}
-					items={store.cv.skills[group]}
-					{suggestionsData}
-					suggestField={group === 'hard'
-						? 'skillHard'
-						: group === 'soft'
-							? 'skillSoft'
-							: 'skillTool'}
-					onChange={(items) =>
-						store.update(
-							(draft) => {
-								draft.skills[group] = items;
-							},
-							{ coalesceKey: `skills.${group}.structure.${newId()}` }
-						)}
-				/>
-			{/each}
-			<ListEditor
-				label={t('wizard.fields.languages')}
-				getKey={(entry) => entry.id}
-				getSummary={(entry) => itemSummary('languages', entry)}
-				emptyMessage={t('wizard.emptyLists.languages')}
-				onUndo={() => store.undo()}
-				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
-				maxItems={LIMITS.itemsPerSection}
-				bind:items={() => store.cv.languages, (items) => replaceItems('languages', items)}
-				onAdd={(): CVDocument['languages'][number] => ({
-					id: newId(),
-					name: '',
-					level: 'basic',
-					score: ''
-				})}
-			>
-				{#snippet item(entry)}
-					<div class="item-fields">
-						<Autocomplete
-							id={`languages.${entry.id}.name`}
-							label={t('wizard.fields.name')}
-							suggestions={(query) => fieldSuggestions('language', query, true)}
-							popularWhenEmpty
-							showCounter
-							maxlength={LIMITS.short}
-							bind:value={
-								() => entry.name,
-								(value) =>
-									editItem('languages', entry.id, 'name', (draft) => {
-										draft.name = value;
-									})
-							}
-						/>
-						<Select
-							id={`languages.${entry.id}.level`}
-							label={t('wizard.fields.level')}
-							options={languageOptions}
-							bind:value={
-								() => entry.level,
-								(value) =>
-									editItem('languages', entry.id, 'level', (draft) => {
-										draft.level = value as LanguageLevel;
-									})
-							}
-						/>
-						<Input
-							id={`languages.${entry.id}.score`}
-							label={t('wizard.fields.score')}
-							showCounter
-							maxlength={LIMITS.short}
-							bind:value={
-								() => entry.score ?? '',
-								(value) =>
-									editItem('languages', entry.id, 'score', (draft) => {
-										draft.score = value;
-									})
-							}
-						/>
-					</div>
-				{/snippet}
-			</ListEditor>
-			<ListEditor
-				label={t('wizard.fields.certifications')}
-				getKey={(entry) => entry.id}
-				getSummary={(entry) => itemSummary('certifications', entry)}
-				emptyMessage={t('wizard.emptyLists.certifications')}
-				onUndo={() => store.undo()}
-				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
-				maxItems={LIMITS.itemsPerSection}
-				bind:items={() => store.cv.certifications, (items) => replaceItems('certifications', items)}
-				onAdd={(): CVDocument['certifications'][number] => ({ id: newId(), name: '', issuer: '' })}
-			>
-				{#snippet item(entry)}
-					<div class="item-fields">
-						{#each ['name', 'issuer'] as field (field)}
-							{@const key = field as 'name' | 'issuer'}
-							<Input
-								id={`certifications.${entry.id}.${key}`}
-								label={t(`wizard.fields.${key}`)}
+			{#if !skillSection || skillSection === 'skills'}
+				{#if suggestionsData}<SkillRecommendations {store} data={suggestionsData} {onTarget} />{/if}
+				{#each ['hard', 'soft', 'tools'] as field (field)}
+					{@const group = field as 'hard' | 'soft' | 'tools'}
+					<SkillTags
+						id={`skills.${group}`}
+						label={t(`wizard.fields.${group}`)}
+						items={store.cv.skills[group]}
+						{suggestionsData}
+						suggestField={group === 'hard'
+							? 'skillHard'
+							: group === 'soft'
+								? 'skillSoft'
+								: 'skillTool'}
+						onChange={(items) =>
+							store.update(
+								(draft) => {
+									draft.skills[group] = items;
+								},
+								{ coalesceKey: `skills.${group}.structure.${newId()}` }
+							)}
+					/>
+				{/each}
+			{/if}
+			{#if !skillSection || skillSection === 'languages'}
+				<ListEditor
+					label={t('wizard.fields.languages')}
+					getKey={(entry) => entry.id}
+					getSummary={(entry) => itemSummary('languages', entry)}
+					emptyMessage={t('wizard.emptyLists.languages')}
+					onUndo={() => store.undo()}
+					undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+					maxItems={LIMITS.itemsPerSection}
+					bind:items={() => store.cv.languages, (items) => replaceItems('languages', items)}
+					onAdd={(): CVDocument['languages'][number] => ({
+						id: newId(),
+						name: '',
+						level: 'basic',
+						score: ''
+					})}
+				>
+					{#snippet item(entry)}
+						<div class="item-fields">
+							<Autocomplete
+								id={`languages.${entry.id}.name`}
+								label={t('wizard.fields.name')}
+								suggestions={(query) => fieldSuggestions('language', query, true)}
+								popularWhenEmpty
 								showCounter
-								maxlength={LIMITS.title}
+								maxlength={LIMITS.short}
 								bind:value={
-									() => entry[key],
+									() => entry.name,
 									(value) =>
-										editItem('certifications', entry.id, key, (draft) => {
-											draft[key] = value;
+										editItem('languages', entry.id, 'name', (draft) => {
+											draft.name = value;
 										})
 								}
 							/>
-						{/each}
-						<MonthPicker
-							id={`certifications.${entry.id}.date`}
-							label={t('wizard.fields.date')}
-							bind:value={
-								() => entry.date,
-								(value) =>
-									editItem('certifications', entry.id, 'date', (draft) => {
-										draft.date = value;
-									})
-							}
-						/>
-						<Input
-							id={`certifications.${entry.id}.credentialUrl`}
-							type="url"
-							label={t('wizard.fields.credentialUrl')}
-							showCounter
-							maxlength={LIMITS.url}
-							bind:value={
-								() => entry.credentialUrl ?? '',
-								(value) =>
-									editItem('certifications', entry.id, 'credentialUrl', (draft) => {
-										draft.credentialUrl = value;
-									})
-							}
-						/>
-					</div>
-				{/snippet}
-			</ListEditor>
-			<ListEditor
-				label={t('wizard.fields.awards')}
-				getKey={(entry) => entry.id}
-				getSummary={(entry) => itemSummary('awards', entry)}
-				emptyMessage={t('wizard.emptyLists.awards')}
-				onUndo={() => store.undo()}
-				undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
-				maxItems={LIMITS.itemsPerSection}
-				bind:items={() => store.cv.awards, (items) => replaceItems('awards', items)}
-				onAdd={(): CVDocument['awards'][number] => ({ id: newId(), title: '', issuer: '' })}
-			>
-				{#snippet item(entry)}
-					<div class="item-fields">
-						{#each ['title', 'issuer'] as field (field)}
-							{@const key = field as 'title' | 'issuer'}
-							<Input
-								id={`awards.${entry.id}.${key}`}
-								label={t(key === 'title' ? 'wizard.fields.awardTitle' : 'wizard.fields.issuer')}
-								showCounter
-								maxlength={LIMITS.title}
+							<Select
+								id={`languages.${entry.id}.level`}
+								label={t('wizard.fields.level')}
+								options={languageOptions}
 								bind:value={
-									() => entry[key],
+									() => entry.level,
 									(value) =>
-										editItem('awards', entry.id, key, (draft) => {
-											draft[key] = value;
+										editItem('languages', entry.id, 'level', (draft) => {
+											draft.level = value as LanguageLevel;
 										})
 								}
 							/>
-						{/each}
-						<MonthPicker
-							id={`awards.${entry.id}.date`}
-							label={t('wizard.fields.date')}
-							bind:value={
-								() => entry.date,
-								(value) =>
-									editItem('awards', entry.id, 'date', (draft) => {
-										draft.date = value;
-									})
-							}
-						/>
-						<Textarea
-							id={`awards.${entry.id}.description`}
-							label={t('wizard.fields.description')}
-							showCounter
-							maxlength={LIMITS.description}
-							bind:value={
-								() => entry.description ?? '',
-								(value) =>
-									editItem('awards', entry.id, 'description', (draft) => {
-										draft.description = value;
-									})
-							}
-						/>
-					</div>
-				{/snippet}
-			</ListEditor>
+							<Input
+								id={`languages.${entry.id}.score`}
+								label={t('wizard.fields.score')}
+								showCounter
+								maxlength={LIMITS.short}
+								bind:value={
+									() => entry.score ?? '',
+									(value) =>
+										editItem('languages', entry.id, 'score', (draft) => {
+											draft.score = value;
+										})
+								}
+							/>
+						</div>
+					{/snippet}
+				</ListEditor>
+			{/if}
+			{#if !skillSection || skillSection === 'certifications'}
+				<ListEditor
+					label={t('wizard.fields.certifications')}
+					getKey={(entry) => entry.id}
+					getSummary={(entry) => itemSummary('certifications', entry)}
+					emptyMessage={t('wizard.emptyLists.certifications')}
+					onUndo={() => store.undo()}
+					undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+					maxItems={LIMITS.itemsPerSection}
+					bind:items={
+						() => store.cv.certifications, (items) => replaceItems('certifications', items)
+					}
+					onAdd={(): CVDocument['certifications'][number] => ({
+						id: newId(),
+						name: '',
+						issuer: ''
+					})}
+				>
+					{#snippet item(entry)}
+						<div class="item-fields">
+							{#each ['name', 'issuer'] as field (field)}
+								{@const key = field as 'name' | 'issuer'}
+								<Input
+									id={`certifications.${entry.id}.${key}`}
+									label={t(`wizard.fields.${key}`)}
+									showCounter
+									maxlength={LIMITS.title}
+									bind:value={
+										() => entry[key],
+										(value) =>
+											editItem('certifications', entry.id, key, (draft) => {
+												draft[key] = value;
+											})
+									}
+								/>
+							{/each}
+							<MonthPicker
+								id={`certifications.${entry.id}.date`}
+								label={t('wizard.fields.date')}
+								bind:value={
+									() => entry.date,
+									(value) =>
+										editItem('certifications', entry.id, 'date', (draft) => {
+											draft.date = value;
+										})
+								}
+							/>
+							<Input
+								id={`certifications.${entry.id}.credentialUrl`}
+								type="url"
+								label={t('wizard.fields.credentialUrl')}
+								showCounter
+								maxlength={LIMITS.url}
+								bind:value={
+									() => entry.credentialUrl ?? '',
+									(value) =>
+										editItem('certifications', entry.id, 'credentialUrl', (draft) => {
+											draft.credentialUrl = value;
+										})
+								}
+							/>
+						</div>
+					{/snippet}
+				</ListEditor>
+			{/if}
+			{#if !skillSection || skillSection === 'awards'}
+				<ListEditor
+					label={t('wizard.fields.awards')}
+					getKey={(entry) => entry.id}
+					getSummary={(entry) => itemSummary('awards', entry)}
+					emptyMessage={t('wizard.emptyLists.awards')}
+					onUndo={() => store.undo()}
+					undoRevision={`${store.cv.updatedAt}:${store.externalChange}`}
+					maxItems={LIMITS.itemsPerSection}
+					bind:items={() => store.cv.awards, (items) => replaceItems('awards', items)}
+					onAdd={(): CVDocument['awards'][number] => ({ id: newId(), title: '', issuer: '' })}
+				>
+					{#snippet item(entry)}
+						<div class="item-fields">
+							{#each ['title', 'issuer'] as field (field)}
+								{@const key = field as 'title' | 'issuer'}
+								<Input
+									id={`awards.${entry.id}.${key}`}
+									label={t(key === 'title' ? 'wizard.fields.awardTitle' : 'wizard.fields.issuer')}
+									showCounter
+									maxlength={LIMITS.title}
+									bind:value={
+										() => entry[key],
+										(value) =>
+											editItem('awards', entry.id, key, (draft) => {
+												draft[key] = value;
+											})
+									}
+								/>
+							{/each}
+							<MonthPicker
+								id={`awards.${entry.id}.date`}
+								label={t('wizard.fields.date')}
+								bind:value={
+									() => entry.date,
+									(value) =>
+										editItem('awards', entry.id, 'date', (draft) => {
+											draft.date = value;
+										})
+								}
+							/>
+							<Textarea
+								id={`awards.${entry.id}.description`}
+								label={t('wizard.fields.description')}
+								showCounter
+								maxlength={LIMITS.description}
+								bind:value={
+									() => entry.description ?? '',
+									(value) =>
+										editItem('awards', entry.id, 'description', (draft) => {
+											draft.description = value;
+										})
+								}
+							/>
+						</div>
+					{/snippet}
+				</ListEditor>
+			{/if}
 		</div>
 	{/if}
 </div>

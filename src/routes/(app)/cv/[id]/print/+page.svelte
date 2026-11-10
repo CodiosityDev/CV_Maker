@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { exportFileName } from '#lib/core/export/index.ts';
 	import { toRenderModel, type RenderModel } from '#lib/core/render/index.ts';
 	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
@@ -10,6 +11,9 @@
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+	const backHref = $derived(
+		page.url.searchParams.get('from') === 'editor' && data.cv ? `/cv/${data.cv.id}/edit` : '/cv'
+	);
 	let Template = $state<TemplateComponent>();
 	let model = $state.raw<RenderModel>();
 	let loading = $state(true);
@@ -161,7 +165,7 @@
 		</div>
 	{:else if data.cv}
 		<div class="print-toolbar" data-testid="print-toolbar">
-			<Button href="/cv" variant="ghost">{t('printPage.back')}</Button>
+			<Button href={backHref} variant="ghost">{t('printPage.back')}</Button>
 			<Button onclick={printCv} disabled={loading || !Template || !model}>
 				{t('printPage.savePdf')}
 			</Button>

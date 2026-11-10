@@ -136,10 +136,10 @@ test('ATS happy path reaches review and done with saved content and heading focu
 	await page.reload();
 	await expect(heading(page)).toHaveText('CV-mu tersimpan');
 	await expect(page.getByTestId('cv-preview')).toContainText('Alya Putri');
-	await page.getByRole('button', { name: 'Ubah lagi', exact: true }).click();
-	await expect(heading(page)).toHaveText('Tinjau CV-mu');
-	await expect(heading(page)).toBeFocused();
-	await fitsViewport(page, 'done and review again');
+	await page.getByText('Ubah lagi', { exact: true }).click();
+	await expect(page).toHaveURL(/\/cv\/[a-f\d-]+\/edit$/);
+	await expect(page.getByTestId('full-editor')).toBeVisible();
+	await fitsViewport(page, 'done and full editor');
 	expect(errors, 'Wizard must have no runtime or console errors').toEqual([]);
 });
 

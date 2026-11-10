@@ -16,7 +16,11 @@
 	import Button from '#lib/ui/Button.svelte';
 	import { toast } from '#lib/ui/toast.svelte.ts';
 
-	let { cv, beforeLeave }: { cv: CVDocument; beforeLeave?: () => Promise<boolean> } = $props();
+	let {
+		cv,
+		beforeLeave,
+		returnToEditor = false
+	}: { cv: CVDocument; beforeLeave?: () => Promise<boolean>; returnToEditor?: boolean } = $props();
 	const uid = $props.id();
 	let busy = $state<'docx' | 'txt' | 'copy' | 'leave'>();
 	let manualText = $state<string>();
@@ -51,7 +55,11 @@
 		const id = cv.id;
 		try {
 			if ((await beforeLeave()) && active && id === cv.id) {
-				await goto(resolve('/(app)/cv/[id]/print', { id }));
+				await goto(
+					returnToEditor
+						? resolve('/(app)/cv/[id]/print?from=editor', { id })
+						: resolve('/(app)/cv/[id]/print', { id })
+				);
 			}
 		} catch {
 			if (active) toast.error(t('exportPanel.navigationError'));
@@ -126,7 +134,13 @@
 	<h2 id="{uid}-title">{t('exportPanel.title')}</h2>
 	{#if cv.kind === 'creative'}<p>{t('exportPanel.simpleLayout')}</p>{/if}
 	<div class="pdf-option">
-		<a class="pdf-link" href={resolve('/(app)/cv/[id]/print', { id: cv.id })} onclick={leave}>
+		<a
+			class="pdf-link"
+			href={returnToEditor
+				? resolve('/(app)/cv/[id]/print?from=editor', { id: cv.id })
+				: resolve('/(app)/cv/[id]/print', { id: cv.id })}
+			onclick={leave}
+		>
 			{t('exportPanel.pdf')}
 			<svg
 				viewBox="0 0 24 24"

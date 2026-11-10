@@ -5,6 +5,42 @@
 import type { AppMessages } from '../translate';
 
 export const appEn: AppMessages = {
+	editor: {
+		title: 'Edit CV',
+		description: 'Edit your CV content and sections. Changes save automatically.',
+		download: 'Download',
+		view: 'Editor view',
+		edit: 'Edit',
+		preview: 'Preview',
+		appearance: 'Appearance',
+		sections: {
+			count: '{count} items',
+			hidden: 'Hidden',
+			up: 'Move up: {title}',
+			down: 'Move down: {title}',
+			drag: 'Drag to move: {title}',
+			moved: '{title} is now at position {position} of {total}',
+			more: 'Section actions: {title}',
+			rename: 'Rename section',
+			renameTitle: 'Rename section',
+			titleLabel: 'Section title',
+			defaultTitle: 'Default title: {title}. Leave blank to use it.',
+			showOnCv: 'Show on CV',
+			delete: 'Delete section',
+			deleteTitle: 'Delete this section?',
+			deleteDescription: 'Delete “{title}” and its {count} items? You can undo this.',
+			removed: 'Section deleted.',
+			add: 'Add section',
+			addTitle: 'Add custom section',
+			addPlaceholder: 'Training, Publications, Volunteering',
+			limit: 'You can have up to {count} custom sections. Remove one to add another.',
+			customEmpty: 'No items yet. Add training or activities to include.',
+			itemTitle: 'Title',
+			itemSubtitle: 'Subtitle (optional)',
+			itemBullets: 'Activity points',
+			newItem: 'New item'
+		}
+	},
 	atsPanel: {
 		title: 'Check ATS',
 		summary: '{error} must fix · {warn} recommended · {tip} tips',
