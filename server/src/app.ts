@@ -35,7 +35,7 @@ import {
 	wibDay
 } from './identity';
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
-import { buildMessages, parseAnswer } from './tasks';
+import { buildMessages, maxTokensFor, parseAnswer } from './tasks';
 import { parseAiRequest } from '../../src/lib/core/ai/schema';
 import type { AiErrorCode, AiQuota } from '../../src/lib/core/ai/types';
 
@@ -188,7 +188,9 @@ export function createApp(deps: AppDeps) {
 
 		const started = now();
 		try {
-			const answer = await provider.complete(buildMessages(request));
+			const answer = await provider.complete(buildMessages(request), {
+				maxTokens: maxTokensFor(request)
+			});
 			const result = parseAnswer(request, answer.text);
 			log({
 				event: 'ai.run',

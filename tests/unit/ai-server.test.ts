@@ -14,7 +14,7 @@ import {
 } from '../../server/src/identity';
 import { consume, memoryQuotaStore } from '../../server/src/quota';
 import { cleanText, guardNumbers, parseAnswer } from '../../server/src/tasks';
-import type { AiProfile, AiRequest } from '../../src/lib/core/ai/types';
+import type { AiProfile, AiRequest, AiTask } from '../../src/lib/core/ai/types';
 
 const SECRET = '0123456789abcdef0123456789abcdef-test';
 const ORIGIN = 'https://cvmaker.codiosity.com';
@@ -102,7 +102,7 @@ describe('answer checking', () => {
 		expect(guardNumbers('Up 40%', { ...profile, locale: 'en' })).toBe('Up [add number]');
 	});
 
-	const request = (task: AiRequest['task']): AiRequest => ({ task, profile });
+	const request = (task: AiTask): AiRequest => ({ task, profile });
 
 	it('accepts JSON wrapped in fences and returns at most 3 unique headlines', () => {
 		const text =

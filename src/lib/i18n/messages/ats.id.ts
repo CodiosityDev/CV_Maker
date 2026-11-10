@@ -15,6 +15,54 @@ export const atsId = {
 			ok: 'Cukup baik',
 			needsWork: 'Perlu diperbaiki'
 		},
+		scan: {
+			checks: {
+				imageOnly:
+					'Teks di file ini tidak bisa dibaca: isinya berupa gambar atau hasil scan. ATS akan melihat CV kosong. Buat ulang CV sebagai dokumen teks.',
+				missingEmail: 'Email tidak ditemukan. Perekrut perlu cara menghubungimu.',
+				missingPhone: 'Nomor HP tidak ditemukan.',
+				missingEducation:
+					'Bagian Pendidikan tidak ditemukan. Beri judul yang jelas, misalnya "Pendidikan".',
+				garbledText:
+					'Sebagian teks terbaca sebagai simbol aneh atau huruf terpisah (font ikon atau spasi antarhuruf). ATS bisa salah membaca isinya.',
+				multiColumn:
+					'CV memakai dua kolom. Banyak ATS membaca baris demi baris sehingga isi kedua kolom tercampur. Pakai satu kolom.',
+				tables: 'CV memakai tabel. Sebagian ATS melewatkan atau mengacak isi tabel.',
+				textBoxes: 'CV memakai kotak teks (text box). Isinya sering dilewati ATS.',
+				contactInHeaderFooter:
+					'Email/nomor HP hanya ada di header atau footer halaman. Sebagian ATS tidak membacanya; pindahkan ke badan CV.',
+				unclearHeadings:
+					'Judul bagian tidak dikenali. Pakai judul standar seperti Pendidikan, Pengalaman, Keahlian.',
+				noExperience:
+					'Tidak ada bagian Pengalaman, Organisasi, atau Proyek. Isi salah satunya agar CV tidak terlihat kosong.',
+				noSkills: 'Bagian Keahlian tidak ditemukan. ATS sering mencari kata kunci keahlian.',
+				missingSummary: 'Ringkasan profil tidak ditemukan. Tambahkan 2–4 kalimat di bagian atas.',
+				missingDates:
+					'Tidak ada tahun di pendidikan atau pengalaman. Tulis periode, misalnya "2021 – 2025".',
+				noBullets:
+					'Pengalaman ditulis sebagai paragraf. Pecah jadi poin-poin singkat yang diawali kata kerja.',
+				unprofessionalEmail: 'Email terlihat kurang profesional. Pakai email yang berisi namamu.',
+				tooLong: 'CV {pages} halaman. Untuk fresh graduate, usahakan 1–2 halaman.',
+				tooShort: 'CV hanya sekitar {words} kata. Tambahkan pengalaman, proyek, atau keahlian.',
+				graphics:
+					'Ada {count} gambar/grafik (foto, ikon, atau grafik keahlian). ATS tidak membaca gambar; pastikan infonya juga ada sebagai teks.',
+				missingLinkedIn: 'Tambahkan profil LinkedIn agar perekrut bisa mengenalmu lebih jauh.',
+				bulletNoVerb: '{count} poin belum diawali kata kerja (misalnya Mengelola, Membuat).',
+				fewNumbers:
+					'Sedikit poin yang memakai angka. Tambahkan hasil terukur bila bisa (jumlah, persen, waktu).',
+				bulletTooLong: '{count} poin terlalu panjang. Pecah jadi poin yang lebih singkat.',
+				firstPerson: '{count} poin memakai kata "saya/aku". Langsung mulai dengan kata kerja.'
+			},
+			errors: {
+				unsupported:
+					'Format file tidak didukung. Pakai PDF, DOCX, atau TXT (file .doc lama: simpan ulang sebagai DOCX/PDF).',
+				tooLarge: 'File terlalu besar (maksimal 5 MB).',
+				encrypted: 'File dilindungi password. Simpan ulang tanpa password lalu coba lagi.',
+				damaged: 'File rusak atau tidak bisa dibuka.',
+				empty: 'File tidak berisi teks.',
+				failed: 'File tidak bisa dibaca. Coba lagi atau pakai format lain.'
+			}
+		},
 		checks: {
 			missingName: 'Nama lengkap belum diisi.',
 			missingEmail: 'Email belum diisi. Perekrut perlu cara menghubungimu.',
