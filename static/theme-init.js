@@ -19,7 +19,7 @@
 		document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);
 		document
 			.querySelector('meta[name="theme-color"]')
-			?.setAttribute('content', theme === 'dark' ? '#17152b' : '#f3f2ff');
+			?.setAttribute('content', theme === 'dark' ? '#1c1b22' : '#f3f2ff');
 	} catch {
 		// The HTML and CSS also default to dark if initialization cannot run.
 	}

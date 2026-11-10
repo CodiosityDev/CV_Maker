@@ -71,34 +71,39 @@
 	--shadow-dialog: 0 2px 6px rgb(31 29 61 / 0.04), 0 16px 40px rgb(31 29 61 / 0.08);
 }
 
+/* Dark theme ("soft dark", owner 2026-11-10: the first one was too purple and too contrasty).
+   Warm charcoal with a hint of the brand violet, off-white text (~13:1, not 16:1), muted accents.
+   Every pair stays WCAG AA; see the contrast table in HANDOFF. */
 :root:not([data-theme='light']) {
 	color-scheme: dark;
-	--color-brand-hover: #aaa7ff;
-	--color-brand-50: #2d284a;
-	--color-brand-100: #3d345f;
-	--color-brand-ink: #c9c1ff;
-	--color-progress: #b4a5ff;
-	--color-mint: #304d4b;
-	--color-mint-50: #233a39;
-	--color-cream: #46382f;
-	--color-cream-50: #30282f;
-	--color-coral-50: #442a36;
-	--color-coral-ink: #ffb1b1;
-	--color-surface: #211e38;
-	--color-surface-muted: #2b2744;
-	--color-canvas: #17152b;
-	--color-text: #f6f2ff;
-	--color-logo-ink: #fff1e1;
-	--color-text-muted: #c5bdd9;
-	--color-border: #49405f;
-	--color-control-border: #a094c2;
-	--color-focus: #c9c1ff;
-	--color-success: #abd5ce;
-	--color-warning: #ffd0a4;
-	--color-backdrop: rgb(12 10 24 / 68%);
-	--shadow-card: 0 1px 2px rgb(8 6 20 / 12%), 0 8px 24px rgb(8 6 20 / 16%);
-	--shadow-dialog: 0 2px 6px rgb(8 6 20 / 16%), 0 16px 40px rgb(8 6 20 / 24%);
-	--shadow-paper: 0 0 0 1px rgb(255 255 255 / 12%), 0 8px 24px rgb(8 6 20 / 22%);
+	--color-brand-hover: #a9a6f5;
+	--color-brand-50: #2d2b3c;
+	--color-brand-100: #3a3752;
+	--color-brand-ink: #c2bcf2;
+	--color-progress: #a59bea;
+	--color-mint: #2f4341;
+	--color-mint-50: #263130;
+	--color-cream: #3a332d;
+	--color-cream-50: #2d2925;
+	--color-coral-50: #3b2b30;
+	--color-coral-ink: #f0aaaa;
+	--color-surface: #24232c;
+	--color-surface-muted: #2c2b35;
+	--color-canvas: #1c1b22;
+	--color-text: #e6e3ee;
+	--color-logo-ink: #ece6dc;
+	--color-text-muted: #aaa6b8;
+	--color-border: #3b3946;
+	--color-control-border: #8c87a3;
+	--color-focus: #bdb6f2;
+	--color-success: #a4cfc7;
+	--color-warning: #f0c79f;
+	--color-backdrop: rgb(10 10 14 / 62%);
+	--shadow-card: 0 1px 2px rgb(0 0 0 / 18%), 0 8px 24px rgb(0 0 0 / 22%);
+	--shadow-dialog: 0 2px 6px rgb(0 0 0 / 22%), 0 16px 40px rgb(0 0 0 / 32%);
+	--shadow-paper: 0 0 0 1px rgb(255 255 255 / 8%), 0 8px 24px rgb(0 0 0 / 28%);
+	/* The white CV paper is dimmed ON SCREEN only (less glare); print and PDF stay pure white. */
+	--paper-dim: brightness(0.9);
 }
 
 :root[data-theme='light'] {

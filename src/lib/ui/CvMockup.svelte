@@ -42,6 +42,7 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-paper);
 		box-shadow: var(--shadow-paper);
+		filter: var(--paper-dim, none);
 	}
 	.paper-label {
 		padding: 12px 22px;

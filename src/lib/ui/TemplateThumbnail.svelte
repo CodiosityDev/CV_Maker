@@ -94,6 +94,7 @@
 		width: 210mm;
 		min-height: 297mm;
 		transform-origin: top left;
+		filter: var(--paper-dim, none);
 	}
 	span {
 		display: block;
