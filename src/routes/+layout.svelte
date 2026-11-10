@@ -15,7 +15,10 @@
 	onMount(() => {
 		void initLocale();
 		void import('#lib/core/stats/index.ts')
-			.then(({ visitorCount }) => visitorCount())
+			.then(({ visitorCount, startPresence }) => {
+				startPresence();
+				return visitorCount();
+			})
 			.catch(() => {
 				// An unavailable counter must not interrupt the rest of the application.
 			});

@@ -186,3 +186,21 @@ test('privacy explains the counter ID and hashes in both interface languages', a
 	await expect(english).toContainText('only in tab memory');
 	await expect(page.getByTestId('visitor-count')).toHaveCount(0);
 });
+
+test('online now is shown next to the visitor count in both languages, without moving content', async ({
+	page
+}) => {
+	await page.route('**/api/hello', (route) =>
+		route.fulfill({ status: 200, json: { visitors: 1234, online: 3 } })
+	);
+	await page.goto('/');
+	const counter = page.getByTestId('visitor-count');
+	await expect(counter).toHaveAttribute('aria-label', '3 sedang online, 1.234 pengunjung');
+	await expect(page.getByTestId('online-count')).toHaveText(/3\s*sedang online/);
+	await expect(page.getByTestId('online-count')).toHaveAttribute('aria-hidden', 'true');
+	const slot = await page.getByTestId('visitor-count-slot').boundingBox();
+	const pill = await counter.boundingBox();
+	expect(Math.round(pill?.height ?? 0)).toBeLessThanOrEqual(Math.round(slot?.height ?? 0));
+	await page.getByRole('button', { name: 'English', exact: true }).click();
+	await expect(counter).toHaveAttribute('aria-label', '3 online now, 1,234 visitors');
+});
