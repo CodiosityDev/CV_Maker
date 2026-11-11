@@ -1,15 +1,25 @@
 <script lang="ts">
 	import type { KeywordReport } from '#lib/core/ats/types.ts';
+	import type { ConciseReport } from '#lib/core/ats/concise.ts';
 	import type { ScanReport, ScanSection } from '#lib/core/scan/types.ts';
 	import { t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import SharedKeywordResults from './SharedKeywordResults.svelte';
+	import ConcisePanel from './ConcisePanel.svelte';
 
 	let {
 		report,
 		keywords,
-		jobPost = ''
-	}: { report: ScanReport; keywords?: KeywordReport; jobPost?: string } = $props();
+		jobPost = '',
+		concise,
+		resetKey = ''
+	}: {
+		report: ScanReport;
+		keywords?: KeywordReport;
+		jobPost?: string;
+		concise?: ConciseReport;
+		resetKey?: string;
+	} = $props();
 	const uid = $props.id();
 	const levels = ['error', 'warn', 'tip'] as const;
 	const imageCheck = $derived(report.checks.find((check) => check.id === 'imageOnly'));
@@ -123,6 +133,9 @@
 	</div>
 	{#if jobPost.trim() && keywords}
 		<SharedKeywordResults {keywords} />
+	{/if}
+	{#if concise?.score !== undefined}
+		<ConcisePanel report={concise} locale={report.locale} {resetKey} />
 	{/if}
 	{#if !imageCheck}
 		<div class="create-cv">

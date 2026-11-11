@@ -5,6 +5,56 @@
 import type { AppMessages } from '../translate';
 
 export const appEn: AppMessages = {
+	conciseWorkspace: {
+		pasteTab: 'Paste CV text',
+		pasteLabel: 'Paste CV content',
+		pasteHint:
+			'Paste your CV text, then check the results. The text is processed on your device and is not saved.',
+		checkPaste: 'Check',
+		pastedSource: 'Pasted CV text',
+		pasteAgain: 'Edit CV text',
+		missingSummary: 'Your CV is missing {missing} of {total} job keywords: {terms}.',
+		missingSummaryAll: 'Your CV includes all {total} job keywords.',
+		missingMore: 'and {count} more'
+	},
+	concisePanel: {
+		title: 'Too wordy?',
+		loadError: 'The conciseness check could not be displayed. Try again.',
+		localChecked: 'Initial check on your device. A higher score means more concise writing.',
+		aiChecked: 'Checked on your device with AI assistance. Review suggestions before using them.',
+		empty: 'There is no summary or bullet point to rate yet.',
+		summary: '{wordy} of {total} points could be shorter.',
+		okay: 'View {count} points that are already concise',
+		point: 'Point {number}',
+		bullet: 'Activity point',
+		pointScore: '{score}/100 · {words} words',
+		fillerReason: 'Some words add no information.',
+		fix: 'Fix',
+		shorter: 'Shorter version',
+		apply: 'Use shorter version',
+		copy: 'Copy shorter version',
+		copied: 'Shorter version copied.',
+		copyFailed: 'Automatic copying failed. Copy the text manually from this field.',
+		copyText: 'Text to copy',
+		applied: 'Shorter version applied. You can undo this change.',
+		stale: 'This point has changed. Check it again before using the suggestion.',
+		ai: {
+			request: 'Check with AI (free)',
+			busy: 'Checking conciseness…',
+			free: 'This check is free and does not use your 3 daily AI uses.',
+			quota: '{remaining} of {limit} free checks left today.',
+			limit: 'The free check limit has been reached. Try again later.',
+			noText: 'Add a summary or point of at least 6 words to check it with AI.',
+			consentTitle: 'Check conciseness with AI?',
+			consentIntro:
+				'The points shown below and your CV language are sent through the CV Maker server to the AI provider. This content is not stored on the server; only anonymous quota counters are kept for 7 days.',
+			contacts:
+				'Email, phone number and link patterns are removed. Names of people or companies within sentences may still be sent. Review the text below before agreeing.',
+			locale: 'CV language sent: {locale}.',
+			sentText: 'Points to send',
+			send: 'Agree & check'
+		}
+	},
 	convertAts: {
 		title: 'Convert to an ATS CV',
 		description:

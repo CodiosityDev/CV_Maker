@@ -1,6 +1,10 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { MAX_JOB_POST_CHARS } from '#lib/core/ats/keywords.ts';
-	import type { AtsCheck, AtsReport, CheckTarget, KeywordReport } from '#lib/core/ats/types.ts';
+	import type { AtsCheck, AtsReport, KeywordReport } from '#lib/core/ats/types.ts';
+	import type { ConcisePoint, ConciseReport } from '#lib/core/ats/concise.ts';
+	import type { Locale } from '#lib/core/schema/types.ts';
+	import type { AtsEditTarget } from '#lib/ui/ats-check/navigation.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
@@ -9,12 +13,16 @@
 	interface Props {
 		report?: AtsReport;
 		keywords?: KeywordReport;
+		concise?: ConciseReport;
+		locale?: Locale;
+		conciseResetKey?: string;
+		onapply?: (point: ConcisePoint, text: string) => boolean;
 		loading?: boolean;
 		failed?: boolean;
 		jobPost?: string;
 		showJobField?: boolean;
 		fixLabel?: string;
-		onjump: (target: CheckTarget) => void | Promise<void>;
+		onjump: (target: AtsEditTarget) => void | Promise<void>;
 		onadd?: (term: string) => void;
 		onretry: () => void;
 		canAdd?: (term: string) => boolean;
@@ -23,6 +31,10 @@
 	let {
 		report,
 		keywords,
+		concise,
+		locale = 'id',
+		conciseResetKey,
+		onapply,
 		loading = false,
 		failed = false,
 		jobPost = $bindable(''),
@@ -44,6 +56,27 @@
 			.filter((group) => group.checks.length > 0)
 	);
 	const tips = $derived(report?.checks.filter((check) => check.level === 'tip') ?? []);
+	let ConcisePanel = $state<typeof import('#lib/ui/ats-check/ConcisePanel.svelte').default>();
+	let conciseLoad: Promise<void> | undefined;
+	let conciseLoadFailed = $state(false);
+	let conciseRetry = $state(0);
+	let mounted = true;
+	onDestroy(() => {
+		mounted = false;
+	});
+	$effect(() => {
+		void conciseRetry;
+		if (concise?.score === undefined || ConcisePanel) return;
+		conciseLoadFailed = false;
+		conciseLoad ??= import('#lib/ui/ats-check/ConcisePanel.svelte')
+			.then(({ default: loaded }) => {
+				if (mounted) ConcisePanel = loaded;
+			})
+			.catch(() => {
+				conciseLoad = undefined;
+				if (mounted) conciseLoadFailed = true;
+			});
+	});
 </script>
 
 {#snippet checkList(checks: AtsCheck[])}
@@ -125,6 +158,21 @@
 					</details>
 				{/if}
 			</div>
+		{/if}
+	{/if}
+
+	{#if concise?.score !== undefined}
+		{#if ConcisePanel}
+			<ConcisePanel report={concise} {locale} resetKey={conciseResetKey} onfix={onjump} {onapply} />
+		{:else if conciseLoadFailed}
+			<div class="analysis-error" role="alert">
+				<p>{t('concisePanel.loadError')}</p>
+				<Button variant="secondary" size="sm" onclick={() => conciseRetry++}
+					>{t('atsPanel.retry')}</Button
+				>
+			</div>
+		{:else}
+			<p class="loading" role="status">{t('common.loading')}</p>
 		{/if}
 	{/if}
 

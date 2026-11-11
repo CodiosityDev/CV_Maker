@@ -5,13 +5,16 @@ export type AiModule = typeof import('#lib/core/ai/index.ts');
 export const aiSession = $state({
 	consented: false,
 	epoch: 0,
-	quota: undefined as AiQuota | undefined
+	quota: undefined as AiQuota | undefined,
+	lite: undefined as AiQuota['lite'],
+	liteBlocked: false
 });
 let mode = incognito.active;
 let expired: string | undefined;
 let revision = 0;
 let moduleRequest: Promise<AiModule> | undefined;
 let quotaRequest: Promise<void> | undefined;
+let liteBlockedReset: string | undefined;
 
 export function loadAiModule(): Promise<AiModule> {
 	return (moduleRequest ??= import('#lib/core/ai/index.ts').catch((error: unknown) => {
@@ -22,6 +25,9 @@ export function loadAiModule(): Promise<AiModule> {
 export function resetAiSession(): void {
 	aiSession.consented = false;
 	aiSession.quota = undefined;
+	aiSession.lite = undefined;
+	aiSession.liteBlocked = false;
+	liteBlockedReset = undefined;
 	aiSession.epoch += 1;
 	revision += 1;
 	quotaRequest = undefined;
@@ -40,7 +46,26 @@ export function sameAiSession(epoch: number, active: boolean): boolean {
 }
 export function updateAiQuota(quota: AiQuota): void {
 	revision += 1;
-	aiSession.quota = quota;
+	resetLiteBlockForNewDay(quota.resetsAt);
+	aiSession.quota = quota.lite || !aiSession.lite ? quota : { ...quota, lite: aiSession.lite };
+	if (quota.lite) aiSession.lite = quota.lite;
+}
+/** The limit can apply to the IP. A same-day device quota cannot lift it. */
+export function blockAiLite(): void {
+	if (!aiSession.liteBlocked) liteBlockedReset = aiSession.quota?.resetsAt;
+	aiSession.liteBlocked = true;
+}
+function resetLiteBlockForNewDay(resetsAt: string): void {
+	if (liteBlockedReset && Date.parse(resetsAt) > Date.parse(liteBlockedReset)) {
+		aiSession.liteBlocked = false;
+		liteBlockedReset = undefined;
+	}
+}
+/** A free check changes only its own counter; never infer or spend a daily AI use. */
+export function updateAiLiteQuota(lite: NonNullable<AiQuota['lite']>): void {
+	revision += 1;
+	aiSession.lite = lite;
+	if (aiSession.quota) aiSession.quota = { ...aiSession.quota, lite };
 }
 export function refreshAiQuota(): Promise<void> {
 	syncAiSession();
@@ -52,7 +77,11 @@ export function refreshAiQuota(): Promise<void> {
 		.then((module) => module.aiClient.quota())
 		.then(
 			(quota) => {
-				if (sameAiSession(epoch, active) && revision === version) aiSession.quota = quota;
+				if (sameAiSession(epoch, active) && revision === version) {
+					resetLiteBlockForNewDay(quota.resetsAt);
+					aiSession.quota = quota;
+					aiSession.lite = quota.lite;
+				}
 			},
 			() => {
 				if (sameAiSession(epoch, active) && revision === version) aiSession.quota = undefined;
