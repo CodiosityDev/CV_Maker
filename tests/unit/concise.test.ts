@@ -20,7 +20,7 @@ import { sampleCvAts } from '../../src/lib/core/fixtures/index';
 import { createApp } from '../../server/src/app';
 import type { ChatMessage, ChatProvider } from '../../server/src/ai';
 import { memoryQuotaStore } from '../../server/src/quota';
-import { buildConciseMessages, parseConcise } from '../../server/src/tasks';
+import { buildConciseMessages, parseConcise, pointLanguage } from '../../server/src/tasks';
 import type { CVDocument } from '../../src/lib/core/schema/types';
 
 const WORDY =
@@ -205,6 +205,30 @@ describe('server: parseConcise', () => {
 		expect(answer('Mengelola media sosial PT Maju selama 6 bulan')).toBeUndefined();
 		expect(answer('Mengelola media sosial Tokopedia selama 3 bulan')).toBeUndefined();
 		expect(answer(input.points[2]!.text)).toBeUndefined();
+	});
+
+	it('never keeps a translated rewrite (mixed-language CVs)', () => {
+		const english: AiConciseInput = {
+			locale: 'id',
+			points: [
+				{
+					kind: 'bullet',
+					text: 'Was responsible for handling various customer complaints in order to make sure that customers were satisfied with the service'
+				}
+			]
+		};
+		const answer = (shorter: string) =>
+			parseConcise(english, JSON.stringify({ points: [{ i: 0, score: 50, issues: [], shorter }] }))
+				?.points[0]?.shorter;
+		expect(
+			answer('Menangani keluhan pelanggan untuk memastikan kepuasan terhadap layanan')
+		).toBeUndefined();
+		expect(answer('Handled customer complaints to keep customers satisfied with the service')).toBe(
+			'Handled customer complaints to keep customers satisfied with the service'
+		);
+		expect(pointLanguage('Figma, Looker Studio, SQL')).toBeUndefined();
+		expect(pointLanguage('Merancang 40 layar aplikasi di Figma')).toBe('id');
+		expect(JSON.stringify(buildConciseMessages(english))).toContain('never translate');
 	});
 
 	it('falls back to list order without "i", ignores duplicates, and gives up on garbage', () => {
