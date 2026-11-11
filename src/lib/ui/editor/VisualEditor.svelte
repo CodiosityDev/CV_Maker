@@ -42,6 +42,10 @@
 	let paper = $state<HTMLDivElement>();
 	let scale = $state(0);
 	let height = $state(0);
+	/** Scale that fits the paper to the screen; below ZOOM_SCALE the text is too small to tap. */
+	let fit = $state(1);
+	let zoomed = $state(false);
+	const ZOOM_SCALE = 0.75;
 	let editing = $state(false);
 	let textEpoch = $state(0);
 	let textWasOwned = false;
@@ -202,7 +206,8 @@
 		if (!viewport || !paper || !safe()) return;
 		const width = paper.offsetWidth;
 		if (!width) return;
-		const nextScale = Math.min(1, viewport.clientWidth / width);
+		fit = Math.min(1, viewport.clientWidth / width);
+		const nextScale = zoomed && fit < ZOOM_SCALE ? ZOOM_SCALE : fit;
 		const rescaled = scale !== nextScale;
 		scale = nextScale;
 		height = paper.offsetHeight * nextScale;
@@ -229,6 +234,11 @@
 				};
 			}
 		);
+	}
+	function toggleZoom() {
+		finishActive();
+		zoomed = !zoomed;
+		scheduleMeasure();
 	}
 	function scheduleMeasure() {
 		if (measureFrame !== undefined) cancelAnimationFrame(measureFrame);
@@ -488,7 +498,17 @@
 	<div class="design-controls">
 		<VisualDesignPanel {store} onbeforechange={finishActive} />
 		<details class="section-navigator">
-			<summary>{t('visualEditor.sections')}</summary>
+			<summary
+				>{t('visualEditor.sections')}<svg aria-hidden="true" viewBox="0 0 24 24" fill="none"
+					><path
+						d="m6 9 6 6 6-6"
+						stroke="currentColor"
+						stroke-width="1.75"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/></svg
+				></summary
+			>
 			<div class="section-rows">
 				{#each rendered.sections as section (section.key)}
 					<div class="section-row" data-section-key={section.key}>
@@ -517,8 +537,16 @@
 	</div>
 	<div class="canvas-area">
 		<p id={`${uid}-help`} class="help">{t('visualEditor.help')} {t('visualEditor.editHint')}</p>
+		{#if fit < ZOOM_SCALE || zoomed}<button
+				type="button"
+				class="zoom"
+				aria-pressed={zoomed}
+				data-testid="visual-zoom"
+				onclick={toggleZoom}>{t(zoomed ? 'visualEditor.zoomFit' : 'visualEditor.zoomIn')}</button
+			>{/if}
 		<div
 			class="canvas"
+			class:zoomed
 			role="region"
 			bind:this={viewport}
 			style:height={height ? `${height}px` : undefined}
@@ -541,7 +569,8 @@
 						>{/if}
 				</div>
 			{/if}
-			{#each boxes as box (box.key)}
+			<!-- Zoomed (small screens): sections move through the "Bagian CV" menu instead of handles. -->
+			{#each zoomed ? [] : boxes as box (box.key)}
 				<button
 					type="button"
 					class="section-handle"
@@ -665,6 +694,32 @@
 		color-scheme: light;
 		box-shadow: var(--shadow-paper);
 	}
+	.canvas.zoomed {
+		overflow-x: auto;
+		overflow-y: hidden;
+		overscroll-behavior-x: contain;
+	}
+	.zoom {
+		display: block;
+		min-height: 44px;
+		margin: 0 auto 0.75rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		color: var(--color-text);
+		font: inherit;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.zoom[aria-pressed='true'] {
+		background: var(--color-brand-100);
+	}
+	.zoom:focus-visible {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
+	}
 	.paper {
 		position: absolute;
 		top: 0;
@@ -674,6 +729,8 @@
 		transform-origin: top left;
 		background: var(--color-paper);
 		color: var(--color-paper-ink);
+		/* Same as the other previews: slightly dimmer white paper in the dark theme. */
+		filter: var(--paper-dim, none);
 		--color-focus: var(--color-paper-focus);
 	}
 	.paper :global([data-edit]),
@@ -706,10 +763,27 @@
 		background: var(--color-surface);
 	}
 	.section-navigator summary {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
 		min-height: 48px;
-		padding: 0.75rem;
+		padding: 0.75rem 1rem;
 		cursor: pointer;
 		font-weight: 600;
+		list-style: none;
+	}
+	.section-navigator summary::-webkit-details-marker {
+		display: none;
+	}
+	.section-navigator summary svg {
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+		transition: transform 160ms ease-out;
+	}
+	.section-navigator[open] summary svg {
+		transform: rotate(180deg);
 	}
 	.section-rows {
 		padding: 0 0.75rem 0.75rem;

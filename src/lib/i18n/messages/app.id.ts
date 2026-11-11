@@ -9,6 +9,8 @@ export const appId = {
 		loadError: 'Editor visual belum bisa dibuka. Coba lagi.',
 		toolLoadError: 'Fitur ini belum bisa dimuat. Coba lagi.',
 		retry: 'Coba lagi',
+		zoomIn: 'Perbesar',
+		zoomFit: 'Pas layar',
 		canvas: 'Kanvas CV',
 		help: 'Klik teks untuk mengubahnya. Gunakan menu bagian untuk memindahkannya.',
 		design: 'Desain',

@@ -11,6 +11,8 @@ export const appEn: AppMessages = {
 		loadError: 'The visual editor could not be opened. Try again.',
 		toolLoadError: 'This tool could not be loaded. Try again.',
 		retry: 'Try again',
+		zoomIn: 'Zoom in',
+		zoomFit: 'Fit to screen',
 		canvas: 'CV canvas',
 		help: 'Click text to edit it. Use a section menu to move it.',
 		design: 'Design',
