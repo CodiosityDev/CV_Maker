@@ -25,6 +25,7 @@ import { displayDegree, isSchoolLevel, scoreLabel } from '../education/index';
 import { displayUrl, sanitizeUrl } from '../security/url';
 import { formatDateRange, formatYearMonth, phoneHref } from './format';
 import { CV_LABELS, type CvLabels } from './labels';
+import { resolveDesign, type ResolvedDesign } from '../design/index';
 
 export { CV_LABELS, type CvLabels } from './labels';
 export { formatDateRange, formatYearMonth } from './format';
@@ -88,11 +89,32 @@ export interface RenderModel {
 	};
 	/** Visible, non-empty sections in display order. */
 	sections: RenderSection[];
+	/** Creative CVs only: the visual design, every default filled in. Split columns with `splitColumns`. */
+	design?: ResolvedDesign;
+	/** Set for the visual editor's page: templates add `data-edit={editKey(...)}` to editable texts. */
+	editing?: true;
 }
 
 export interface RenderOptions {
 	/** Object URL from assetRepo.getPhotoUrl(); ignored for ATS CVs. */
 	photoUrl?: string;
+	/** Visual editor page only (never print/export): keeps blank bullets and marks `model.editing`. */
+	editing?: boolean;
+}
+
+/**
+ * Two-column templates: sections for the side and main columns (design placement, CV order).
+ * Without a design (ATS) everything is in `main`.
+ */
+export function splitColumns(model: Pick<RenderModel, 'sections' | 'design'>): {
+	side: RenderSection[];
+	main: RenderSection[];
+} {
+	const side = new Set(model.design?.side ?? []);
+	return {
+		side: model.sections.filter((section) => side.has(section.key)),
+		main: model.sections.filter((section) => !side.has(section.key))
+	};
 }
 
 const trim = (value: string | undefined): string => (value ?? '').trim();
@@ -110,10 +132,13 @@ function keep(entry: RenderEntry): boolean {
 	return Boolean(entry.title || entry.subtitle);
 }
 
+type BulletList = (items: readonly string[]) => string[];
+
 function buildEntries(
 	cv: CVDocument,
 	key: Exclude<BuiltinSectionKey, 'summary' | 'skills'>,
-	labels: CvLabels
+	labels: CvLabels,
+	list: BulletList
 ): RenderEntry[] {
 	const locale = cv.locale;
 	switch (key) {
@@ -139,7 +164,7 @@ function buildEntries(
 							undefined,
 						meta,
 						dateText: formatDateRange(e.dates, locale),
-						bullets: cleanList(e.highlights)
+						bullets: list(e.highlights)
 					};
 				})
 				.filter(keep);
@@ -152,7 +177,7 @@ function buildEntries(
 					meta: e.type === 'fulltime' ? [] : [labels.experienceType[e.type]],
 					dateText: formatDateRange(e.dates, locale),
 					location: opt(e.location),
-					bullets: cleanList(e.bullets)
+					bullets: list(e.bullets)
 				}))
 				.filter(keep);
 		case 'organizations':
@@ -163,7 +188,7 @@ function buildEntries(
 					subtitle: opt(o.name),
 					meta: [],
 					dateText: formatDateRange(o.dates, locale),
-					bullets: cleanList(o.bullets)
+					bullets: list(o.bullets)
 				}))
 				.filter(keep);
 		case 'projects':
@@ -175,7 +200,7 @@ function buildEntries(
 					meta: [],
 					dateText: formatDateRange(p.dates, locale),
 					link: makeLink(p.url),
-					bullets: cleanList(p.bullets)
+					bullets: list(p.bullets)
 				}))
 				.filter(keep);
 		case 'languages':
@@ -215,7 +240,12 @@ function buildEntries(
 	}
 }
 
-function buildSection(cv: CVDocument, key: SectionKey, labels: CvLabels): RenderSection | null {
+function buildSection(
+	cv: CVDocument,
+	key: SectionKey,
+	labels: CvLabels,
+	list: BulletList
+): RenderSection | null {
 	const title = opt(cv.layout.customTitles[key]);
 
 	if (key === 'summary') {
@@ -251,7 +281,7 @@ function buildSection(cv: CVDocument, key: SectionKey, labels: CvLabels): Render
 				subtitle: opt(item.subtitle),
 				meta: [],
 				dateText: formatDateRange(item.dates, cv.locale),
-				bullets: cleanList(item.bullets)
+				bullets: list(item.bullets)
 			}))
 			.filter(keep);
 		const sectionTitle = title ?? opt(section.title);
@@ -261,7 +291,7 @@ function buildSection(cv: CVDocument, key: SectionKey, labels: CvLabels): Render
 	}
 
 	const builtin = key as Exclude<BuiltinSectionKey, 'summary' | 'skills'>;
-	const entries = buildEntries(cv, builtin, labels);
+	const entries = buildEntries(cv, builtin, labels, list);
 	return entries.length
 		? { type: 'entries', key: builtin, title: title ?? labels.sections[builtin], entries }
 		: null;
@@ -274,11 +304,14 @@ export function toRenderModel(cv: CVDocument, options: RenderOptions = {}): Rend
 	const email = opt(p.email);
 	const phone = opt(p.phone);
 	const hidden = new Set(cv.layout.hidden);
+	const editing = options.editing === true;
+	// Editing keeps blank bullets (and their exact text) so `data-edit` bullet indexes match the data.
+	const list: BulletList = editing ? (items) => [...items] : cleanList;
 
 	const sections: RenderSection[] = [];
 	for (const key of cv.layout.order) {
 		if (hidden.has(key)) continue;
-		const section = buildSection(cv, key, labels);
+		const section = buildSection(cv, key, labels, list);
 		if (section) sections.push(section);
 	}
 
@@ -302,6 +335,8 @@ export function toRenderModel(cv: CVDocument, options: RenderOptions = {}): Rend
 				.filter((link): link is RenderLink => link !== undefined),
 			photoUrl: cv.kind === 'creative' ? options.photoUrl : undefined
 		},
-		sections
+		sections,
+		...(cv.kind === 'creative' ? { design: resolveDesign(cv) } : {}),
+		...(editing ? { editing: true as const } : {})
 	};
 }

@@ -25,3 +25,9 @@ export const LIMITS = {
 } as const;
 
 export const FONT_SCALE = { min: 0.9, max: 1.1, default: 1 } as const;
+
+/** Visual editor (creative CVs). */
+export const DESIGN_LIMITS = {
+	/** Side column width, % of the page. */
+	sideWidth: { min: 22, max: 40, default: 27 }
+} as const;

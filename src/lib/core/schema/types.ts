@@ -168,6 +168,30 @@ export interface CVTheme {
 	fontScale: number;
 }
 
+export const DESIGN_SPACINGS = ['compact', 'normal', 'airy'] as const;
+export type DesignSpacing = (typeof DESIGN_SPACINGS)[number];
+export const PHOTO_SHAPES = ['circle', 'rounded', 'square'] as const;
+export type PhotoShape = (typeof PHOTO_SHAPES)[number];
+export const PHOTO_SIZES = ['sm', 'md', 'lg'] as const;
+export type PhotoSize = (typeof PHOTO_SIZES)[number];
+export const SIDE_POSITIONS = ['left', 'right'] as const;
+export type SidePosition = (typeof SIDE_POSITIONS)[number];
+
+/**
+ * Visual layout of a CREATIVE CV, set in the visual (Canva-like) editor. ATS CVs ignore it.
+ * Every field is optional: missing = the template's default. Read it through `resolveDesign()`.
+ */
+export interface CVDesign {
+	/** Sections shown in the side column (two-column templates). The rest go in the main column. */
+	side?: SectionKey[];
+	sidePosition?: SidePosition;
+	/** Side column width in % of the page: `DESIGN_LIMITS.sideWidth`. */
+	sideWidth?: number;
+	spacing?: DesignSpacing;
+	photoShape?: PhotoShape;
+	photoSize?: PhotoSize;
+}
+
 export interface CVStatus {
 	wizardCompleted: boolean;
 	/** 0-based index of the wizard step to resume. */
@@ -193,6 +217,8 @@ export interface CVDocument {
 	theme: CVTheme;
 	status: CVStatus;
 	layout: CVLayout;
+	/** Creative CVs only; absent = template defaults. */
+	design?: CVDesign;
 	personal: PersonalInfo;
 	summary: string;
 	education: EducationItem[];

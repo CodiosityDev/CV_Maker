@@ -1,5 +1,5 @@
 export * from './types';
-export { LIMITS, FONT_SCALE } from './limits';
+export { LIMITS, FONT_SCALE, DESIGN_LIMITS } from './limits';
 export { newId, newCustomSectionKey } from './ids';
 export {
 	CURRENT_SCHEMA_VERSION,
