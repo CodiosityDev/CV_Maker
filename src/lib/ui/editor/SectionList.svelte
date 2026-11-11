@@ -232,8 +232,7 @@
 								fill="none"
 								stroke="currentColor"
 								stroke-width="1.75"
-								aria-hidden="true"
-								><path d={expanded.includes(section.key) ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} /></svg
+								aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg
 							>
 						</button>
 					</h2>
@@ -452,6 +451,13 @@
 		font-weight: 650;
 		text-align: left;
 		cursor: pointer;
+		scroll-margin-top: 6rem;
+	}
+	h2 button > svg {
+		transition: transform 160ms ease-out;
+	}
+	h2 button[aria-expanded='true'] > svg {
+		transform: rotate(180deg);
 	}
 	.section-title {
 		min-width: 0;
@@ -548,6 +554,9 @@
 	}
 	.section-content[hidden] {
 		display: none;
+	}
+	.section-content:not([hidden]) {
+		animation: ui-content-reveal 160ms ease-out;
 	}
 	.dialog-actions {
 		display: flex;
