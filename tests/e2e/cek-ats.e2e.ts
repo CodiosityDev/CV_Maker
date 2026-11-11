@@ -402,9 +402,10 @@ test('a PDF without readable text shows a dedicated explanation and create actio
 	await page.locator('#ats-file').setInputFiles(unreadablePdf());
 	await expect(page.getByTestId('scan-image-only')).toBeVisible();
 	await expect(page.getByText(/Teks di file ini tidak bisa dibaca/)).toBeVisible();
-	await expect(
-		page.getByRole('link', { name: 'Buat CV ATS di CV Maker', exact: true })
-	).toHaveAttribute('href', '/buat');
+	await expect(page.getByRole('link', { name: 'Buat CV baru', exact: true })).toHaveAttribute(
+		'href',
+		'/buat'
+	);
 	await expect(page.getByRole('button', { name: 'Perbaiki', exact: true })).toHaveCount(0);
 });
 

@@ -126,6 +126,9 @@ export const siteId = {
 		faqLink: 'Baca FAQ'
 	},
 	faq: {
+		aiInventedQuestion: 'Apakah AI bisa menambah pengalaman yang tidak saya punya?',
+		aiInventedAnswer:
+			'Tidak. Nama sekolah, perusahaan, organisasi, sertifikat, tahun, IPK, dan skill diperiksa agar ada di CV asli. Angka baru diganti dengan [isi angka]. Keahlian tambahan hanya berupa saran yang kamu pilih sendiri. Periksa kembali hasil konversi sebelum menyimpan.',
 		scanUploadQuestion: 'Apakah file CV saya di-upload?',
 		scanUploadAnswer:
 			'Tidak. File PDF, DOCX, atau TXT dibaca di perangkat dan tidak disimpan. Hanya jika kamu memilih Minta saran AI dan menyetujuinya, teks tanpa nama, kontak, tautan, dan alamat dikirim untuk diproses AI.',
@@ -168,6 +171,8 @@ export const siteId = {
 		back: 'Kembali ke beranda'
 	},
 	privacy: {
+		convertCopy:
+			'Ubah jadi CV ATS tanpa AI berjalan di perangkatmu. Jika kamu memilih Rapikan dengan AI dan setuju, teks tanpa nama, kontak, tautan, dan alamat dikirim melalui server CV Maker ke penyedia AI. Hasil konversi tersedia sementara di memori server maksimal 2 menit setelah siap untuk diambil browser, tanpa disimpan ke database. CV baru disimpan di perangkatmu setelah kamu memilih Simpan & buka editor.',
 		scanTitle: 'Cek ATS',
 		scanCopy:
 			'File CV dibaca di perangkat, tidak dikirim ke server, dan tidak disimpan. Hanya bila kamu menekan Minta saran AI dan setuju, teks CV tanpa nama, kontak, tautan, dan alamat dikirim melalui server CV Maker ke penyedia AI. Teks tidak disimpan.',

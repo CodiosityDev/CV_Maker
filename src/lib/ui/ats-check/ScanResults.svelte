@@ -51,7 +51,8 @@
 		<div class="image-only" data-testid="scan-image-only">
 			<h3>{t('atsCheck.imageOnlyTitle')}</h3>
 			<p data-check-id={imageCheck.id}>{t(imageCheck.messageKey, imageCheck.params)}</p>
-			<Button href="/buat" variant="secondary">{t('atsCheck.createAts')}</Button>
+			<p>{t('convertAts.imageOnly')}</p>
+			<Button href="/buat" variant="secondary">{t('convertAts.createNew')}</Button>
 		</div>
 	{/if}
 	<div class="score-summary" role="status" aria-atomic="true">

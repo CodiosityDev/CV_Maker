@@ -54,6 +54,8 @@
 		$state<Component<{ report: ScanReport; keywords?: KeywordReport; jobPost?: string }>>();
 	let CvResults = $state<typeof import('#lib/ui/AtsPanel.svelte').default>();
 	let Review = $state<Component<{ source: ReviewSource }>>();
+	let ConvertPanel = $state<typeof import('./ConvertPanel.svelte').default>();
+	let conversionEngaged = $state(false);
 	let suggestModule = $state.raw<SuggestModule>();
 	let suggestions = $state.raw<SuggestionData>();
 	let storage: StorageModule | undefined;
@@ -96,6 +98,7 @@
 		analyzing = false;
 		error = undefined;
 		analysisFailed = false;
+		conversionEngaged = false;
 		if (fileInput) fileInput.value = '';
 	}
 	function reset() {
@@ -226,6 +229,7 @@
 		if (!file && !document) return;
 		const token = ++generation;
 		revision = token;
+		conversionEngaged = false;
 		const startedScope = scope();
 		analyzing = true;
 		analysisFailed = false;
@@ -246,6 +250,11 @@
 						scanReport = analysis.report;
 						keywords = analysis.keywords;
 						ScanResults = component.default;
+						if (!file.layout.imageOnly) {
+							const convert = await import('./ConvertPanel.svelte');
+							if (!current(token, startedScope)) return;
+							ConvertPanel = convert.default;
+						}
 					} else if (document) {
 						const [analysis, component] = await Promise.all([
 							analyzer.analyze($state.snapshot(document), post),
@@ -475,7 +484,7 @@
 	</div>{/if}
 
 <div class="results" aria-busy={analyzing || undefined}>
-	{#if tab === 'file' && scanReport && ScanResults}<ScanResults
+	{#if tab === 'file' && scanReport && ScanResults && !conversionEngaged}<ScanResults
 			report={scanReport}
 			{keywords}
 			{jobPost}
@@ -490,7 +499,20 @@
 			onjump={jump}
 			onretry={() => retry++}
 		/>{/if}
-	{#if Review && reviewSource && !busy && !analysisFailed && (scanReport || cvReport)}{#key revision}<Review
+	{#if tab === 'file' && extracted && scanReport && !extracted.layout.imageOnly && ConvertPanel && !busy && !analysisFailed}
+		{#key revision}
+			{@const panelRevision = untrack(() => revision)}
+			<ConvertPanel
+				{extracted}
+				{jobPost}
+				{targetRole}
+				onstagechange={(engaged) => {
+					if (mounted && panelRevision === revision) conversionEngaged = engaged;
+				}}
+			/>
+		{/key}
+	{/if}
+	{#if Review && reviewSource && !busy && !analysisFailed && !conversionEngaged && (scanReport || cvReport)}{#key revision}<Review
 				source={reviewSource}
 			/>{/key}{/if}
 </div>

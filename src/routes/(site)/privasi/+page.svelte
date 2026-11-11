@@ -33,6 +33,7 @@
 	<section>
 		<h2>{t('privacy.scanTitle')}</h2>
 		<p>{t('privacy.scanCopy')}</p>
+		<p>{t('privacy.convertCopy')}</p>
 	</section>
 	<section>
 		<h2>{t('privacy.adsTitle')}</h2>
