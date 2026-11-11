@@ -6,6 +6,8 @@
  *   POST /api/ai/run          → { result, quota }  (body AiRequest, header X-Device-Token)
  *                               task 'convert' → 202 { job, quota }; then poll
  *   GET  /api/ai/job?id=      → { status: 'pending' } | { status: 'done', result, quota } (same token)
+ *   POST /api/ai/lite         → { result, lite }  (body { task: 'concise', concise }, X-Device-Token)
+ *                               free light check: small model, own daily limit, no daily use spent
  *   POST /api/ai/reward/start → { adUrl }          (header X-Device-Token; open adUrl in a new tab)
  *   POST /api/ai/reward/claim → { quota }          (body { ticket }; called by the AD PAGE origin)
  *   GET  /api/hello           → { visitors, online } (all-time count + online now, counts nothing)
@@ -38,17 +40,26 @@ import {
 	wibDay
 } from './identity';
 import { consume, refund, type QuotaKey, type QuotaStore } from './quota';
-import { buildMessages, maxTokensFor, parseAnswer } from './tasks';
+import {
+	buildConciseMessages,
+	buildMessages,
+	conciseMaxTokens,
+	maxTokensFor,
+	parseAnswer,
+	parseConcise
+} from './tasks';
 import { createJobStore } from './jobs';
 import { createPresence } from './presence';
-import { parseAiRequest } from '../../src/lib/core/ai/schema';
+import { parseAiLiteRequest, parseAiRequest } from '../../src/lib/core/ai/schema';
 import type { AiErrorCode, AiQuota, AiRequest, AiResult } from '../../src/lib/core/ai/types';
 
 const MAX_BODY_BYTES = 32 * 1024;
 /** A ticket older than this cannot be claimed (the ad tab was left open too long). */
 const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
-const BURST = { run: 6, other: 30, poll: 90, beat: 60 } as const;
+const BURST = { run: 6, lite: 12, other: 30, poll: 90, beat: 60 } as const;
+/** Light checks must answer fast; a small model needs little time. */
+const LITE_TIMEOUT_MS = 20_000;
 /** The all-time total is read from the database at most this often for heartbeats. */
 const TOTAL_CACHE_MS = 30_000;
 /** Long tasks get more time per model (they write a whole CV). */
@@ -61,6 +72,8 @@ export interface AppDeps {
 	config: Pick<ServerConfig, 'appOrigin' | 'appSecret' | 'limits' | 'ads'>;
 	store: QuotaStore;
 	provider: ChatProvider;
+	/** Small model for the free light checks; defaults to `provider`. */
+	liteProvider?: ChatProvider;
 	now?: () => number;
 	log?: (entry: Record<string, unknown>) => void;
 }
@@ -125,6 +138,7 @@ async function readJson(req: IncomingMessage, allowText = false): Promise<unknow
 
 export function createApp(deps: AppDeps) {
 	const { config, store, provider } = deps;
+	const liteProvider = deps.liteProvider ?? provider;
 	const now = deps.now ?? Date.now;
 	const log = deps.log ?? (() => {});
 	const bursts = new Map<string, { minute: number; count: number }>();
@@ -176,7 +190,61 @@ export function createApp(deps: AppDeps) {
 				remaining: Math.max(0, config.ads.perDevice - bonus)
 			};
 		}
+		quota.lite = await liteLeft(device);
 		return quota;
+	}
+
+	async function liteLeft(
+		device: string | undefined
+	): Promise<{ limit: number; remaining: number }> {
+		const limit = config.limits.lite.device;
+		const used = device ? await store.used('lite', device, wibDay(now())) : 0;
+		return { limit, remaining: Math.max(0, limit - used) };
+	}
+
+	/** Free light check (wordiness): own daily limits, small model, the use is given back on failure. */
+	async function lite(req: IncomingMessage, ip: string): Promise<unknown> {
+		sameOrigin(req);
+		burst(ip, 'lite');
+		const device = deviceFrom(req);
+		if (!device) throw new HttpError(401, 'invalid');
+		const request = parseAiLiteRequest(await readJson(req));
+		if (!request) throw new HttpError(400, 'invalid');
+
+		const day = wibDay(now());
+		const keys: QuotaKey[] = [
+			{ scope: 'lite', subject: device, limit: config.limits.lite.device },
+			{ scope: 'liteip', subject: ipSubject(config.appSecret, ip), limit: config.limits.lite.ip },
+			{ scope: 'liteall', subject: 'all', limit: config.limits.lite.global }
+		];
+		const full = await consume(store, keys, day);
+		if (full === 'lite' || full === 'liteip') throw new HttpError(429, 'quota');
+		if (full) throw new HttpError(503, 'unavailable');
+
+		const started = now();
+		try {
+			const reply = await liteProvider.complete(buildConciseMessages(request.concise), {
+				maxTokens: conciseMaxTokens(request.concise),
+				timeoutMs: LITE_TIMEOUT_MS,
+				// Rating needs consistency, not creativity.
+				temperature: 0.1
+			});
+			const result = parseConcise(request.concise, reply.text);
+			log({
+				event: 'ai.lite',
+				task: 'concise',
+				model: reply.model,
+				ms: now() - started,
+				ok: !!result
+			});
+			if (!result) throw new HttpError(502, 'failed');
+			return { result, lite: await liteLeft(device) };
+		} catch (error) {
+			await refund(store, keys, day);
+			if (error instanceof HttpError) throw error;
+			log({ event: 'ai.lite', task: 'concise', ms: now() - started, ok: false });
+			throw new HttpError(503, 'unavailable');
+		}
 	}
 
 	function deviceFrom(req: IncomingMessage): string | undefined {
@@ -405,6 +473,9 @@ export function createApp(deps: AppDeps) {
 			if (req.method === 'POST' && path === '/api/ai/run') {
 				const body = await run(req, ip);
 				return send(res, body && typeof body === 'object' && 'job' in body ? 202 : 200, body);
+			}
+			if (req.method === 'POST' && path === '/api/ai/lite') {
+				return send(res, 200, await lite(req, ip));
 			}
 			if (req.method === 'GET' && path === '/api/ai/job') {
 				return send(res, 200, await jobStatus(req, ip));

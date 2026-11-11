@@ -29,7 +29,14 @@ async function main(): Promise<void> {
 			if (!info.ok) log({ event: 'ai.attempt_failed', ...info });
 		}
 	});
-	const handle = createApp({ config, store, provider, log });
+	const liteProvider = openAiCompatibleProvider({
+		...config.ai,
+		models: config.ai.liteModels,
+		onAttempt: (info) => {
+			if (!info.ok) log({ event: 'ai.attempt_failed', lite: true, ...info });
+		}
+	});
+	const handle = createApp({ config, store, provider, liteProvider, log });
 	const server = createServer((req, res) => void handle(req, res));
 	server.requestTimeout = 90_000;
 	server.headersTimeout = 15_000;
@@ -45,7 +52,13 @@ async function main(): Promise<void> {
 	pruneTimer.unref();
 
 	server.listen(config.port, '127.0.0.1', () =>
-		log({ event: 'started', port: config.port, models: config.ai.models, db: Boolean(config.db) })
+		log({
+			event: 'started',
+			port: config.port,
+			models: config.ai.models,
+			liteModels: config.ai.liteModels,
+			db: Boolean(config.db)
+		})
 	);
 
 	const shutdown = (signal: string) => {

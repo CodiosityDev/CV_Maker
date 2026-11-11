@@ -11,7 +11,7 @@ export interface ChatProvider {
 	/** The model's text answer; throws when every model failed. */
 	complete(
 		messages: ChatMessage[],
-		options?: { maxTokens?: number; timeoutMs?: number }
+		options?: { maxTokens?: number; timeoutMs?: number; temperature?: number }
 	): Promise<{ text: string; model: string }>;
 }
 
@@ -50,7 +50,7 @@ export function openAiCompatibleProvider(options: OpenAiCompatibleOptions): Chat
 						body: JSON.stringify({
 							model,
 							messages,
-							temperature: 0.4,
+							temperature: completeOptions?.temperature ?? 0.4,
 							max_tokens: completeOptions?.maxTokens ?? 700
 						}),
 						signal: controller.signal

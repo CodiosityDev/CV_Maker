@@ -200,7 +200,14 @@ async function startApi(
 	options: { now?: () => number; adsEnabled?: boolean } = {}
 ) {
 	const store = memoryQuotaStore();
-	const limits = { device: 3, ip: 100, devicesPerIp: 10, global: 100, visitorsPerIp: 3 };
+	const limits = {
+		device: 3,
+		ip: 100,
+		devicesPerIp: 10,
+		global: 100,
+		visitorsPerIp: 3,
+		lite: { device: 2, ip: 5, global: 100 }
+	};
 	const ads = {
 		enabled: options.adsEnabled ?? false,
 		origin: ADS_ORIGIN,

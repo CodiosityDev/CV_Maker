@@ -13,6 +13,21 @@ export const atsEn: AtsMessages = {
 			ok: 'Fairly good',
 			needsWork: 'Needs work'
 		},
+		concise: {
+			levels: {
+				ok: 'Concise',
+				wordy: 'A bit wordy',
+				veryWordy: 'Wordy'
+			},
+			issues: {
+				filler: 'Some words add no information, e.g. "{fillers}".',
+				tooLong: 'Too long ({words} words). Keep one point to 2 lines at most.',
+				multipleIdeas: 'Covers more than one thing. Split it into separate points.',
+				repetition: 'A word is repeated. Say it once.',
+				vague: 'Still general. Name a real result, tool or number.',
+				indirect: 'Roundabout wording. Start directly with an action verb.'
+			}
+		},
 		convert: {
 			notes: {
 				monthGuessed:

@@ -109,6 +109,8 @@ export interface AiQuota {
 	 * how many ads this device may still watch today (0 → hide the button).
 	 */
 	rewards?: { limit: number; remaining: number };
+	/** Free light checks (wordiness) left today: separate from the uses above. */
+	lite?: { limit: number; remaining: number };
 }
 
 /** Answer of `POST /api/ai/reward/start`: open `adUrl` in a new tab (top-level, not an iframe). */
@@ -156,4 +158,62 @@ export const AI_REVIEW_LIMITS = {
 	improvements: 5,
 	rewrites: 3,
 	missingKeywords: 8
+} as const;
+
+// ---------------------------------------------------------------------------
+// Light checks: free (no daily use), small model, own daily limit. POST /api/ai/lite
+// ---------------------------------------------------------------------------
+
+/** Why a CV point is wordy. Shared by the on-device check and the AI check. */
+export const CONCISE_ISSUES = [
+	/** Words that add nothing ("bertanggung jawab untuk", "dalam rangka", "responsible for"). */
+	'filler',
+	/** Too many words for one point. */
+	'tooLong',
+	/** Several ideas/sentences in one bullet. */
+	'multipleIdeas',
+	/** The same word or idea repeated. */
+	'repetition',
+	/** General words without a concrete result or tool. */
+	'vague',
+	/** Passive or roundabout phrasing ("was given the task of"). */
+	'indirect'
+] as const;
+export type ConciseIssue = (typeof CONCISE_ISSUES)[number];
+
+export interface AiConcisePoint {
+	kind: 'bullet' | 'summary';
+	/** Contact details removed (`redactContacts`). */
+	text: string;
+}
+
+/** Points to rate (bullets and the summary). Built by `aiConciseInput`. */
+export interface AiConciseInput {
+	locale: Locale;
+	points: AiConcisePoint[];
+}
+
+export interface ConciseResult {
+	task: 'concise';
+	/**
+	 * Same order as the request. `null` = the model gave nothing usable for that point (keep the
+	 * on-device result). `shorter` only when the point is wordy; numbers and names never invented.
+	 */
+	points: ({ score: number; issues: ConciseIssue[]; shorter?: string } | null)[];
+}
+
+export interface AiLiteResult {
+	result: ConciseResult;
+	/** Free light checks left today. */
+	lite: { limit: number; remaining: number };
+}
+
+export const AI_CONCISE_LIMITS = {
+	/** Points per request (the wordiest ones are sent first). */
+	points: 30,
+	/** Characters per point (bullet limit; the summary is longer). */
+	bullet: 300,
+	summary: 800,
+	/** Points shorter than this are never wordy: not sent. */
+	minWords: 6
 } as const;

@@ -8,10 +8,13 @@ import { matchKeywords } from './keywords';
 import { analyzeScan } from '../scan/analyze';
 import type { ExtractedCv, ScanAnalysis } from '../scan/types';
 import type { AtsReport, KeywordReport } from './types';
+import { conciseFromCv, conciseFromText, type ConciseReport } from './concise';
 
 export interface FullAnalysis {
 	report: AtsReport;
 	keywords?: KeywordReport;
+	/** How wordy each point is (on device; refine with the free AI check). */
+	concise: ConciseReport;
 }
 
 let knownTermsPromise: Promise<string[]> | undefined;
@@ -29,14 +32,16 @@ export function knownTerms(): Promise<string[]> {
 
 export async function analyzeFull(cv: CVDocument, jobPost?: string): Promise<FullAnalysis> {
 	const report = analyzeCv(cv);
-	if (!jobPost?.trim()) return { report };
+	const concise = conciseFromCv(cv);
+	if (!jobPost?.trim()) return { report, concise };
 	const cvText = toPlainText(toRenderModel(cv));
-	return { report, keywords: matchKeywords(jobPost, cvText, await knownTerms()) };
+	return { report, concise, keywords: matchKeywords(jobPost, cvText, await knownTerms()) };
 }
 
 /** Checks + optional job-post keywords for a CV FILE (see core/scan). */
 export async function analyzeScanFull(cv: ExtractedCv, jobPost?: string): Promise<ScanAnalysis> {
 	const report = analyzeScan(cv);
-	if (!jobPost?.trim() || !cv.text) return { report };
-	return { report, keywords: matchKeywords(jobPost, cv.text, await knownTerms()) };
+	const concise = conciseFromText(cv.text);
+	if (!jobPost?.trim() || !cv.text) return { report, concise };
+	return { report, concise, keywords: matchKeywords(jobPost, cv.text, await knownTerms()) };
 }

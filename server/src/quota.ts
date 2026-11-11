@@ -6,10 +6,22 @@
 /**
  * device/ip/global: AI uses · issue: new device tokens per IP · bonus: extra uses earned from ads
  * per device · bonusip: the same per IP · ticket: single-use ad tickets (replay protection) ·
- * visit: a visitor seen today (once per day) · visitip: new visitors per IP (anti-inflation).
+ * visit: a visitor seen today (once per day) · visitip: new visitors per IP (anti-inflation) ·
+ * lite/liteip/liteall: free light checks per device / IP / everyone (max 8 chars: DB column).
  */
 export type QuotaScope =
-	'device' | 'ip' | 'issue' | 'global' | 'bonus' | 'bonusip' | 'ticket' | 'visit' | 'visitip';
+	| 'device'
+	| 'ip'
+	| 'issue'
+	| 'global'
+	| 'bonus'
+	| 'bonusip'
+	| 'ticket'
+	| 'visit'
+	| 'visitip'
+	| 'lite'
+	| 'liteip'
+	| 'liteall';
 
 /** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */
 export type TotalName = 'visitors';

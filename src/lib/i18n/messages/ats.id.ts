@@ -15,6 +15,21 @@ export const atsId = {
 			ok: 'Cukup baik',
 			needsWork: 'Perlu diperbaiki'
 		},
+		concise: {
+			levels: {
+				ok: 'Ringkas',
+				wordy: 'Agak bertele-tele',
+				veryWordy: 'Bertele-tele'
+			},
+			issues: {
+				filler: 'Ada kata yang tidak menambah informasi, misalnya "{fillers}".',
+				tooLong: 'Terlalu panjang ({words} kata). Usahakan satu poin paling banyak 2 baris.',
+				multipleIdeas: 'Berisi lebih dari satu hal. Pecah jadi beberapa poin.',
+				repetition: 'Ada kata yang diulang. Cukup sebut sekali.',
+				vague: 'Masih umum. Sebutkan hasil, alat, atau jumlah yang nyata.',
+				indirect: 'Kalimatnya berputar-putar. Mulai langsung dengan kata kerja aktif.'
+			}
+		},
 		convert: {
 			notes: {
 				monthGuessed:
