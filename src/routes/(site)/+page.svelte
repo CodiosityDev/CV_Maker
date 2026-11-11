@@ -16,8 +16,12 @@
 		<div class="hero-copy">
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
-			<Button href="/buat" size="lg">{t('nav.create')}</Button>
-			<a class="ats-link" href={resolve('/(site)/cek-ats')}>{t('landing.atsCheck')}</a>
+			<Button href="/buat" data-sveltekit-preload-code="viewport" size="lg"
+				>{t('nav.create')}</Button
+			>
+			<a class="ats-link" href={resolve('/(site)/cek-ats')} data-sveltekit-preload-code="viewport"
+				>{t('landing.atsCheck')}</a
+			>
 			<VisitorCounter />
 		</div>
 		<CvMockup />
@@ -60,11 +64,15 @@
 	<div class="site-container closing-links">
 		<p class="privacy-line">
 			{t('landing.privacyCopy')}
-			<a href={resolve('/(site)/privasi')}>{t('landing.privacyLink')}</a>
+			<a href={resolve('/(site)/privasi')} data-sveltekit-preload-code="viewport"
+				>{t('landing.privacyLink')}</a
+			>
 		</p>
 		<p class="faq-line">
 			{t('landing.faqCopy')}
-			<a href={resolve('/(site)/faq')}>{t('landing.faqLink')}</a>
+			<a href={resolve('/(site)/faq')} data-sveltekit-preload-code="viewport"
+				>{t('landing.faqLink')}</a
+			>
 		</p>
 	</div>
 </main>

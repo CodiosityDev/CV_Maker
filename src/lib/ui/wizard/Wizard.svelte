@@ -314,8 +314,35 @@
 
 	async function focusHeading() {
 		await tick();
+		if (!mounted || removed) return;
 		heading?.focus({ preventScroll: true });
 		window.scrollTo({ top: 0, behavior: 'instant' });
+	}
+	function revealStep(node: HTMLFieldSetElement, initial: string) {
+		let current = initial;
+		let animation: Animation | undefined;
+		return {
+			update(next: string) {
+				if (next === current) return;
+				current = next;
+				animation?.cancel();
+				if (
+					window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+					typeof node.animate !== 'function'
+				)
+					return;
+				animation = node.animate(
+					[
+						{ opacity: 0, transform: 'translateY(4px)' },
+						{ opacity: 1, transform: 'none' }
+					],
+					{ duration: 160, easing: 'ease-out' }
+				);
+			},
+			destroy() {
+				animation?.cancel();
+			}
+		};
 	}
 	async function move(next: number) {
 		if (store.externalChange === 'removed') return;
@@ -335,6 +362,7 @@
 	}
 	async function focusIssue(issue: { field?: string }) {
 		await tick();
+		if (!mounted || removed) return;
 		if (!issue.field) {
 			await focusHeading();
 			return;
@@ -354,8 +382,9 @@
 			disclosure = disclosure.parentElement?.closest('details') ?? null;
 		}
 		await tick();
-		control.focus();
-		control.scrollIntoView({ block: 'center' });
+		if (!mounted || removed || !control.isConnected) return;
+		control.focus({ preventScroll: true });
+		control.scrollIntoView({ block: 'center', behavior: 'instant' });
 	}
 	async function back() {
 		if (store.externalChange === 'removed') {
@@ -436,9 +465,10 @@
 	}
 	async function focusAtsPanel() {
 		await tick();
+		if (!mounted || removed) return;
 		const panel = document.getElementById('ats-panel');
 		panel?.focus({ preventScroll: true });
-		panel?.scrollIntoView({ block: 'start' });
+		panel?.scrollIntoView({ block: 'start', behavior: 'instant' });
 	}
 	async function checkAtsAgain(event: MouseEvent) {
 		event.preventDefault();
@@ -464,6 +494,7 @@
 	}
 	async function focusAtsJob() {
 		await tick();
+		if (!mounted || removed) return;
 		const input = document.querySelector<HTMLTextAreaElement>('#ats-panel textarea');
 		if (input) input.focus({ preventScroll: true });
 		else heading?.focus({ preventScroll: true });
@@ -646,7 +677,11 @@
 							</ul>
 						</details>
 					{/if}
-					<fieldset class="step-fields" disabled={store.externalChange === 'removed'}>
+					<fieldset
+						class="step-fields"
+						disabled={store.externalChange === 'removed'}
+						use:revealStep={step}
+					>
 						{#if step === 'target'}
 							<CareerFields {store} {suggestionsData} />
 						{:else if step === 'personal'}
@@ -869,6 +904,7 @@
 	}
 	h1 {
 		margin: 0.75rem 0;
+		scroll-margin-top: 6rem;
 		font-size: clamp(1.6rem, 3vw, 2rem);
 		font-weight: 650;
 	}

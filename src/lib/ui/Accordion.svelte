@@ -73,6 +73,7 @@
 		line-height: 1.6;
 		text-align: left;
 		cursor: pointer;
+		scroll-margin-top: 6rem;
 		transition:
 			background-color var(--motion-duration) ease-out,
 			color var(--motion-duration) ease-out;
@@ -104,5 +105,8 @@
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.8;
+	}
+	div[role='region']:not([hidden]) > .content {
+		animation: ui-content-reveal 160ms ease-out;
 	}
 </style>

@@ -32,8 +32,12 @@
 
 <header class="site-header">
 	<div class="site-container header-inner">
-		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
-			><Logo size={28} /><span>{t('app.name')}</span></a
+		<a
+			class="brand"
+			href={resolve('/(site)')}
+			data-sveltekit-preload-code="viewport"
+			aria-label={t('nav.home')}
+			onclick={closeMenu}><Logo size={28} /><span>{t('app.name')}</span></a
 		>
 		<button
 			type="button"
@@ -51,6 +55,7 @@
 					<li>
 						<a
 							href={link.href}
+							data-sveltekit-preload-code="viewport"
 							aria-current={page.url.pathname === link.href ? 'page' : undefined}
 							onclick={closeMenu}>{link.label}</a
 						>
@@ -71,8 +76,12 @@
 		</nav>
 		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
 		<div class="create-action">
-			<Button href="/buat" size="sm" class="header-cta" onclick={closeMenu}
-				>{t('nav.create')}</Button
+			<Button
+				href="/buat"
+				data-sveltekit-preload-code="viewport"
+				size="sm"
+				class="header-cta"
+				onclick={closeMenu}>{t('nav.create')}</Button
 			>
 		</div>
 	</div>
@@ -80,6 +89,7 @@
 
 <style>
 	.site-header {
+		view-transition-name: app-header;
 		background: var(--color-surface);
 		border-bottom: 1px solid var(--color-border);
 	}
