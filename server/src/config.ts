@@ -16,6 +16,8 @@ export interface ServerConfig {
 		/** Tried in order; the next one is used when a model fails or times out. */
 		models: string[];
 		timeoutMs: number;
+		/** Small, cheap models for the free light checks (AI_LITE_MODELS; default: `models`). */
+		liteModels: string[];
 	};
 	limits: {
 		/** Free uses per device per day (owner: 3). */
@@ -28,6 +30,8 @@ export interface ServerConfig {
 		global: number;
 		/** New visitors counted per IP per day (mobile carriers share IPs: keep it high). */
 		visitorsPerIp: number;
+		/** Free light checks (wordiness), separate from the uses above: per device / IP / all per day. */
+		lite: { device: number; ip: number; global: number };
 	};
 	/** Watch an ad for one more AI use (Google Ad Manager rewarded ad on a separate origin). */
 	ads: {
@@ -73,6 +77,10 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 		.map((model) => model.trim())
 		.filter(Boolean);
 	if (!models.length) throw new Error('AI_MODELS is empty');
+	const liteModels = (env.AI_LITE_MODELS ?? '')
+		.split(',')
+		.map((model) => model.trim())
+		.filter(Boolean);
 
 	const dbName = env.DB_NAME?.trim();
 	const appOrigin = (env.APP_ORIGIN ?? 'https://cvmaker.codiosity.com').replace(/\/+$/, '');
@@ -84,14 +92,20 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 			baseUrl,
 			apiKey: required(env, 'AI_API_KEY'),
 			models,
-			timeoutMs: int(env, 'AI_TIMEOUT_MS', 30_000, 1000)
+			timeoutMs: int(env, 'AI_TIMEOUT_MS', 30_000, 1000),
+			liteModels: liteModels.length ? liteModels : models
 		},
 		limits: {
 			device: int(env, 'AI_LIMIT_DEVICE', 3),
 			ip: int(env, 'AI_LIMIT_IP', 100),
 			devicesPerIp: int(env, 'AI_LIMIT_DEVICES_PER_IP', 10),
 			global: int(env, 'AI_LIMIT_GLOBAL', 1500),
-			visitorsPerIp: int(env, 'VISITOR_LIMIT_IP', 300)
+			visitorsPerIp: int(env, 'VISITOR_LIMIT_IP', 300),
+			lite: {
+				device: int(env, 'AI_LITE_LIMIT_DEVICE', 20),
+				ip: int(env, 'AI_LITE_LIMIT_IP', 200),
+				global: int(env, 'AI_LITE_LIMIT_GLOBAL', 5000)
+			}
 		},
 		ads: {
 			enabled: env.ADS_ENABLED?.trim() === 'true',

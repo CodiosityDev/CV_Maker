@@ -5,7 +5,14 @@
 import * as v from 'valibot';
 import { EXPERIENCE_TYPES } from '../schema/types';
 import { LIMITS } from '../schema/limits';
-import { AI_PROFILE_LIMITS, AI_REVIEW_LIMITS, AI_TASKS, type AiRequest } from './types';
+import {
+	AI_CONCISE_LIMITS,
+	AI_PROFILE_LIMITS,
+	AI_REVIEW_LIMITS,
+	AI_TASKS,
+	type AiConciseInput,
+	type AiRequest
+} from './types';
 
 const text = (max: number) => v.pipe(v.string(), v.maxLength(max));
 const list = <T extends v.GenericSchema>(item: T, max: number) =>
@@ -59,6 +66,39 @@ export const AiRequestSchema = v.union([
 	v.strictObject({ task: v.literal('review'), review: AiReviewInputSchema }),
 	v.strictObject({ task: v.literal('convert'), convert: AiReviewInputSchema })
 ]);
+
+export const AiConciseInputSchema = v.strictObject({
+	locale: v.picklist(['id', 'en']),
+	points: v.pipe(
+		v.array(
+			v.variant('kind', [
+				v.strictObject({
+					kind: v.literal('bullet'),
+					text: v.pipe(v.string(), v.minLength(1), v.maxLength(AI_CONCISE_LIMITS.bullet))
+				}),
+				v.strictObject({
+					kind: v.literal('summary'),
+					text: v.pipe(v.string(), v.minLength(1), v.maxLength(AI_CONCISE_LIMITS.summary))
+				})
+			])
+		),
+		v.minLength(1),
+		v.maxLength(AI_CONCISE_LIMITS.points)
+	)
+});
+
+const AiLiteRequestSchema = v.strictObject({
+	task: v.literal('concise'),
+	concise: AiConciseInputSchema
+});
+
+/** Parses an untrusted `POST /api/ai/lite` body; `undefined` when it does not match. */
+export function parseAiLiteRequest(
+	input: unknown
+): { task: 'concise'; concise: AiConciseInput } | undefined {
+	const result = v.safeParse(AiLiteRequestSchema, input);
+	return result.success ? result.output : undefined;
+}
 
 /** Parses an untrusted request body; `undefined` when it does not match the contract. */
 export function parseAiRequest(input: unknown): AiRequest | undefined {

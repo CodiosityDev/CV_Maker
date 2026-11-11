@@ -120,7 +120,8 @@ function hasDates(range: DateRange | undefined): boolean {
 	return Boolean(range && range.start && (range.current || range.end));
 }
 
-const SECTION_STEP: Partial<Record<SectionKey, WizardStepId>> = {
+/** Wizard step where each section is edited (fix-it navigation). */
+export const SECTION_STEP: Partial<Record<SectionKey, WizardStepId>> = {
 	summary: 'summary',
 	education: 'education',
 	experience: 'experience',

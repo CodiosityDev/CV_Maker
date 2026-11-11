@@ -17,6 +17,16 @@ import type { ExtractedCv, ScanAnalysis } from '../scan/types';
 import type { FullAnalysis } from './analyze';
 
 export { analyzeCv } from './checks';
+export {
+	aiConciseInput,
+	conciseFromCv,
+	conciseFromText,
+	mergeConciseAi,
+	rateConcise,
+	type ConciseLevel,
+	type ConcisePoint,
+	type ConciseReport
+} from './concise';
 export { matchKeywords, MAX_JOB_POST_CHARS } from './keywords';
 export type { FullAnalysis } from './analyze';
 export type {

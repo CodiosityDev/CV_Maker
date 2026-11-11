@@ -187,7 +187,14 @@ describe('HTTP: a review uses 1 of the daily uses', () => {
 			config: {
 				appOrigin: ORIGIN,
 				appSecret: '0123456789abcdef0123456789abcdef-test',
-				limits: { device: 3, ip: 100, devicesPerIp: 10, global: 100, visitorsPerIp: 3 },
+				limits: {
+					device: 3,
+					ip: 100,
+					devicesPerIp: 10,
+					global: 100,
+					visitorsPerIp: 3,
+					lite: { device: 2, ip: 5, global: 100 }
+				},
 				ads: {
 					enabled: false,
 					origin: 'https://iklan.codiosity.com',

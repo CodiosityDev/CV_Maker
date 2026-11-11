@@ -3,6 +3,7 @@
  * Everything runs on the user's device — the file is never uploaded.
  */
 import type { AtsGrade, CheckLevel, KeywordReport } from '../ats/types';
+import type { ConciseReport } from '../ats/concise';
 import type { Locale, SectionKey } from '../schema/types';
 
 /** Largest file accepted (same limit as a JSON backup). */
@@ -136,4 +137,6 @@ export interface ScanAnalysis {
 	report: ScanReport;
 	/** Present when a job post was given. */
 	keywords?: KeywordReport;
+	/** How wordy each point is (on device; refine with the free AI check). */
+	concise: ConciseReport;
 }

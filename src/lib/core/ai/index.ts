@@ -25,11 +25,14 @@ import type { CVDocument, Locale } from '../schema/types';
 import type { ExtractedCv } from '../scan/types';
 import { redactContacts as redactContactsOnly, redactCvText } from './redact';
 import {
+	AI_CONCISE_LIMITS,
 	AI_DEVICE_STORAGE_KEY,
 	AI_ERROR_CODES,
 	AI_PROFILE_LIMITS,
 	AI_REVIEW_LIMITS,
+	type AiConciseInput,
 	type AiErrorCode,
+	type AiLiteResult,
 	type AiProfile,
 	type AiQuota,
 	type AiResult,
@@ -318,6 +321,12 @@ export interface AiClient {
 	 * Throws AiError ('busy' when the browser blocked the tab, 'quota' when today's ads are used up).
 	 */
 	openRewardAd(locale: CVDocument['locale']): Promise<void>;
+	/**
+	 * Free wordiness check (small model, own daily limit `quota.lite`; does NOT use today's uses).
+	 * Build the input with `aiConciseInput` (core/ats) and merge with `mergeConciseAi`. Throws AiError
+	 * ('quota' when today's free checks are used up).
+	 */
+	concise(input: AiConciseInput): Promise<AiLiteResult>;
 }
 
 interface ErrorBody {
@@ -367,9 +376,12 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 		throw new AiError(response.status >= 500 ? 'unavailable' : 'failed');
 	}
 
-	async function runTask<T = { result: AiResult; quota: AiQuota }>(body: string): Promise<T> {
+	async function runTask<T = { result: AiResult; quota: AiQuota }>(
+		body: string,
+		path = '/run'
+	): Promise<T> {
 		const send = async () =>
-			request<T>('/run', {
+			request<T>(path, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'X-Device-Token': await deviceToken() },
 				body
@@ -451,6 +463,28 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 				if (status.status !== 'pending') throw new AiError('failed');
 				if (Date.now() > deadline) throw new AiError('unavailable');
 			}
+		},
+		async concise(input) {
+			const concise: AiConciseInput = {
+				locale: input.locale,
+				// Redacted again and capped here: callers may build the input by hand.
+				points: input.points
+					.map((p) => ({
+						kind: p.kind,
+						text: redactContactsOnly(p.text)
+							.trim()
+							.slice(0, p.kind === 'summary' ? AI_CONCISE_LIMITS.summary : AI_CONCISE_LIMITS.bullet)
+					}))
+					.filter((p) => p.text)
+					.slice(0, AI_CONCISE_LIMITS.points)
+			};
+			if (!concise.points.length) throw new AiError('invalid');
+			const answer = await runTask<AiLiteResult>(
+				JSON.stringify({ task: 'concise', concise }),
+				'/lite'
+			);
+			if (answer.result?.task !== 'concise') throw new AiError('failed');
+			return answer;
 		},
 		async openRewardAd(locale) {
 			// Synchronously, inside the user's click: an empty tab is never blocked.
