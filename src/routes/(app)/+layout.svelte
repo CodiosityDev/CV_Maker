@@ -113,6 +113,10 @@
 	}
 	.app-header {
 		view-transition-name: app-header;
+		/* view-transition-name makes the header its own stacking context: lift it above the page
+		   (sticky preview, etc.) so the menu dropdown is never covered. Below toasts (50). */
+		position: relative;
+		z-index: 30;
 		border-bottom: 1px solid var(--color-border);
 		background: var(--color-surface);
 	}
