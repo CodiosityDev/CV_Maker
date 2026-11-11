@@ -19,21 +19,6 @@
 			>
 		</a>
 	</p>
-	<section>
-		<h2>{t('about.openTitle')}</h2>
-		<p>{t('about.openCopy')}</p>
-		<div class="github-link">
-			<Button
-				href="https://github.com/CodiosityDev/CV_Maker"
-				target="_blank"
-				rel="noopener noreferrer"
-				variant="secondary"
-				>{t('about.github')}<span aria-hidden="true">↗</span><span class="sr-only">
-					{t('a11y.opensNewTab')}</span
-				></Button
-			>
-		</div>
-	</section>
 	<div class="back-link"><Button href="/" variant="ghost">{t('about.back')}</Button></div>
 </main>
 
@@ -47,9 +32,6 @@
 		align-items: center;
 		min-height: 44px;
 		font-weight: 600;
-	}
-	.github-link {
-		margin-top: 20px;
 	}
 	.back-link {
 		margin-top: 32px;

@@ -217,9 +217,6 @@ export const siteId = {
 			'CV Maker membantu fresh graduate menyusun CV ATS atau Creative dengan panduan, tanpa membuat akun.',
 		attribution: 'CV Maker dibuat dan dikelola oleh Codiosity.',
 		codiosityLink: 'Kunjungi Codiosity',
-		openTitle: 'Kode sumber',
-		openCopy: 'Kode sumber CV Maker tersedia di GitHub.',
-		github: 'Lihat kode di GitHub',
 		back: 'Kembali ke beranda'
 	}
 };

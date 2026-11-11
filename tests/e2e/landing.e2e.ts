@@ -19,9 +19,8 @@ test('landing offers the planned CV actions and honest template guidance', async
 	await expect(page.locator('footer a[href="/privasi"]')).toBeVisible();
 	await expect(page.locator('footer a[href="/tentang"]')).toBeVisible();
 	await expect(page.locator('footer a[href="/faq"]')).toBeVisible();
-	await expect(
-		page.locator('footer a[href="https://github.com/CodiosityDev/CV_Maker"]')
-	).toHaveAttribute('rel', /noopener/);
+	// Owner: the site does not link to the source code.
+	await expect(page.locator('a[href*="github.com/CodiosityDev"]')).toHaveCount(0);
 });
 
 test('language changes content and metadata, and survives reload and navigation', async ({

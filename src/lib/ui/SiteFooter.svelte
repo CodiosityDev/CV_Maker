@@ -21,11 +21,6 @@
 				>{t('nav.about')}</a
 			>
 			<a href={resolve('/(site)/faq')} data-sveltekit-preload-code="viewport">{t('nav.faq')}</a>
-			<a href="https://github.com/CodiosityDev/CV_Maker" target="_blank" rel="noopener noreferrer"
-				>{t('footer.github')}<span aria-hidden="true">↗</span><span class="sr-only">
-					{t('a11y.opensNewTab')}</span
-				></a
-			>
 		</nav>
 	</div>
 </footer>
