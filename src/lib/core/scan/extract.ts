@@ -1,7 +1,13 @@
 /** Detects the file type from its bytes (not its name) and extracts the text. */
 import { extractDocx } from './docx';
 import { estimatePages, normalizeLines } from './text';
-import { ScanError, SCAN_MAX_BYTES, type ExtractedCv, type ScanFileKind } from './types';
+import {
+	ScanError,
+	SCAN_MAX_BYTES,
+	SCAN_MAX_PASTE_CHARS,
+	type ExtractedCv,
+	type ScanFileKind
+} from './types';
 
 /** File type from the first bytes; `undefined` when not PDF/DOCX/plain text. */
 export function sniffKind(bytes: Uint8Array, name = ''): ScanFileKind | undefined {
@@ -40,22 +46,35 @@ export async function extractCvText(file: Blob & { name?: string }): Promise<Ext
 	const kind = sniffKind(bytes, file.name);
 	if (kind === 'pdf') return (await import('./pdf')).extractPdf(bytes);
 	if (kind === 'docx') return extractDocx(bytes);
-	if (kind === 'txt') {
-		const text = normalizeLines(decodeText(bytes));
-		if (!text) throw new ScanError('empty');
-		return {
-			kind,
-			text,
-			pages: estimatePages(text),
-			layout: {
-				imageOnly: false,
-				columns: false,
-				tables: false,
-				textBoxes: false,
-				images: 0,
-				contactInHeaderFooter: false
-			}
-		};
-	}
+	if (kind === 'txt') return fromPlainText(decodeText(bytes));
 	throw new ScanError('unsupported');
+}
+
+function fromPlainText(raw: string): ExtractedCv {
+	const text = normalizeLines(raw);
+	if (!text) throw new ScanError('empty');
+	return {
+		kind: 'txt',
+		text,
+		pages: estimatePages(text),
+		layout: {
+			imageOnly: false,
+			columns: false,
+			tables: false,
+			textBoxes: false,
+			images: 0,
+			contactInHeaderFooter: false
+		}
+	};
+}
+
+/**
+ * CV text pasted by the user ("Tempel teks CV"): treated like a .txt file, so the same checks,
+ * keyword matching and "Ubah jadi CV ATS" work. Throws ScanError ('empty' · 'tooLarge').
+ *
+ *   const cv = extractPastedText(textarea.value);
+ */
+export function extractPastedText(text: string): ExtractedCv {
+	if (text.length > SCAN_MAX_PASTE_CHARS) throw new ScanError('tooLarge');
+	return fromPlainText(text);
 }
