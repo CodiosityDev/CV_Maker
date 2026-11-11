@@ -23,7 +23,7 @@ import { incognito } from '../storage/index';
 import { LIMITS } from '../schema/limits';
 import type { CVDocument, Locale } from '../schema/types';
 import type { ExtractedCv } from '../scan/types';
-import { redactContacts as redactContactsOnly, redactCvText } from './redact';
+import { conciseSendText, redactContacts as redactContactsOnly, redactCvText } from './redact';
 import {
 	AI_CONCISE_LIMITS,
 	AI_DEVICE_STORAGE_KEY,
@@ -45,7 +45,7 @@ import {
 } from './types';
 
 export * from './types';
-export { redactContacts, redactCvText } from './redact';
+export { conciseSendText, redactContacts, redactCvText } from './redact';
 
 const API_BASE = '/api/ai';
 const REQUEST_TIMEOUT_MS = 70_000;
@@ -465,20 +465,15 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 			}
 		},
 		async concise(input) {
-			const concise: AiConciseInput = {
-				locale: input.locale,
-				// Redacted again and capped here: callers may build the input by hand.
-				points: input.points
-					.map((p) => ({
-						kind: p.kind,
-						text: redactContactsOnly(p.text)
-							.trim()
-							.slice(0, p.kind === 'summary' ? AI_CONCISE_LIMITS.summary : AI_CONCISE_LIMITS.bullet)
-					}))
-					.filter((p) => p.text)
-					.slice(0, AI_CONCISE_LIMITS.points)
-			};
-			if (!concise.points.length) throw new AiError('invalid');
+			// Normalized again (callers may build the input by hand). A point that ends up empty is an
+			// error, never silently dropped: answers are matched to points by position.
+			const points = input.points.map((p) => ({
+				kind: p.kind,
+				text: conciseSendText(p.kind, p.text)
+			}));
+			if (!points.length || points.length > AI_CONCISE_LIMITS.points || points.some((p) => !p.text))
+				throw new AiError('invalid');
+			const concise: AiConciseInput = { locale: input.locale, points };
 			const answer = await runTask<AiLiteResult>(
 				JSON.stringify({ task: 'concise', concise }),
 				'/lite'

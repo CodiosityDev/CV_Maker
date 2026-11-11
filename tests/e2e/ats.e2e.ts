@@ -219,7 +219,7 @@ test('a missing email is a mandatory check that returns focus to the personal em
 	await expect(page.locator('[id="personal.email"]')).toHaveValue('');
 });
 
-test('known job keywords can be added to hard skills and undone while pasted text stays temporary', async ({
+test('known and detected job keywords can be added while pasted text stays temporary', async ({
 	page
 }) => {
 	await reachReview(page);
@@ -232,7 +232,7 @@ test('known job keywords can be added to hard skills and undone while pasted tex
 	await expect(sql).toBeVisible();
 	await expect(present).toContainText('Microsoft Excel');
 	await expect(missing.getByText('pelaporan rinci', { exact: true })).toBeVisible();
-	await expect(missing.getByRole('button', { name: /pelaporan rinci/i })).toHaveCount(0);
+	await expect(missing.getByRole('button', { name: /pelaporan rinci/i })).toBeEnabled();
 	await fitsReferenceWidths(page);
 	await sql.click();
 	await expect(present.getByText('SQL', { exact: true })).toBeVisible();

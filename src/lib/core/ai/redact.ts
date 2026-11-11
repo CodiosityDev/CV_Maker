@@ -3,6 +3,7 @@
  * receives name, email, phone or links). Used by the browser AND again by the server.
  */
 import { headingSection } from '../scan/analyze';
+import { AI_CONCISE_LIMITS } from './types';
 
 // Bounded repeats: the server runs these on untrusted text (no quadratic backtracking).
 const EMAIL = /[^\s@<>()[\]:;,]{1,64}@[^\s@<>()[\]:;,]{1,190}\.[a-z]{2,24}/gi;
@@ -54,4 +55,20 @@ export function redactCvText(text: string, maxLength = Infinity): string {
 	const body = first >= 0 ? lines.slice(first) : lines.slice(1);
 	const redacted = redactContacts(body.join('\n'));
 	return redacted.length > maxLength ? redacted.slice(0, maxLength) : redacted;
+}
+
+/**
+ * The exact text of one point for the free wordiness check (`aiClient.concise`): contacts removed,
+ * trimmed, capped, and removed again (cutting can turn the end of a long token into a domain).
+ * Stable: applying it to its own output changes nothing. '' = nothing left to send.
+ */
+export function conciseSendText(kind: 'bullet' | 'summary', text: string): string {
+	const max = kind === 'summary' ? AI_CONCISE_LIMITS.summary : AI_CONCISE_LIMITS.bullet;
+	let current = text;
+	for (let round = 0; round < 3; round++) {
+		const next = redactContacts(current).trim().slice(0, max).trim();
+		if (next === current) break;
+		current = next;
+	}
+	return current;
 }

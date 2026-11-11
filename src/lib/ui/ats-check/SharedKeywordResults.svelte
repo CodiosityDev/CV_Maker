@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { KeywordMatch, KeywordReport } from '#lib/core/ats/types.ts';
+	import type { KeywordReport } from '#lib/core/ats/types.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 
 	let {
@@ -12,9 +12,14 @@
 		canAdd?: (term: string) => boolean;
 	} = $props();
 	const uid = $props.id();
-	const knownFirst = (a: KeywordMatch, b: KeywordMatch) => Number(b.known) - Number(a.known);
-	const present = $derived(keywords.keywords.filter((keyword) => keyword.inCv).sort(knownFirst));
-	const missing = $derived(keywords.keywords.filter((keyword) => !keyword.inCv).sort(knownFirst));
+	const present = $derived(keywords.keywords.filter((keyword) => keyword.inCv));
+	const missing = $derived(keywords.keywords.filter((keyword) => !keyword.inCv));
+	const missingTerms = $derived(
+		missing
+			.slice(0, 5)
+			.map((keyword) => keyword.term)
+			.join(', ')
+	);
 </script>
 
 <div class="keyword-results" data-testid="ats-keywords">
@@ -25,6 +30,19 @@
 			percent: Math.round(keywords.coverage * 100)
 		})}
 	</p>
+	{#if keywords.keywords.length}
+		<p class="missing-summary" data-testid="ats-keywords-missing-summary">
+			{missing.length
+				? t('conciseWorkspace.missingSummary', {
+						missing: missing.length,
+						total: keywords.keywords.length,
+						terms: missingTerms
+					})
+				: t('conciseWorkspace.missingSummaryAll', { total: keywords.keywords.length })}
+			{#if missing.length > 5}
+				{t('conciseWorkspace.missingMore', { count: missing.length - 5 })}{/if}
+		</p>
+	{/if}
 	{#if keywords.keywords.length === 0}
 		<p>{t('atsPanel.noKeywords')}</p>
 	{:else}
@@ -55,11 +73,11 @@
 				<ul class="keyword-list">
 					{#each missing as keyword (keyword.term)}
 						<li>
-							{#if keyword.known && onadd}
+							{#if onadd}
 								<button
 									type="button"
 									class="keyword-chip missing add-keyword"
-									data-known="true"
+									data-known={keyword.known}
 									aria-label={t('atsPanel.addKeyword', { term: keyword.term })}
 									disabled={!canAdd(keyword.term)}
 									onclick={() => onadd?.(keyword.term)}>{keyword.term}</button
@@ -93,6 +111,11 @@
 	.keyword-summary {
 		font-size: 0.875rem;
 		font-weight: 600;
+	}
+	.missing-summary {
+		font-size: 0.875rem;
+		line-height: 1.65;
+		overflow-wrap: anywhere;
 	}
 	.keyword-empty,
 	.keyword-help {

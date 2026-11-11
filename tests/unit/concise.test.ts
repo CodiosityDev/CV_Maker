@@ -9,7 +9,7 @@ import {
 	rateConcise
 } from '../../src/lib/core/ats/concise';
 import { analyzeFull, analyzeScanFull } from '../../src/lib/core/ats/analyze';
-import { createAiClient } from '../../src/lib/core/ai/index';
+import { conciseSendText, createAiClient } from '../../src/lib/core/ai/index';
 import { parseAiLiteRequest } from '../../src/lib/core/ai/schema';
 import {
 	AI_CONCISE_LIMITS,
@@ -168,6 +168,65 @@ describe('AI input and merge', () => {
 		});
 		expect(merged.points[0]!.issues).toEqual(expect.arrayContaining(['vague', 'filler']));
 		expect(merged.points[1]).toEqual(report.points[1]);
+	});
+});
+
+describe('AI input alignment (points and keys always match)', () => {
+	const CONTACTS_ONLY =
+		'rizky@mail.com 081234567890 https://rizky.dev www.rizky.id linkedin.com/in/rizky github.com/rizky';
+
+	it('conciseSendText removes contacts, caps the length and is stable', () => {
+		expect(conciseSendText('summary', CONTACTS_ONLY)).toBe('');
+		const once = conciseSendText('bullet', `${WORDY} ${WORDY}`);
+		expect(once.length).toBeLessThanOrEqual(AI_CONCISE_LIMITS.bullet);
+		expect(conciseSendText('bullet', once)).toBe(once);
+	});
+
+	it('a cut that turns the end of a long token into a domain is redacted too', () => {
+		const prefix = 'Membuat fitur pencarian aplikasi internal kampus ';
+		const token = 'xxxxxxxxxx.comx';
+		const text = `${prefix}${'y'.repeat(300 - prefix.length - token.length + 1)} ${token}`.slice(
+			0,
+			301
+		);
+		const sent = conciseSendText('bullet', text);
+		expect(sent).not.toMatch(/\.com/);
+		expect(conciseSendText('bullet', sent)).toBe(sent);
+	});
+
+	it('drops a point that is only contact details together with its key', () => {
+		const report = conciseFromText(`RINGKASAN
+${CONTACTS_ONLY}
+PENGALAMAN
+• ${WORDY}`);
+		expect(report.points.map((p) => p.kind)).toEqual(['summary', 'bullet']);
+		const input = aiConciseInput(report, 'id');
+		expect(input.points).toHaveLength(1);
+		expect(input.keys).toEqual([report.points[1]!.key]);
+		const merged = mergeConciseAi(report, input, {
+			task: 'concise',
+			points: [{ score: 20, issues: ['filler'] }]
+		});
+		expect(merged.points[0]).toEqual(report.points[0]);
+		expect(merged.points[1]!.ai).toBe(true);
+	});
+
+	it('the client refuses a hand-built input with an empty point instead of shifting answers', async () => {
+		const client = createAiClient({
+			fetch: (async () => {
+				throw new Error('must not be called');
+			}) as typeof fetch
+		});
+		const error = await client
+			.concise({
+				locale: 'id',
+				points: [
+					{ kind: 'summary', text: CONTACTS_ONLY },
+					{ kind: 'bullet', text: WORDY }
+				]
+			})
+			.catch((e: unknown) => e);
+		expect((error as { code?: string }).code).toBe('invalid');
 	});
 });
 

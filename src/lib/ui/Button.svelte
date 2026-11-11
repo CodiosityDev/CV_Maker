@@ -43,6 +43,7 @@
 		'data-sveltekit-preload-code': preloadCode
 	}: Props = $props();
 	let blocked = $derived(disabled || loading);
+	const external = $derived(!!href && /^(https?:)?\/\//.test(href));
 
 	function handleClick(event: MouseEvent) {
 		if (blocked) {
@@ -64,36 +65,23 @@
 	{@render children()}
 {/snippet}
 
-{#if href && /^(https?:)?\/\//.test(href)}
-	<a
-		{id}
-		href={blocked ? undefined : href}
-		role={blocked ? 'link' : undefined}
-		{title}
-		{target}
-		rel={`external noopener noreferrer ${rel ?? ''}`}
-		data-sveltekit-preload-code={preloadCode}
-		class={`button ${variant} ${size} ${className}`}
-		aria-label={ariaLabel}
-		aria-controls={ariaControls}
-		aria-expanded={ariaExpanded}
-		aria-disabled={blocked || undefined}
-		aria-busy={loading || undefined}
-		tabindex={blocked ? -1 : undefined}
-		onclick={handleClick}
-	>
-		{@render content()}
-	</a>
-{:else if href}
+{#if href}
+	<!-- eslint-disable svelte/no-navigation-without-resolve -- Only validated external URLs bypass resolve(); the internal branch always uses it. -->
 	<a
 		{id}
 		href={blocked
 			? undefined
-			: resolve(...([href.replace(/^\//, '')] as Parameters<typeof resolve>))}
+			: external
+				? href
+				: resolve(...([href.replace(/^\//, '')] as Parameters<typeof resolve>))}
 		role={blocked ? 'link' : undefined}
 		{title}
 		{target}
-		rel={target === '_blank' ? `noopener noreferrer ${rel ?? ''}` : rel}
+		rel={external
+			? `external noopener noreferrer ${rel ?? ''}`
+			: target === '_blank'
+				? `noopener noreferrer ${rel ?? ''}`
+				: rel}
 		data-sveltekit-preload-code={preloadCode}
 		class={`button ${variant} ${size} ${className}`}
 		aria-label={ariaLabel}
@@ -106,6 +94,7 @@
 	>
 		{@render content()}
 	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {:else}
 	<button
 		{id}

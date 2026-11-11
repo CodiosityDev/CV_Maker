@@ -9,6 +9,7 @@
 		failed = false;
 		try {
 			const module = await import('#lib/ui/ats-check/Workspace.svelte');
+			await module.prepareWorkspaceMessages();
 			if (mounted) Workspace = module.default;
 		} catch {
 			if (mounted) failed = true;
@@ -16,10 +17,6 @@
 	}
 	onMount(() => {
 		mounted = true;
-		// This request contains no CV data and never blocks the local scanner.
-		void import('#lib/ui/ai/session.svelte.ts')
-			.then((module) => module.refreshAiQuota())
-			.catch(() => {});
 		void load();
 		return () => {
 			mounted = false;

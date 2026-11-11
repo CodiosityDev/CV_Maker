@@ -3,11 +3,18 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { atsEditTarget } from '#lib/ui/ats-check/navigation.ts';
+	import { atsEditTarget, atsField, type AtsEditTarget } from '#lib/ui/ats-check/navigation.ts';
+	import { applyConcisePoint } from '#lib/ui/ats-check/concise-target.ts';
 	import type { CVDocument } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import { newId } from '#lib/core/schema/ids.ts';
-	import type { AtsAnalyzer, AtsReport, KeywordReport, CheckTarget } from '#lib/core/ats/index.ts';
+	import type {
+		AtsAnalyzer,
+		AtsReport,
+		KeywordReport,
+		ConcisePoint,
+		ConciseReport
+	} from '#lib/core/ats/index.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
@@ -72,6 +79,9 @@
 	let analyzerLoad: Promise<AtsAnalyzer> | undefined;
 	let atsReport = $state.raw<AtsReport>();
 	let atsKeywords = $state.raw<KeywordReport>();
+	let atsConcise = $state.raw<ConciseReport>();
+	let conciseSignature: string | undefined;
+	const conciseSource = $derived(contentSignature());
 	let atsLoading = $state(false);
 	let atsFailed = $state(false);
 	let atsRetry = $state(0);
@@ -117,6 +127,7 @@
 		jobPost = '';
 		atsReport = undefined;
 		atsKeywords = undefined;
+		atsConcise = undefined;
 		clearKeywordUndo();
 		void tick().then(() => {
 			if (mounted && removed) removalNotice?.focus({ preventScroll: true });
@@ -188,9 +199,19 @@
 		};
 	});
 	$effect(() => {
+		void conciseSource;
+		void incognito.active;
+		void removed;
+		void expired;
+		atsConcise = undefined;
+		conciseSignature = undefined;
+	});
+	$effect(() => {
 		const request = ++analysisRequest;
+		const source = conciseSource;
+		const mode = incognito.active;
 		void atsRetry;
-		if (!toolOpen || tool !== 'ats' || removed) {
+		if (!toolOpen || tool !== 'ats' || removed || expired) {
 			atsLoading = false;
 			return;
 		}
@@ -212,9 +233,20 @@
 					return engine.analyze(cv, text.trim() ? text : undefined);
 				})
 				.then((result) => {
-					if (!result || !mounted || request !== analysisRequest) return;
+					if (
+						!result ||
+						!mounted ||
+						request !== analysisRequest ||
+						removed ||
+						expired ||
+						mode !== incognito.active ||
+						source !== contentSignature()
+					)
+						return;
 					atsReport = result.report;
 					atsKeywords = result.keywords;
+					atsConcise = result.concise;
+					conciseSignature = source;
 					atsLoading = false;
 				})
 				.catch(() => {
@@ -222,6 +254,7 @@
 					analyzerLoad = undefined;
 					atsReport = undefined;
 					atsKeywords = undefined;
+					atsConcise = undefined;
 					atsLoading = false;
 					atsFailed = true;
 				});
@@ -405,20 +438,20 @@
 		target?.focus({ preventScroll: true });
 		target?.scrollIntoView({ block: 'center', behavior: 'instant' });
 	}
-	async function jump(target: CheckTarget) {
-		const field =
-			target.step === 'personal' && target.field
-				? target.field === 'links' && target.itemId
-					? `personal.links.${target.itemId}.url`
-					: `personal.${target.field}`
-				: target.section && target.itemId && target.field
-					? `${target.section}.${target.itemId}.${target.field}`
-					: target.section === 'summary'
-						? 'summary'
-						: target.section === 'skills'
-							? 'skills.hard'
-							: (target.field ?? '');
-		await focusField(field, target.section ?? target.step);
+	async function jump(target: AtsEditTarget) {
+		await focusField(atsField(target) ?? '', target.section ?? target.step);
+	}
+	function applyShorter(point: ConcisePoint, text: string): boolean {
+		if (
+			!mounted ||
+			removed ||
+			expired ||
+			!atsConcise ||
+			conciseSignature !== contentSignature() ||
+			!atsConcise.points.some((item) => item.key === point.key && item.text === point.text)
+		)
+			return false;
+		return applyConcisePoint(store, point, text);
 	}
 	function canAddKeyword(term: string) {
 		return (
@@ -432,7 +465,7 @@
 	function addKeyword(term: string) {
 		if (
 			!canAddKeyword(term) ||
-			!atsKeywords?.keywords.some((item) => item.term === term && item.known && !item.inCv)
+			!atsKeywords?.keywords.some((item) => item.term === term && !item.inCv)
 		)
 			return;
 		clearKeywordUndo();
@@ -668,6 +701,10 @@
 				{:else if tool === 'ats' && AtsPanel}<AtsPanel
 						report={atsReport}
 						keywords={atsKeywords}
+						concise={atsConcise}
+						locale={store.cv.locale}
+						conciseResetKey={`${store.cv.id}:${conciseSource}:${incognito.active}`}
+						onapply={applyShorter}
 						loading={atsLoading}
 						failed={atsFailed}
 						bind:jobPost
