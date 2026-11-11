@@ -22,9 +22,6 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import CvPreview from '#lib/ui/CvPreview.svelte';
 	import TemplatePicker from '#lib/ui/TemplatePicker.svelte';
-	import ExportPanel from '#lib/ui/ExportPanel.svelte';
-	import AtsPanel from '#lib/ui/AtsPanel.svelte';
-	import JobLinks from '#lib/ui/JobLinks.svelte';
 	import PersonalStep from '#lib/ui/wizard/PersonalStep.svelte';
 	import CareerFields from '#lib/ui/wizard/CareerFields.svelte';
 	import SummaryFields from '#lib/ui/wizard/SummaryFields.svelte';
@@ -45,9 +42,21 @@
 	const expired = $derived(incognito.active && Boolean(incognito.expiredAt));
 	let mounted = true;
 	let memory = $state(false);
-	let view = $state<'edit' | 'preview'>('edit');
+	let view = $state<'edit' | 'preview' | 'visual'>('edit');
+	let VisualEditor = $state<typeof import('./VisualEditor.svelte').default>();
+	let visualLoading = $state(false);
+	let visualFailed = $state(false);
+	let visualRequest = 0;
+	let visualMode = untrack(() => incognito.active);
+	const visualAllowed = $derived(store.cv.kind === 'creative' && !removed && !expired);
 	let tool = $state<'download' | 'ats' | 'jobs'>();
 	let toolOpen = $state(false);
+	let ExportPanel = $state<typeof import('#lib/ui/ExportPanel.svelte').default>();
+	let AtsPanel = $state<typeof import('#lib/ui/AtsPanel.svelte').default>();
+	let JobLinks = $state<typeof import('#lib/ui/JobLinks.svelte').default>();
+	let toolLoading = $state(false);
+	let toolFailed = $state(false);
+	let toolRequest = 0;
 	let appearanceOpen = $state(false);
 	let container = $state<HTMLDivElement>();
 	let removalNotice = $state<HTMLDivElement>();
@@ -91,6 +100,8 @@
 	});
 	onDestroy(() => {
 		mounted = false;
+		clearVisual();
+		clearTool();
 		analysisRequest += 1;
 		analyzer?.dispose();
 		clearKeywordUndo();
@@ -98,6 +109,9 @@
 	});
 	$effect(() => {
 		if (!removed) return;
+		view = 'edit';
+		clearVisual();
+		clearTool();
 		toolOpen = false;
 		tool = undefined;
 		jobPost = '';
@@ -107,6 +121,22 @@
 		void tick().then(() => {
 			if (mounted && removed) removalNotice?.focus({ preventScroll: true });
 		});
+	});
+	$effect(() => {
+		const mode = incognito.active;
+		if (mode !== visualMode) {
+			clearTool();
+			toolOpen = false;
+			tool = undefined;
+		}
+		if (mode !== visualMode || !visualAllowed) {
+			visualMode = mode;
+			if (view === 'visual') view = 'edit';
+			clearVisual();
+		}
+	});
+	$effect(() => {
+		if (!toolOpen) clearTool();
 	});
 	$effect(() => {
 		const locale = store.cv.locale;
@@ -215,8 +245,97 @@
 		return JSON.stringify({ ...cv, status: undefined, updatedAt: undefined });
 	}
 	function openTool(next: 'download' | 'ats' | 'jobs') {
+		if (!mounted || removed || expired) return;
 		tool = next;
 		toolOpen = true;
+		void loadTool();
+	}
+	function clearTool() {
+		toolRequest += 1;
+		toolLoading = false;
+		toolFailed = false;
+	}
+	async function loadTool() {
+		const requested = tool;
+		if (!mounted || !toolOpen || !requested || removed || expired) return;
+		const request = ++toolRequest;
+		toolFailed = false;
+		if (
+			(requested === 'download' && ExportPanel) ||
+			(requested === 'ats' && AtsPanel) ||
+			(requested === 'jobs' && JobLinks)
+		) {
+			toolLoading = false;
+			return;
+		}
+		const id = store.cv.id;
+		const mode = incognito.active;
+		const expiredAt = incognito.expiredAt;
+		const current = () =>
+			mounted &&
+			toolOpen &&
+			tool === requested &&
+			request === toolRequest &&
+			!removed &&
+			!expired &&
+			store.cv.id === id &&
+			incognito.active === mode &&
+			incognito.expiredAt === expiredAt;
+		toolLoading = true;
+		try {
+			if (requested === 'download') {
+				const module = await import('#lib/ui/ExportPanel.svelte');
+				if (current()) ExportPanel = module.default;
+			} else if (requested === 'ats') {
+				const module = await import('#lib/ui/AtsPanel.svelte');
+				if (current()) AtsPanel = module.default;
+			} else {
+				const module = await import('#lib/ui/JobLinks.svelte');
+				if (current()) JobLinks = module.default;
+			}
+		} catch {
+			if (current()) toolFailed = true;
+		} finally {
+			if (mounted && request === toolRequest) toolLoading = false;
+		}
+	}
+	function clearVisual() {
+		visualRequest += 1;
+		VisualEditor = undefined;
+		visualLoading = false;
+		visualFailed = false;
+	}
+	function selectView(next: 'edit' | 'preview' | 'visual') {
+		if (next === 'visual' && !visualAllowed) return;
+		if (next === view && (next !== 'visual' || VisualEditor || visualLoading)) return;
+		view = next;
+		if (next === 'visual') void loadVisual();
+		else clearVisual();
+	}
+	async function loadVisual() {
+		if (!visualAllowed || view !== 'visual') return;
+		const request = ++visualRequest;
+		const id = store.cv.id;
+		const mode = incognito.active;
+		const expiredAt = incognito.expiredAt;
+		const current = () =>
+			mounted &&
+			visualAllowed &&
+			view === 'visual' &&
+			request === visualRequest &&
+			store.cv.id === id &&
+			incognito.active === mode &&
+			incognito.expiredAt === expiredAt;
+		visualLoading = true;
+		visualFailed = false;
+		try {
+			const module = await import('./VisualEditor.svelte');
+			if (current()) VisualEditor = module.default;
+		} catch {
+			if (current()) visualFailed = true;
+		} finally {
+			if (mounted && request === visualRequest) visualLoading = false;
+		}
 	}
 	async function flushBeforeLeave() {
 		if (removed) return false;
@@ -260,6 +379,7 @@
 	async function focusField(field: string, section?: string) {
 		toolOpen = false;
 		view = 'edit';
+		clearVisual();
 		await tick();
 		if (!mounted || removed || !container?.isConnected) return;
 		const control =
@@ -416,14 +536,31 @@
 				>
 			</div>
 		</div>
-		<div class="view-switch" role="group" aria-label={t('editor.view')}>
-			<button type="button" aria-pressed={view === 'edit'} onclick={() => (view = 'edit')}
+		<div
+			class="view-switch"
+			class:has-visual={store.cv.kind === 'creative'}
+			role="group"
+			aria-label={t('editor.view')}
+		>
+			<button type="button" aria-pressed={view === 'edit'} onclick={() => selectView('edit')}
 				>{t('editor.edit')}</button
-			><button type="button" aria-pressed={view === 'preview'} onclick={() => (view = 'preview')}
+			><button type="button" aria-pressed={view === 'preview'} onclick={() => selectView('preview')}
 				>{t('editor.preview')}</button
 			>
+			{#if store.cv.kind === 'creative'}<button
+					type="button"
+					aria-pressed={view === 'visual'}
+					disabled={!visualAllowed}
+					onclick={() => selectView('visual')}>{t('visualEditor.mode')}</button
+				>{/if}
 		</div>
-		<div class="workspace" class:show-preview={view === 'preview'}>
+		<div
+			class="workspace"
+			class:show-preview={view === 'preview'}
+			class:visual-capable={store.cv.kind === 'creative'}
+			hidden={view === 'visual'}
+			inert={view === 'visual'}
+		>
 			<div class="editor-form">
 				{#if guidanceFailed}<p class="notice">
 						{t('wizard.loadError')}
@@ -493,6 +630,18 @@
 				<div class="preview-sticky"><CvPreview {model} /></div>
 			</aside>
 		</div>
+		{#if view === 'visual' && visualAllowed}<div
+				class="visual-workspace"
+				aria-busy={visualLoading || undefined}
+			>
+				{#if VisualEditor}<VisualEditor {store} {photoUrl} onformrequest={focusField} />
+				{:else}<div class="visual-placeholder" role="status" data-testid="visual-editor-loading">
+						<p>{t(visualFailed ? 'visualEditor.loadError' : 'visualEditor.loading')}</p>
+						{#if visualFailed}<Button variant="secondary" onclick={loadVisual}
+								>{t('visualEditor.retry')}</Button
+							>{/if}
+					</div>{/if}
+			</div>{/if}
 		<Dialog
 			bind:open={toolOpen}
 			title={tool === 'download'
@@ -502,12 +651,21 @@
 					: t('jobLinks.dialogTitle')}
 		>
 			{#if toolOpen}
-				{#if tool === 'download'}<ExportPanel
+				{#if toolLoading}
+					<p role="status">{t('common.loading')}</p>
+				{:else if toolFailed}
+					<div role="alert">
+						<p>{t('visualEditor.toolLoadError')}</p>
+						<Button variant="secondary" onclick={() => void loadTool()}
+							>{t('visualEditor.retry')}</Button
+						>
+					</div>
+				{:else if tool === 'download' && ExportPanel}<ExportPanel
 						cv={store.cv}
 						beforeLeave={flushBeforeLeave}
 						returnToEditor
 					/>
-				{:else if tool === 'ats'}<AtsPanel
+				{:else if tool === 'ats' && AtsPanel}<AtsPanel
 						report={atsReport}
 						keywords={atsKeywords}
 						loading={atsLoading}
@@ -518,7 +676,7 @@
 						onretry={() => atsRetry++}
 						canAdd={canAddKeyword}
 					/>
-				{:else if tool === 'jobs'}<JobLinks
+				{:else if tool === 'jobs' && JobLinks}<JobLinks
 						cv={store.cv}
 						suggestionData={suggestionsData}
 						onfillTarget={(event) => {
@@ -636,8 +794,23 @@
 	}
 	.workspace,
 	.editor-form,
-	.preview-panel {
+	.preview-panel,
+	.visual-workspace {
 		min-width: 0;
+	}
+	.workspace[hidden] {
+		display: none;
+	}
+	.visual-workspace {
+		min-height: calc(100svh - 10rem);
+	}
+	.visual-placeholder {
+		display: grid;
+		justify-items: start;
+		align-content: start;
+		gap: 1rem;
+		padding-block: 1rem;
+		color: var(--color-text-muted);
 	}
 	.preview-panel {
 		display: none;
@@ -704,7 +877,20 @@
 		.show-preview .editor-form {
 			display: block;
 		}
-		.view-switch {
+		.workspace.visual-capable.show-preview {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.workspace.visual-capable.show-preview .editor-form {
+			display: none;
+		}
+		.workspace.visual-capable.show-preview .preview-panel {
+			position: static;
+			justify-self: center;
+			width: min(100%, 210mm);
+			max-height: none;
+			overflow: visible;
+		}
+		.view-switch:not(.has-visual) {
 			display: none;
 		}
 	}
