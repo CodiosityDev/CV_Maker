@@ -8,6 +8,7 @@ import { matchKeywords } from './keywords';
 import { analyzeScan } from '../scan/analyze';
 import type { ExtractedCv, ScanAnalysis } from '../scan/types';
 import type { AtsReport, KeywordReport } from './types';
+import { KEYWORD_LEXICON, type KeywordTerm } from './lexicon';
 import { conciseFromCv, conciseFromText, type ConciseReport } from './concise';
 
 export interface FullAnalysis {
@@ -17,16 +18,20 @@ export interface FullAnalysis {
 	concise: ConciseReport;
 }
 
-let knownTermsPromise: Promise<string[]> | undefined;
+let knownTermsPromise: Promise<(string | KeywordTerm)[]> | undefined;
 
-/** Curated skills/tools in both languages (job posts often mix Indonesian and English). */
-export function knownTerms(): Promise<string[]> {
-	knownTermsPromise ??= Promise.all([loadSuggestions('id'), loadSuggestions('en')]).then((sets) =>
-		sets.flatMap((data) => [
+/**
+ * Job keywords with their other spellings (lexicon) plus the curated skills/tools of the
+ * suggestions in both languages (job posts often mix Indonesian and English).
+ */
+export function knownTerms(): Promise<(string | KeywordTerm)[]> {
+	knownTermsPromise ??= Promise.all([loadSuggestions('id'), loadSuggestions('en')]).then((sets) => [
+		...KEYWORD_LEXICON,
+		...sets.flatMap((data) => [
 			...Object.values(data.skillsByCategory).flatMap((set) => [...set.hard, ...set.tools]),
 			...data.softSkills
 		])
-	);
+	]);
 	return knownTermsPromise;
 }
 

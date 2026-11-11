@@ -12,6 +12,8 @@ export const SCAN_MAX_BYTES = 5 * 1024 * 1024;
 export const SCAN_MAX_PAGES = 10;
 /** Text beyond this is ignored (keeps analysis fast on any phone). */
 export const SCAN_MAX_CHARS = 40_000;
+/** Pasted CV text ("Tempel teks CV"): longer is surely not a CV. Use as the textarea maxlength. */
+export const SCAN_MAX_PASTE_CHARS = 30_000;
 /** `accept` attribute for the file input. */
 export const SCAN_ACCEPT =
 	'.pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain';

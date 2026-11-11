@@ -22,7 +22,7 @@
 import type { ScanErrorCode } from './types';
 
 export * from './types';
-export { extractCvText, sniffKind } from './extract';
+export { extractCvText, extractPastedText, sniffKind } from './extract';
 export { analyzeScan, headingSection } from './analyze';
 
 /** i18n key for a file-reading error (namespace `ats`). */
