@@ -43,7 +43,6 @@ export const id = {
 	},
 	footer: {
 		madeBy: 'Dibuat oleh',
-		github: 'GitHub',
 		links: 'Tautan situs'
 	},
 	ui: {

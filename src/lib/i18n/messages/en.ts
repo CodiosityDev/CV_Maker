@@ -38,7 +38,6 @@ export const en: BaseMessages = {
 	},
 	footer: {
 		madeBy: 'Made by',
-		github: 'GitHub',
 		links: 'Site links'
 	},
 	ui: {

@@ -220,9 +220,6 @@ export const siteEn: SiteMessages = {
 			'CV Maker helps fresh graduates build an ATS or Creative CV with guidance, without creating an account.',
 		attribution: 'CV Maker is created and maintained by Codiosity.',
 		codiosityLink: 'Visit Codiosity',
-		openTitle: 'Source code',
-		openCopy: 'The CV Maker source code is available on GitHub.',
-		github: 'View the code on GitHub',
 		back: 'Back to home'
 	}
 };
