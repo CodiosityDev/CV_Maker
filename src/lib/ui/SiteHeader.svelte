@@ -90,6 +90,9 @@
 <style>
 	.site-header {
 		view-transition-name: app-header;
+		/* Own stacking context (view-transition-name): keep it above the page content. */
+		position: relative;
+		z-index: 30;
 		background: var(--color-surface);
 		border-bottom: 1px solid var(--color-border);
 	}
