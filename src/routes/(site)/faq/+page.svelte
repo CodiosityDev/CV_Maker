@@ -6,6 +6,7 @@
 		'ats',
 		'scanUpload',
 		'scanScore',
+		'aiInvented',
 		'free',
 		'storage',
 		'deleted',
