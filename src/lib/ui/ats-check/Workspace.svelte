@@ -1,32 +1,51 @@
+<script module lang="ts">
+	import { ensureMessages, registerNamespace } from '#lib/i18n/index.svelte.ts';
+	let namespaceRequest: Promise<void> | undefined;
+	/** Loaded on the scanner page, so its extra UI text never enters the landing bundle. */
+	export function prepareWorkspaceMessages(): Promise<void> {
+		return (namespaceRequest ??= Promise.all([
+			import('#lib/i18n/messages/app.id.ts'),
+			import('#lib/i18n/messages/ats.id.ts')
+		])
+			.then(async ([app, ats]) => {
+				registerNamespace('app', app.appId);
+				registerNamespace('ats', ats.atsId);
+				await ensureMessages();
+			})
+			.catch((failure: unknown) => {
+				namespaceRequest = undefined;
+				throw failure;
+			}));
+	}
+</script>
+
 <script lang="ts">
 	import { onDestroy, onMount, tick, untrack, type Component } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { goto as navigate } from '$app/navigation';
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
+	import type { CvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import type { ExtractedCv, ScanReport } from '#lib/core/scan/types.ts';
-	import { SCAN_ACCEPT } from '#lib/core/scan/types.ts';
-	import type { AtsAnalyzer, AtsReport, KeywordReport, CheckTarget } from '#lib/core/ats/index.ts';
+	import { SCAN_ACCEPT, SCAN_MAX_PASTE_CHARS } from '#lib/core/scan/types.ts';
+	import type { ConciseReport } from '#lib/core/ats/concise.ts';
+	import type { AtsAnalyzer, AtsReport, KeywordReport } from '#lib/core/ats/index.ts';
 	import { MAX_JOB_POST_CHARS } from '#lib/core/ats/keywords.ts';
 	import { incognito } from '#lib/core/storage/incognito.svelte.ts';
 	import type { SuggestionData } from '#lib/core/suggest/types.ts';
-	import {
-		t,
-		i18n,
-		ensureMessages,
-		registerNamespace,
-		type MessageKey
-	} from '#lib/i18n/index.svelte.ts';
+	import { t, i18n, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Autocomplete from '#lib/ui/Autocomplete.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
 	import type { AiReviewSource as ReviewSource } from '#lib/ui/ai/AiReviewPanel.svelte';
-	import { resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
-	import { atsEditQuery } from './navigation.ts';
+	import { refreshAiQuota, resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
+	import { atsEditQuery, type AtsEditTarget } from './navigation.ts';
 
 	type StorageModule = typeof import('#lib/core/storage/index.ts');
 	type SuggestModule = typeof import('#lib/core/suggest/index.ts');
-	let tab = $state<'file' | 'cv'>('file');
+	type SourceTab = 'file' | 'cv' | 'paste';
+	let tab = $state<SourceTab>('file');
+	let pastedText = $state('');
 	let cvs = $state<CVMeta[]>([]);
 	let listFailed = $state(false);
 	let selectedId = $state('');
@@ -35,6 +54,9 @@
 	let scanReport = $state.raw<ScanReport>();
 	let cvReport = $state.raw<AtsReport>();
 	let keywords = $state.raw<KeywordReport>();
+	let concise = $state.raw<ConciseReport>();
+	let conciseSource = '';
+	let sourceRevision = $state(0);
 	let fileName = $state('');
 	let jobPost = $state('');
 	let targetRole = $state('');
@@ -47,12 +69,21 @@
 	let fileInput = $state<HTMLInputElement>();
 	let uploadTab = $state<HTMLButtonElement>();
 	let cvTab = $state<HTMLButtonElement>();
+	let pasteTab = $state<HTMLButtonElement>();
 	let dragOver = $state(false);
 	let retry = $state(0);
 	let revision = $state(0);
-	let ScanResults =
-		$state<Component<{ report: ScanReport; keywords?: KeywordReport; jobPost?: string }>>();
+	let ScanResults = $state<
+		Component<{
+			report: ScanReport;
+			keywords?: KeywordReport;
+			jobPost?: string;
+			concise?: ConciseReport;
+			resetKey?: string;
+		}>
+	>();
 	let CvResults = $state<typeof import('#lib/ui/AtsPanel.svelte').default>();
+	let SavedConcisePanel = $state<typeof import('./SavedConcisePanel.svelte').default>();
 	let Review = $state<Component<{ source: ReviewSource }>>();
 	let ConvertPanel = $state<typeof import('./ConvertPanel.svelte').default>();
 	let conversionEngaged = $state(false);
@@ -61,15 +92,15 @@
 	let storage: StorageModule | undefined;
 	let atsModule: typeof import('#lib/core/ats/index.ts') | undefined;
 	let analyzer: AtsAnalyzer | undefined;
-	let namespaceRequest: Promise<void> | undefined;
 	let generation = 0;
 	let listGeneration = 0;
 	let mounted = true;
 	const uid = $props.id();
 	const scope = () => `${incognito.active}:${incognito.expiredAt ?? ''}`;
 	let previousScope = untrack(scope);
+	let selectedStore: CvStore | undefined;
 	const reviewSource = $derived<ReviewSource | undefined>(
-		tab === 'file' && extracted
+		tab !== 'cv' && extracted
 			? { kind: 'file', extracted, targetRole, jobPost }
 			: tab === 'cv' && cv
 				? { kind: 'cv', cv, jobPost }
@@ -81,8 +112,21 @@
 	function current(token: number, startedScope: string) {
 		return mounted && token === generation && startedScope === scope();
 	}
+	function registerSavedStore(store: CvStore): () => void {
+		selectedStore = store;
+		return () => {
+			if (selectedStore === store) selectedStore = undefined;
+		};
+	}
+	function invalidateSavedStore(): void {
+		untrack(() => {
+			if (selectedStore && selectedStore.externalChange !== 'removed')
+				selectedStore.applyExternalChange({ type: 'wiped' });
+		});
+	}
 	function clearResults() {
 		generation += 1;
+		sourceRevision += 1;
 		revision = generation;
 		analyzer?.dispose();
 		analyzer = undefined;
@@ -91,6 +135,8 @@
 		scanReport = undefined;
 		cvReport = undefined;
 		keywords = undefined;
+		concise = undefined;
+		conciseSource = '';
 		selectedId = '';
 		fileName = '';
 		loadingCv = false;
@@ -103,39 +149,35 @@
 	}
 	function reset() {
 		clearResults();
+		pastedText = '';
 		jobPost = '';
 		targetRole = '';
-		void tick().then(() => fileInput?.focus());
+		void tick().then(() => {
+			if (tab === 'paste') document.getElementById('ats-paste-text')?.focus();
+			else fileInput?.focus();
+		});
 	}
-	function selectTab(next: 'file' | 'cv') {
+	function selectTab(next: SourceTab) {
 		if (next === tab) return;
 		clearResults();
+		pastedText = '';
 		tab = next;
 	}
 	function tabKey(event: KeyboardEvent) {
-		if (!cvs.length || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+		if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
 		event.preventDefault();
+		const tabs: SourceTab[] = cvs.length ? ['file', 'cv', 'paste'] : ['file', 'paste'];
+		const index = Math.max(0, tabs.indexOf(tab));
 		const next =
-			event.key === 'Home' ? 'file' : event.key === 'End' ? 'cv' : tab === 'file' ? 'cv' : 'file';
+			tabs[
+				event.key === 'Home'
+					? 0
+					: event.key === 'End'
+						? tabs.length - 1
+						: (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length
+			]!;
 		selectTab(next);
-		(next === 'file' ? uploadTab : cvTab)?.focus();
-	}
-	async function prepareMessages() {
-		if (!namespaceRequest)
-			namespaceRequest = Promise.all([
-				import('#lib/i18n/messages/app.id.ts'),
-				import('#lib/i18n/messages/ats.id.ts')
-			])
-				.then(async ([app, ats]) => {
-					registerNamespace('app', app.appId);
-					registerNamespace('ats', ats.atsId);
-					await ensureMessages();
-				})
-				.catch((error: unknown) => {
-					namespaceRequest = undefined;
-					throw error;
-				});
-		return namespaceRequest;
+		(next === 'file' ? uploadTab : next === 'cv' ? cvTab : pasteTab)?.focus();
 	}
 	async function refreshList() {
 		const request = ++listGeneration;
@@ -155,6 +197,7 @@
 		}
 	}
 	onMount(() => {
+		void refreshAiQuota().catch(() => {});
 		void refreshList();
 		let stopExternal: (() => void) | undefined;
 		let stopped = false;
@@ -162,16 +205,23 @@
 			if (stopped) return;
 			stopExternal = module.onExternalChange((event) => {
 				if (event.type === 'wiped') {
+					invalidateSavedStore();
 					clearResults();
 					cvs = [];
 					jobPost = '';
 					targetRole = '';
+					pastedText = '';
 					resetAiSession();
 				}
 				if (event.type === 'cv-removed') cvs = cvs.filter((item) => item.id !== event.id);
 				if ('id' in event && event.id === selectedId) {
-					if (event.type === 'cv-removed') clearResults();
-					else void chooseCv(event.id);
+					if (event.type === 'cv-removed') {
+						invalidateSavedStore();
+						clearResults();
+					} else if (!selectedStore || event.updatedAt > selectedStore.cv.updatedAt) {
+						invalidateSavedStore();
+						void chooseCv(event.id);
+					}
 				}
 				void refreshList();
 			});
@@ -188,6 +238,9 @@
 		analyzer?.dispose();
 		extracted = undefined;
 		cv = undefined;
+		concise = undefined;
+		conciseSource = '';
+		pastedText = '';
 		jobPost = '';
 		targetRole = '';
 		fileName = '';
@@ -196,10 +249,12 @@
 		const nextScope = scope();
 		if (nextScope !== previousScope) {
 			previousScope = nextScope;
+			invalidateSavedStore();
 			clearResults();
 			cvs = [];
 			jobPost = '';
 			targetRole = '';
+			pastedText = '';
 			syncAiSession();
 			void refreshList();
 		}
@@ -227,6 +282,12 @@
 		const attempt = retry;
 		void attempt;
 		if (!file && !document) return;
+		const source = JSON.stringify(file ?? document);
+		if (source !== conciseSource) {
+			conciseSource = source;
+			concise = undefined;
+			sourceRevision += 1;
+		}
 		const token = ++generation;
 		revision = token;
 		conversionEngaged = false;
@@ -237,7 +298,7 @@
 		const timer = setTimeout(() => {
 			void (async () => {
 				try {
-					await prepareMessages();
+					await prepareWorkspaceMessages();
 					atsModule ??= await import('#lib/core/ats/index.ts');
 					if (!current(token, startedScope)) return;
 					analyzer ??= atsModule.createAtsAnalyzer();
@@ -249,6 +310,7 @@
 						if (!current(token, startedScope)) return;
 						scanReport = analysis.report;
 						keywords = analysis.keywords;
+						concise = analysis.concise;
 						ScanResults = component.default;
 						if (!file.layout.imageOnly) {
 							const convert = await import('./ConvertPanel.svelte');
@@ -256,14 +318,17 @@
 							ConvertPanel = convert.default;
 						}
 					} else if (document) {
-						const [analysis, component] = await Promise.all([
+						const [analysis, component, conciseComponent] = await Promise.all([
 							analyzer.analyze($state.snapshot(document), post),
-							import('#lib/ui/AtsPanel.svelte')
+							import('#lib/ui/AtsPanel.svelte'),
+							import('./SavedConcisePanel.svelte')
 						]);
 						if (!current(token, startedScope)) return;
 						cvReport = analysis.report;
 						keywords = analysis.keywords;
+						concise = analysis.concise;
 						CvResults = component.default;
+						SavedConcisePanel = conciseComponent.default;
 					}
 					const review = await import('#lib/ui/ai/AiReviewPanel.svelte');
 					if (!current(token, startedScope)) return;
@@ -286,7 +351,7 @@
 		extracting = true;
 		extractionPending = true;
 		try {
-			await prepareMessages();
+			await prepareWorkspaceMessages();
 			const module = await import('#lib/core/scan/index.ts');
 			try {
 				const text = await module.extractCvText(file);
@@ -306,6 +371,35 @@
 				extracting = false;
 				if (fileInput) fileInput.value = '';
 			}
+		}
+	}
+	async function checkPasted() {
+		if (tab !== 'paste' || extracting) return;
+		const text = pastedText;
+		clearResults();
+		const token = generation;
+		const startedScope = scope();
+		extracting = true;
+		try {
+			await prepareWorkspaceMessages();
+			const module = await import('#lib/core/scan/index.ts');
+			if (!current(token, startedScope)) return;
+			try {
+				extracted = module.extractPastedText(text);
+				fileName = t('conciseWorkspace.pastedSource');
+			} catch (failure) {
+				error =
+					failure instanceof module.ScanError
+						? module.scanErrorMessageKey(failure.code)
+						: 'atsCheck.readFailed';
+				void tick().then(() => {
+					if (current(token, startedScope)) document.getElementById('ats-paste-text')?.focus();
+				});
+			}
+		} catch {
+			if (current(token, startedScope)) error = 'atsCheck.readFailed';
+		} finally {
+			if (current(token, startedScope)) extracting = false;
 		}
 	}
 	async function chooseCv(id: string) {
@@ -344,7 +438,7 @@
 			dateStyle: 'medium'
 		}).format(new Date(value));
 	}
-	async function jump(target: CheckTarget) {
+	async function jump(target: AtsEditTarget) {
 		if (!cv || !storage) return;
 		const token = generation;
 		const startedScope = scope();
@@ -356,7 +450,11 @@
 				void refreshList();
 				return;
 			}
-			await navigate(resolve(`/(app)/cv/[id]/edit?${atsEditQuery(target)}`, { id: latest.id }));
+			await navigate(
+				latest.status.wizardCompleted
+					? resolve(`/(app)/cv/[id]/edit?${atsEditQuery(target)}`, { id: latest.id })
+					: resolve(`/(app)/buat/[id]?${atsEditQuery(target)}`, { id: latest.id })
+			);
 		} catch {
 			if (current(token, startedScope)) error = 'atsCheck.cvLoadFailed';
 		}
@@ -386,6 +484,17 @@
 			onkeydown={tabKey}
 			onclick={() => selectTab('cv')}>{t('atsCheck.savedTab')}</button
 		>{/if}
+	<button
+		type="button"
+		role="tab"
+		id={`${uid}-paste-tab`}
+		aria-controls={`${uid}-paste-panel`}
+		aria-selected={tab === 'paste'}
+		tabindex={tab === 'paste' ? 0 : -1}
+		bind:this={pasteTab}
+		onkeydown={tabKey}
+		onclick={() => selectTab('paste')}>{t('conciseWorkspace.pasteTab')}</button
+	>
 </div>
 
 {#if tab === 'file'}
@@ -422,6 +531,34 @@
 				<Button variant="ghost" onclick={reset}>{t('atsCheck.anotherFile')}</Button>
 			</div>{/if}
 	</div>
+{:else if tab === 'paste'}
+	<div
+		role="tabpanel"
+		id={`${uid}-paste-panel`}
+		aria-labelledby={`${uid}-paste-tab`}
+		class="paste-source"
+	>
+		<Textarea
+			id="ats-paste-text"
+			label={t('conciseWorkspace.pasteLabel')}
+			hint={t('conciseWorkspace.pasteHint')}
+			error={error ? t(error) : undefined}
+			maxlength={SCAN_MAX_PASTE_CHARS}
+			rows={8}
+			autocomplete="off"
+			spellcheck={false}
+			bind:value={
+				() => pastedText,
+				(value) => {
+					clearResults();
+					pastedText = value;
+				}
+			}
+		/>
+		<Button id="scan-paste-submit" disabled={busy} onclick={() => void checkPasted()}
+			>{t('conciseWorkspace.checkPaste')}</Button
+		>
+	</div>
 {:else}
 	<div role="tabpanel" id={`${uid}-cv-panel`} aria-labelledby={`${uid}-cv-tab`}>
 		<h2 class="small-heading">{t('atsCheck.chooseCv')}</h2>
@@ -448,7 +585,7 @@
 	</p>{/if}
 
 <div class="context-fields">
-	{#if tab === 'file'}<Autocomplete
+	{#if tab !== 'cv'}<Autocomplete
 			id="ats-target-role"
 			label={t('atsCheck.targetRole')}
 			bind:value={targetRole}
@@ -477,17 +614,19 @@
 {#if busy}<p class="status" role="status" aria-live="polite">
 		{t(extracting ? 'atsCheck.reading' : loadingCv ? 'atsCheck.loadingCv' : 'atsCheck.analyzing')}
 	</p>{/if}
-{#if error}<p id={`${uid}-error`} class="error" role="alert">{t(error)}</p>{/if}
+{#if error && tab !== 'paste'}<p id={`${uid}-error`} class="error" role="alert">{t(error)}</p>{/if}
 {#if analysisFailed}<div class="error" role="alert">
 		<p>{t('atsCheck.analysisFailed')}</p>
 		<Button variant="secondary" onclick={() => retry++}>{t('atsCheck.retry')}</Button>
 	</div>{/if}
 
 <div class="results" aria-busy={analyzing || undefined}>
-	{#if tab === 'file' && scanReport && ScanResults && !conversionEngaged}<ScanResults
+	{#if tab !== 'cv' && scanReport && ScanResults && !conversionEngaged}<ScanResults
 			report={scanReport}
 			{keywords}
 			{jobPost}
+			{concise}
+			resetKey={`${scope()}:${sourceRevision}`}
 		/>
 	{:else if tab === 'cv' && cvReport && CvResults}<CvResults
 			report={cvReport}
@@ -499,7 +638,19 @@
 			onjump={jump}
 			onretry={() => retry++}
 		/>{/if}
-	{#if tab === 'file' && extracted && scanReport && !extracted.layout.imageOnly && ConvertPanel && !busy && !analysisFailed}
+	{#if tab === 'cv' && cv && SavedConcisePanel}
+		{#key cv.id}<SavedConcisePanel
+				{cv}
+				report={concise}
+				resetKey={`${scope()}:${sourceRevision}`}
+				onfix={jump}
+				registerStore={registerSavedStore}
+				onchange={(document) => {
+					cv = document;
+				}}
+			/>{/key}
+	{/if}
+	{#if tab !== 'cv' && extracted && scanReport && !extracted.layout.imageOnly && ConvertPanel && !busy && !analysisFailed}
 		{#key revision}
 			{@const panelRevision = untrack(() => revision)}
 			<ConvertPanel
@@ -618,6 +769,20 @@
 		display: grid;
 		gap: 1rem;
 		margin-top: 1.5rem;
+	}
+	.paste-source {
+		display: grid;
+		gap: 1rem;
+		min-width: 0;
+		justify-items: start;
+	}
+	.paste-source :global(.field) {
+		width: 100%;
+		min-width: 0;
+	}
+	.paste-source :global(textarea) {
+		max-height: 24rem;
+		overflow-y: auto;
 	}
 	.character-count {
 		margin-top: -0.75rem;

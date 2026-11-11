@@ -9,9 +9,12 @@
 		type AtsAnalyzer,
 		type AtsReport,
 		type KeywordReport,
-		type CheckTarget
+		type ConcisePoint,
+		type ConciseReport
 	} from '#lib/core/ats/index.ts';
-	import { LIMITS, newId, type CVDocument } from '#lib/core/schema/index.ts';
+	import { LIMITS, newId, type CVDocument, type CustomSectionKey } from '#lib/core/schema/index.ts';
+	import { atsEditTarget, atsField, type AtsEditTarget } from '#lib/ui/ats-check/navigation.ts';
+	import { applyConcisePoint } from '#lib/ui/ats-check/concise-target.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
 	import { getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
@@ -49,6 +52,7 @@
 	const incognitoUi = getIncognitoUiContext();
 	const requestedAtsReview = untrack(() => page.url.searchParams.get('step') === 'review');
 	const requestedCareerTarget = untrack(() => page.url.searchParams.get('step') === 'target');
+	const requestedAtsTarget = untrack(() => atsEditTarget(page.url.searchParams));
 	if (
 		requestedCareerTarget ||
 		requestedAtsReview ||
@@ -110,6 +114,13 @@
 	let atsReady = $state(false);
 	let atsReport = $state.raw<AtsReport>();
 	let atsKeywords = $state.raw<KeywordReport>();
+	let atsConcise = $state.raw<ConciseReport>();
+	let conciseSignature: string | undefined;
+	const conciseSource = $derived(atsContentSignature());
+	let customFix = $state<CustomSectionKey>();
+	let CustomSectionFields =
+		$state<typeof import('#lib/ui/editor/CustomSectionFields.svelte').default>();
+	let customFixRequest = 0;
 	let atsLoading = $state(false);
 	let atsFailed = $state(false);
 	let atsRetry = $state(0);
@@ -134,6 +145,8 @@
 		jobPost = '';
 		atsReport = undefined;
 		atsKeywords = undefined;
+		atsConcise = undefined;
+		customFix = undefined;
 		void tick().then(() => {
 			if (mounted && removed) removalNotice?.focus({ preventScroll: true });
 		});
@@ -142,7 +155,9 @@
 	onMount(() => {
 		atsAnalyzer = createAtsAnalyzer();
 		atsReady = true;
-		if (requestedAtsReview) {
+		if (requestedAtsTarget) {
+			void jumpToIssue(requestedAtsTarget);
+		} else if (requestedAtsReview) {
 			void focusAtsPanel();
 		} else if (requestedCareerTarget) {
 			void focusIssue({ field: 'targetRole' });
@@ -171,13 +186,23 @@
 		};
 	});
 	$effect(() => {
+		void conciseSource;
+		void incognito.active;
+		void removed;
+		void sessionExpired;
+		atsConcise = undefined;
+		conciseSignature = undefined;
+	});
+	$effect(() => {
 		const request = ++analysisRequest;
+		const source = conciseSource;
+		const mode = incognito.active;
 		const ready = atsReady;
 		const currentStep = step;
 		const removed = store.externalChange === 'removed';
 		const text = jobPost;
 		void atsRetry;
-		if (!ready || currentStep !== 'review' || removed) {
+		if (!ready || currentStep !== 'review' || removed || sessionExpired) {
 			atsLoading = false;
 			return;
 		}
@@ -188,15 +213,26 @@
 		const timer = setTimeout(() => {
 			void atsAnalyzer?.analyze(cv, text.trim() ? text : undefined).then(
 				(result) => {
-					if (!mounted || request !== analysisRequest) return;
+					if (
+						!mounted ||
+						request !== analysisRequest ||
+						store.externalChange === 'removed' ||
+						sessionExpired ||
+						mode !== incognito.active ||
+						source !== atsContentSignature()
+					)
+						return;
 					atsReport = result.report;
 					atsKeywords = result.keywords;
+					atsConcise = result.concise;
+					conciseSignature = source;
 					atsLoading = false;
 				},
 				() => {
 					if (!mounted || request !== analysisRequest) return;
 					atsReport = undefined;
 					atsKeywords = undefined;
+					atsConcise = undefined;
 					atsLoading = false;
 					atsFailed = true;
 				}
@@ -206,6 +242,12 @@
 			clearTimeout(timer);
 			if (analysisRequest === request) analysisRequest += 1;
 		};
+	});
+	$effect(() => {
+		if ((step !== 'review' || removed || sessionExpired) && customFix) {
+			customFix = undefined;
+			customFixRequest += 1;
+		}
 	});
 	$effect(() => {
 		const notice = atsUndo;
@@ -445,18 +487,46 @@
 			return 'skills';
 		return WIZARD_STEPS.find(({ id }) => id === section)?.id ?? 'target';
 	}
-	function atsField(target: CheckTarget): string | undefined {
-		if (target.step === 'personal' && target.field)
-			return target.field === 'links' && target.itemId
-				? `personal.links.${target.itemId}.url`
-				: `personal.${target.field}`;
-		if (target.section && target.itemId && target.field)
-			return `${target.section}.${target.itemId}.${target.field}`;
-		if (target.section === 'summary') return 'summary';
-		if (target.section === 'skills') return 'skills.hard';
-		return target.field;
-	}
-	async function jumpToIssue(issue: StepIssue | CheckTarget) {
+	async function jumpToIssue(issue: StepIssue | AtsEditTarget) {
+		if (!mounted || removed || sessionExpired) return;
+		const request = ++customFixRequest;
+		if ('step' in issue && issue.section?.startsWith('custom:')) {
+			const sectionKey = issue.section as CustomSectionKey;
+			const cvId = store.cv.id;
+			const mode = incognito.active;
+			const startedStep = step;
+			if (!store.cv.custom.some((section) => section.key === sectionKey)) return;
+			try {
+				const loaded = await import('#lib/ui/editor/CustomSectionFields.svelte');
+				if (
+					!mounted ||
+					removed ||
+					sessionExpired ||
+					request !== customFixRequest ||
+					step !== startedStep ||
+					cvId !== store.cv.id ||
+					mode !== incognito.active ||
+					!store.cv.custom.some((section) => section.key === sectionKey)
+				)
+					return;
+				CustomSectionFields = loaded.default;
+				if (step !== 'review') {
+					store.update(
+						(draft) => {
+							draft.status.wizardStep = 9;
+						},
+						{ skipHistory: true }
+					);
+					await focusHeading();
+				}
+				customFix = sectionKey;
+				await focusIssue({ field: atsField(issue) });
+			} catch {
+				if (mounted && !removed && !sessionExpired) toast.error(t('wizard.loadError'));
+			}
+			return;
+		}
+		customFix = undefined;
 		const targetStep = 'step' in issue ? issue.step : issueStep(issue);
 		const field = 'step' in issue ? atsField(issue) : issue.field;
 		await move(WIZARD_STEPS.findIndex(({ id }) => id === targetStep));
@@ -478,6 +548,18 @@
 	function atsContentSignature() {
 		const content = $state.snapshot(store.cv);
 		return JSON.stringify({ ...content, status: undefined, updatedAt: undefined });
+	}
+	function applyShorter(point: ConcisePoint, text: string): boolean {
+		if (
+			!mounted ||
+			removed ||
+			sessionExpired ||
+			!atsConcise ||
+			conciseSignature !== atsContentSignature() ||
+			!atsConcise.points.some((item) => item.key === point.key && item.text === point.text)
+		)
+			return false;
+		return applyConcisePoint(store, point, text);
 	}
 	function clearAtsUndo() {
 		if (atsUndo) toast.dismiss(atsUndo.id);
@@ -502,9 +584,7 @@
 	async function addAtsKeyword(term: string) {
 		if (
 			!canAddAtsKeyword(term) ||
-			!atsKeywords?.keywords.some(
-				(keyword) => keyword.term === term && keyword.known && !keyword.inCv
-			)
+			!atsKeywords?.keywords.some((keyword) => keyword.term === term && !keyword.inCv)
 		)
 			return;
 		clearAtsUndo();
@@ -717,6 +797,10 @@
 								<AtsPanel
 									report={atsReport}
 									keywords={atsKeywords}
+									concise={atsConcise}
+									locale={store.cv.locale}
+									conciseResetKey={`${store.cv.id}:${conciseSource}:${incognito.active}`}
+									onapply={applyShorter}
 									loading={atsLoading}
 									failed={atsFailed}
 									bind:jobPost
@@ -725,6 +809,27 @@
 									canAdd={canAddAtsKeyword}
 									onretry={() => (atsRetry += 1)}
 								/>
+								{#if customFix && CustomSectionFields}
+									{@const customSection = store.cv.custom.find(
+										(section) => section.key === customFix
+									)}
+									{#if customSection}
+										<section class="custom-fix" aria-label={customSection.title}>
+											<div class="custom-fix-heading">
+												<h2>{customSection.title}</h2>
+												<Button
+													variant="ghost"
+													size="sm"
+													onclick={() => {
+														customFix = undefined;
+														void focusAtsPanel();
+													}}>{t('common.close')}</Button
+												>
+											</div>
+											<CustomSectionFields {store} sectionKey={customFix} />
+										</section>
+									{/if}
+								{/if}
 								<TemplatePicker {store} {model} />
 								<p class="hint">{t('wizard.previewNotice')}</p>
 								<CvPreview {model} />
@@ -819,6 +924,26 @@
 {/if}
 
 <style>
+	.custom-fix {
+		min-width: 0;
+		margin-block: 20px;
+		padding: 16px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		background: var(--color-surface);
+	}
+	.custom-fix-heading {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+	.custom-fix-heading h2 {
+		margin: 0;
+		font-size: 1.125rem;
+		overflow-wrap: anywhere;
+	}
 	.ats-done-summary {
 		margin-bottom: 16px;
 		font-size: 0.875rem;

@@ -62,6 +62,56 @@ export const appId = {
 		editHint: 'Enter untuk mengedit; Escape untuk membatalkan.',
 		dragHint: 'Gunakan menu bagian untuk memindahkan bagian dengan keyboard.'
 	},
+	conciseWorkspace: {
+		pasteTab: 'Tempel teks CV',
+		pasteLabel: 'Tempel isi CV',
+		pasteHint:
+			'Tempel teks CV, lalu cek hasilnya. Teks hanya diproses di perangkat dan tidak disimpan.',
+		checkPaste: 'Cek',
+		pastedSource: 'Teks CV yang ditempel',
+		pasteAgain: 'Ubah teks CV',
+		missingSummary: 'CV kamu belum memuat {missing} dari {total} kata kunci lowongan: {terms}.',
+		missingSummaryAll: 'CV kamu memuat semua {total} kata kunci lowongan.',
+		missingMore: '+{count} lainnya'
+	},
+	concisePanel: {
+		title: 'Bertele-tele?',
+		loadError: 'Pemeriksaan keringkasan belum bisa ditampilkan. Coba lagi.',
+		localChecked: 'Pemeriksaan awal di perangkat. Skor lebih tinggi berarti lebih ringkas.',
+		aiChecked: 'Diperiksa di perangkat dan dibantu AI. Periksa saran sebelum memakainya.',
+		empty: 'Belum ada ringkasan atau poin yang bisa dinilai.',
+		summary: '{wordy} dari {total} poin perlu diringkas.',
+		okay: 'Lihat {count} poin yang sudah ringkas',
+		point: 'Poin {number}',
+		bullet: 'Poin kegiatan',
+		pointScore: '{score}/100 · {words} kata',
+		fillerReason: 'Ada kata yang tidak menambah informasi.',
+		fix: 'Perbaiki',
+		shorter: 'Versi lebih ringkas',
+		apply: 'Pakai versi ringkas',
+		copy: 'Salin versi ringkas',
+		copied: 'Versi ringkas disalin.',
+		copyFailed: 'Teks belum bisa disalin otomatis. Salin secara manual dari kolom ini.',
+		copyText: 'Teks untuk disalin',
+		applied: 'Versi ringkas dipakai. Kamu bisa mengurungkannya.',
+		stale: 'Isi poin sudah berubah. Cek lagi sebelum memakai saran.',
+		ai: {
+			request: 'Cek dengan AI (gratis)',
+			busy: 'Memeriksa keringkasan…',
+			free: 'Cek ini gratis dan tidak memakai 3 jatah bantuan AI harian.',
+			quota: 'Sisa {remaining} dari {limit} cek gratis hari ini.',
+			limit: 'Batas cek gratis tercapai. Coba lagi nanti.',
+			noText: 'Isi ringkasan atau poin minimal 6 kata untuk dicek dengan AI.',
+			consentTitle: 'Cek keringkasan dengan AI?',
+			consentIntro:
+				'Poin yang ditampilkan berikut dan bahasa CV dikirim melalui server CV Maker ke penyedia AI. Isi ini tidak disimpan di server; hanya penghitung jatah anonim selama 7 hari.',
+			contacts:
+				'Pola email, nomor telepon, dan tautan dihapus. Nama orang atau perusahaan dalam kalimat masih dapat ikut terkirim. Periksa teks di bawah sebelum setuju.',
+			locale: 'Bahasa CV yang dikirim: {locale}.',
+			sentText: 'Poin yang dikirim',
+			send: 'Setuju & cek'
+		}
+	},
 	convertAts: {
 		title: 'Ubah jadi CV ATS',
 		description:
