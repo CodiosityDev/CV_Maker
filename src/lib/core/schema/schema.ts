@@ -11,8 +11,13 @@
 import * as v from 'valibot';
 import {
 	BUILTIN_SECTION_KEYS,
+	DESIGN_SPACINGS,
 	EXPERIENCE_TYPES,
 	LANGUAGE_LEVELS,
+	PHOTO_SHAPES,
+	PHOTO_SIZES,
+	SIDE_POSITIONS,
+	type CVDesign,
 	type CVDocument,
 	type CustomSectionKey,
 	type SectionKey
@@ -25,7 +30,7 @@ import {
 	YEAR_MONTH_PATTERN,
 	newId
 } from './ids';
-import { FONT_SCALE, LIMITS } from './limits';
+import { DESIGN_LIMITS, FONT_SCALE, LIMITS } from './limits';
 import { DEFAULT_SECTION_ORDER, DEFAULT_TEMPLATE_ID } from './defaults';
 
 // ---------------------------------------------------------------------------
@@ -268,6 +273,32 @@ const layoutSchema = v.fallback(
 	{ order: [], hidden: [], customTitles: {} }
 );
 
+/** Creative design: each bad field falls back to "template default" (undefined), never an error. */
+const optPick = <T extends readonly [string, ...string[]]>(options: T) =>
+	v.fallback(v.optional(v.picklist(options)), undefined);
+const designSchema = v.fallback(
+	v.optional(
+		v.object({
+			side: v.fallback(v.optional(v.array(v.unknown())), undefined),
+			sidePosition: optPick(SIDE_POSITIONS),
+			sideWidth: v.pipe(
+				v.fallback(v.optional(v.number()), undefined),
+				v.transform((n) =>
+					n === undefined || !Number.isFinite(n)
+						? undefined
+						: Math.round(
+								Math.min(DESIGN_LIMITS.sideWidth.max, Math.max(DESIGN_LIMITS.sideWidth.min, n))
+							)
+				)
+			),
+			spacing: optPick(DESIGN_SPACINGS),
+			photoShape: optPick(PHOTO_SHAPES),
+			photoSize: optPick(PHOTO_SIZES)
+		})
+	),
+	undefined
+);
+
 // ---------------------------------------------------------------------------
 // Document
 // ---------------------------------------------------------------------------
@@ -283,6 +314,7 @@ const documentObject = v.object({
 	theme: themeSchema,
 	status: statusSchema,
 	layout: layoutSchema,
+	design: designSchema,
 	personal: personalSchema,
 	summary: text(LIMITS.summary),
 	education: listOf(educationSchema, LIMITS.itemsPerSection),
@@ -334,6 +366,27 @@ export function normalizeLayout(
 	return { order, hidden, customTitles };
 }
 
+/**
+ * Keeps only meaningful design fields; `side` = existing section keys, no duplicates.
+ * Returns undefined when nothing is set (the document then simply has no `design`).
+ */
+export function normalizeDesign(
+	design: ParsedDocument['design'],
+	order: readonly SectionKey[]
+): CVDesign | undefined {
+	if (!design) return undefined;
+	const out: CVDesign = {};
+	if (design.side) {
+		const side: SectionKey[] = [];
+		for (const key of design.side.slice(0, 64))
+			if (isSectionKey(key) && order.includes(key) && !side.includes(key)) side.push(key);
+		out.side = side;
+	}
+	for (const field of ['sidePosition', 'sideWidth', 'spacing', 'photoShape', 'photoSize'] as const)
+		if (design[field] !== undefined) Object.assign(out, { [field]: design[field] });
+	return Object.keys(out).length ? out : undefined;
+}
+
 /** Full schema: parse → normalize layout & template. Output is a valid `CVDocument`. */
 export const cvDocumentSchema = v.pipe(
 	documentObject,
@@ -345,14 +398,18 @@ export const cvDocumentSchema = v.pipe(
 			seen.add(section.key);
 			return true;
 		});
+		const layout = normalizeLayout(
+			doc.layout,
+			custom.map((section) => section.key)
+		);
+		const { design: rawDesign, ...rest } = doc;
+		const design = normalizeDesign(rawDesign, layout.order);
 		return {
-			...doc,
+			...rest,
 			templateId: doc.templateId ?? DEFAULT_TEMPLATE_ID[doc.kind],
 			custom,
-			layout: normalizeLayout(
-				doc.layout,
-				custom.map((section) => section.key)
-			)
+			layout,
+			...(design ? { design } : {})
 		};
 	})
 );
