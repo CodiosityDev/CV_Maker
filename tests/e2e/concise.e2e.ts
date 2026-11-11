@@ -501,21 +501,15 @@ for (const theme of ['light', 'dark'] as const) {
 			await requestAi(page).click();
 			await expect(consent(page)).toBeVisible();
 			const expected = aiConciseInput(conciseFromText(text), 'id');
-			expect(expected.points[0]?.text).toBe('');
-			expect(expected.points[1]?.text).toHaveLength(AI_CONCISE_LIMITS.bullet);
-			expect(redactContacts(expected.points[1]!.text)).toBe('');
-			const expectedPoints = expected.points
-				.map((point) => ({
-					...point,
-					text: redactContacts(point.text)
-						.trim()
-						.slice(
-							0,
-							point.kind === 'summary' ? AI_CONCISE_LIMITS.summary : AI_CONCISE_LIMITS.bullet
-						)
-				}))
-				.filter((point) => point.text);
+			// Core drops the contact-only summary and the bullet whose cut end became a domain,
+			// each together with its key: what is sent is exactly `expected.points`.
+			const expectedPoints = expected.points;
 			expect(expectedPoints).toHaveLength(1);
+			expect(expected.keys).toHaveLength(1);
+			for (const point of expectedPoints) {
+				expect(point.text.length).toBeLessThanOrEqual(AI_CONCISE_LIMITS.bullet);
+				expect(redactContacts(point.text)).toBe(point.text);
+			}
 			const preview = consent(page).getByTestId('concise-ai-input-point');
 			await expect(preview).toHaveCount(expectedPoints.length);
 			const visiblePoints = await bulletValues(preview);

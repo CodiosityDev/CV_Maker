@@ -15,7 +15,7 @@
  */
 import type { AiConciseInput, ConciseIssue, ConciseResult } from '../ai/types';
 import { AI_CONCISE_LIMITS } from '../ai/types';
-import { redactContacts } from '../ai/redact';
+import { conciseSendText } from '../ai/redact';
 import { headingSection } from '../scan/analyze';
 import type { CVDocument, Locale, SectionKey } from '../schema/types';
 import type { CheckTarget } from './types';
@@ -329,7 +329,8 @@ export function conciseFromText(text: string): ConciseReport {
 
 /**
  * What to send to the free AI check: the wordiest points first (ties: CV order), very short ones
- * skipped, contact details removed. `keys` maps the answer back to the report.
+ * skipped, contact details removed (`conciseSendText`, the exact text sent). Points with nothing
+ * left after that are dropped TOGETHER with their key, so `keys[i]` always belongs to `points[i]`.
  */
 export function aiConciseInput(
 	conciseReport: ConciseReport,
@@ -342,16 +343,13 @@ export function aiConciseInput(
 		.slice(0, AI_CONCISE_LIMITS.points)
 		.sort((a, b) => a.order - b.order)
 		.map(({ p }) => p);
+	const sent = chosen
+		.map((p) => ({ key: p.key, kind: p.kind, text: conciseSendText(p.kind, p.text) }))
+		.filter((p) => p.text);
 	return {
 		locale,
-		points: chosen.map((p) => ({
-			kind: p.kind,
-			text: redactContacts(p.text).slice(
-				0,
-				p.kind === 'summary' ? AI_CONCISE_LIMITS.summary : AI_CONCISE_LIMITS.bullet
-			)
-		})),
-		keys: chosen.map((p) => p.key)
+		points: sent.map(({ kind, text }) => ({ kind, text })),
+		keys: sent.map((p) => p.key)
 	};
 }
 
