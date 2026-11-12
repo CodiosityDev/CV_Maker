@@ -173,8 +173,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       docx:
-        specifier: ^9.15.2
-        version: 9.15.2
+        specifier: ^9.15.3
+        version: 9.15.3
       fflate:
         specifier: 0.8.3
         version: 0.8.3
@@ -185,8 +185,8 @@ importers:
         specifier: ^3.24.6
         version: 3.24.6(@types/node@24.19.2)
       pdfjs-dist:
-        specifier: 6.4.299
-        version: 6.4.299
+        specifier: 6.5.438
+        version: 6.5.438
       valibot:
         specifier: ^1.5.0
         version: 1.5.0(typescript@6.0.3)
@@ -856,8 +856,8 @@ packages:
   devalue@5.9.4:
     resolution: {integrity: sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg==}
 
-  docx@9.15.2:
-    resolution: {integrity: sha512-G/R41dlYE5RS3TG2ybX1DIodQv+TchMspmdvrrovFyzTpvLZe0pLKVqiGosBhZszLkRonrK9+zxJDPWHDYx4NA==}
+  docx@9.15.3:
+    resolution: {integrity: sha512-3FnU6K5cuvGXEAn24yhvP3mfrZ1G8k9+hH8pSVDYsMR+mGmfK/t0NR5AwoMQodnaaxiRt2e+SvckffcJe/NvTQ==}
     engines: {node: '>=16'}
 
   enhanced-resolve@5.26.1:
@@ -1250,8 +1250,8 @@ packages:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
 
-  pdfjs-dist@6.4.299:
-    resolution: {integrity: sha512-AVl138zALtfaAPvADulE0PZThbYzCBS79nL4pOSL/6Sm/4AH5A21BD9VHt97OlCuzJuCpmeZtAtkinisF4Vb1g==}
+  pdfjs-dist@6.5.438:
+    resolution: {integrity: sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==}
     engines: {node: '>=22.13.0 || >=24'}
 
   picocolors@1.1.1:
@@ -2120,7 +2120,7 @@ snapshots:
 
   devalue@5.9.4: {}
 
-  docx@9.15.2:
+  docx@9.15.3:
     dependencies:
       '@types/node': 26.6.6
       fflate: 0.8.3
@@ -2475,7 +2475,7 @@ snapshots:
 
   path-key@3.1.1: {}
 
-  pdfjs-dist@6.4.299:
+  pdfjs-dist@6.5.438:
     optionalDependencies:
       '@napi-rs/canvas': 1.1.0
 
