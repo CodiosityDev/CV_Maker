@@ -12,7 +12,7 @@ test('phone menu opens, closes with Escape, and closes after navigation', async 
 	await menu.click();
 	await expect(menu).toHaveAttribute('aria-expanded', 'true');
 	await expect(navigation).toBeVisible();
-	await expect(navigation.getByRole('link')).toHaveCount(7);
+	await expect(navigation.getByRole('link')).toHaveCount(8);
 	expect(
 		await navigation
 			.getByRole('link')

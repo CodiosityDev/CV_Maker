@@ -89,13 +89,17 @@ test('desktop site header shares one row from 1024px and keeps a logical focus s
 	page
 }) => {
 	await page.goto('/');
-	for (const width of [1024, 1280]) {
+	// 1024–1279px: the eight links sit behind the menu button; from 1280px they are inline.
+	for (const [width, links] of [
+		[1024, 'header .menu-toggle'],
+		[1280, 'header nav']
+	] as const) {
 		await page.setViewportSize({ width, height: 900 });
 		await page.evaluate(async () => {
 			await document.fonts.ready;
 		});
 		const centers = await page
-			.locator('header .brand, header nav, header .language-switcher, header .header-cta')
+			.locator(`header .brand, ${links}, header .language-switcher, header .header-cta`)
 			.evaluateAll((elements) =>
 				elements.map((element) => {
 					const rect = element.getBoundingClientRect();
