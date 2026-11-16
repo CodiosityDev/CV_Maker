@@ -27,11 +27,14 @@ import { conciseSendText, redactContacts as redactContactsOnly, redactCvText } f
 import {
 	AI_CONCISE_LIMITS,
 	AI_DEVICE_STORAGE_KEY,
+	AI_LETTER_LIMITS,
 	AI_ERROR_CODES,
 	AI_PROFILE_LIMITS,
 	AI_REVIEW_LIMITS,
 	type AiConciseInput,
 	type AiErrorCode,
+	type AiLetterInput,
+	type LetterResult,
 	type AiLiteResult,
 	type AiProfile,
 	type AiQuota,
@@ -327,6 +330,11 @@ export interface AiClient {
 	 * ('quota' when today's free checks are used up).
 	 */
 	concise(input: AiConciseInput): Promise<AiLiteResult>;
+	/**
+	 * "Tulis dengan AI" for a cover letter (uses 1 of today's quota on success only). Build the input
+	 * with `aiLetterInput` (core/letter) and show it in the consent dialog first. Throws AiError.
+	 */
+	letter(input: AiLetterInput): Promise<{ result: LetterResult; quota: AiQuota }>;
 }
 
 interface ErrorBody {
@@ -480,6 +488,32 @@ export function createAiClient(options: AiClientOptions = {}): AiClient {
 			);
 			if (answer.result?.task !== 'concise') throw new AiError('failed');
 			return answer;
+		},
+		async letter(input) {
+			// Normalized again (callers may build the input by hand): contacts removed, lengths capped.
+			const clean = (value: string, max: number) =>
+				redactContactsOnly(value.trim()).slice(0, max).trim();
+			const letter: AiLetterInput = {
+				locale: input.locale,
+				position: clip(input.position, LIMITS.title),
+				company: clip(input.company, LIMITS.title),
+				source: input.source,
+				highlights: input.highlights
+					.map((h) => clean(h, AI_LETTER_LIMITS.highlight))
+					.filter(Boolean)
+					.slice(0, AI_LETTER_LIMITS.highlights),
+				motivation: clean(input.motivation, AI_LETTER_LIMITS.motivation),
+				availability: {
+					immediate: input.availability.immediate === true,
+					relocate: input.availability.relocate === true
+				},
+				profile: input.profile,
+				jobPost: clean(input.jobPost, AI_LETTER_LIMITS.jobPost)
+			};
+			if (!letter.position || !letter.company) throw new AiError('invalid');
+			const answer = await runTask(JSON.stringify({ task: 'letter', letter }));
+			if (answer.result.task !== 'letter') throw new AiError('failed');
+			return { result: answer.result, quota: answer.quota };
 		},
 		async openRewardAd(locale) {
 			// Synchronously, inside the user's click: an empty tab is never blocked.

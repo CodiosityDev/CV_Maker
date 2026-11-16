@@ -5,37 +5,66 @@
  */
 import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 import type { RenderEntry, RenderModel } from '../render/index';
+import { foreignParts, type ForeignMatcher } from '../foreign/index';
 
 const FONT = 'Arial';
 const BODY = 21; // half-points → 10.5 pt
 const A4 = { width: 11906, height: 16838 }; // twips
 const MARGIN = 1020; // ≈ 18 mm
 
-const text = (value: string, options: { bold?: boolean; size?: number } = {}) =>
-	new TextRun({ text: value, bold: options.bold, size: options.size ?? BODY, font: FONT });
+const text = (value: string, options: { bold?: boolean; size?: number; italics?: boolean } = {}) =>
+	new TextRun({
+		text: value,
+		bold: options.bold,
+		italics: options.italics,
+		size: options.size ?? BODY,
+		font: FONT
+	});
+
+/** Runs with foreign terms in italics (Indonesian CVs). Without a matcher: one plain run. */
+const content = (
+	value: string,
+	foreign: ForeignMatcher | undefined,
+	options: { bold?: boolean; size?: number } = {}
+) =>
+	foreignParts(value, foreign).map((part) => text(part.text, { ...options, italics: part.italic }));
 
 const line = (value: string, options: { bold?: boolean; after?: number } = {}) =>
 	new Paragraph({ children: [text(value, options)], spacing: { after: options.after ?? 20 } });
 
-function entryParagraphs(entry: RenderEntry): Paragraph[] {
+const contentLine = (
+	value: string,
+	foreign: ForeignMatcher | undefined,
+	options: { bold?: boolean; after?: number } = {}
+) =>
+	new Paragraph({
+		children: content(value, foreign, options),
+		spacing: { after: options.after ?? 20 }
+	});
+
+function entryParagraphs(entry: RenderEntry, foreign: ForeignMatcher | undefined): Paragraph[] {
 	const out: Paragraph[] = [];
 	out.push(
 		new Paragraph({
 			heading: HeadingLevel.HEADING_3,
-			children: [text(entry.title, { bold: true })],
+			children: content(entry.title, foreign, { bold: true }),
 			spacing: { before: 120, after: 20 },
 			keepNext: true
 		})
 	);
-	if (entry.subtitle) out.push(line(entry.subtitle, { bold: true }));
+	if (entry.subtitle) out.push(contentLine(entry.subtitle, foreign, { bold: true }));
 	const details = [entry.dateText, entry.location].filter(Boolean).join(' | ');
 	if (details) out.push(line(details));
-	for (const fact of entry.meta) out.push(line(fact));
+	for (const fact of entry.meta) out.push(contentLine(fact, foreign));
 	if (entry.link) out.push(line(entry.link.display));
-	if (entry.description) out.push(line(entry.description));
+	if (entry.description) out.push(contentLine(entry.description, foreign));
 	for (const bullet of entry.bullets) {
 		out.push(
-			new Paragraph({ bullet: { level: 0 }, children: [text(bullet)], spacing: { after: 20 } })
+			new Paragraph({
+				bullet: { level: 0 },
+				children: content(bullet, foreign),
+				spacing: { after: 20 }
+			})
 		);
 	}
 	return out;
@@ -43,6 +72,7 @@ function entryParagraphs(entry: RenderEntry): Paragraph[] {
 
 export async function toDocx(model: RenderModel): Promise<Blob> {
 	const p = model.personal;
+	const foreign = model.foreign;
 	const children: Paragraph[] = [];
 
 	children.push(
@@ -53,7 +83,7 @@ export async function toDocx(model: RenderModel): Promise<Blob> {
 			spacing: { after: 60 }
 		})
 	);
-	if (p.headline) children.push(line(p.headline, { after: 80 }));
+	if (p.headline) children.push(contentLine(p.headline, foreign, { after: 80 }));
 	if (p.email) children.push(line(`${model.labels.email}: ${p.email}`));
 	if (p.phone) children.push(line(`${model.labels.phone}: ${p.phone}`));
 	if (p.location) children.push(line(`${model.labels.location}: ${p.location}`));
@@ -70,18 +100,22 @@ export async function toDocx(model: RenderModel): Promise<Blob> {
 			})
 		);
 		if (section.type === 'text') {
-			for (const paragraph of section.paragraphs) children.push(line(paragraph, { after: 60 }));
+			for (const paragraph of section.paragraphs)
+				children.push(contentLine(paragraph, foreign, { after: 60 }));
 		} else if (section.type === 'skills') {
 			for (const group of section.groups) {
 				children.push(
 					new Paragraph({
-						children: [text(`${group.label}: `, { bold: true }), text(group.items.join(', '))],
+						children: [
+							...content(`${group.label}: `, foreign, { bold: true }),
+							...content(group.items.join(', '), foreign)
+						],
 						spacing: { after: 40 }
 					})
 				);
 			}
 		} else {
-			for (const entry of section.entries) children.push(...entryParagraphs(entry));
+			for (const entry of section.entries) children.push(...entryParagraphs(entry, foreign));
 		}
 	}
 

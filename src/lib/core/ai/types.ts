@@ -4,7 +4,7 @@
  * Privacy (PROJECT_SPEC §12): only the CV CONTENT needed for the task is sent — never name, email,
  * phone, city, links or photo — and only after the user presses an AI button and agrees.
  */
-import type { ExperienceType, Locale } from '../schema/types';
+import type { ExperienceType, LetterSource, Locale } from '../schema/types';
 import type { CvDraft } from '../convert/types';
 
 /** localStorage key of the anonymous AI device token (cleared by storage.wipeAll). */
@@ -42,10 +42,32 @@ export interface AiReviewInput {
 	jobPost: string;
 }
 
+/**
+ * "Tulis dengan AI" for a cover letter (1 of today's uses). Built by `aiLetterInput` (core/letter):
+ * never the name, contact details, address, birth date or the person who recommended.
+ */
+export interface AiLetterInput {
+	/** Language of the letter. */
+	locale: Locale;
+	position: string;
+	company: string;
+	/** Where the vacancy was found (kind only, no names). */
+	source: LetterSource | '';
+	/** The CV items the user chose to mention, as short text. */
+	highlights: string[];
+	/** The user's own reason for this company ('' when none). */
+	motivation: string;
+	availability: { immediate: boolean; relocate: boolean };
+	profile: AiProfile;
+	/** Pasted job post ('' when none). */
+	jobPost: string;
+}
+
 export type AiRequest =
 	| { task: AiTask; profile: AiProfile }
 	| { task: 'review'; review: AiReviewInput }
-	| { task: 'convert'; convert: AiReviewInput };
+	| { task: 'convert'; convert: AiReviewInput }
+	| { task: 'letter'; letter: AiLetterInput };
 
 export interface HeadlineResult {
 	task: 'headline';
@@ -90,7 +112,16 @@ export interface ConvertResult {
 	/** What to add or check (e.g. "Tambahkan hasil terukur di magang PT X"). */
 	notes: { title: string; detail: string }[];
 }
-export type AiResult = HeadlineResult | SummaryResult | SkillsResult | ReviewResult | ConvertResult;
+/** Four formal paragraphs ('' = the model gave nothing usable: keep the text written from the CV). */
+export interface LetterResult {
+	task: 'letter';
+	opening: string;
+	qualifications: string;
+	motivation: string;
+	closing: string;
+}
+export type AiResult =
+	HeadlineResult | SummaryResult | SkillsResult | ReviewResult | ConvertResult | LetterResult;
 
 /** Answer of `POST /api/ai/run` for long tasks (convert): poll `GET /api/ai/job?id=`. */
 export interface AiJobStarted {
@@ -149,6 +180,16 @@ export const AI_SKILL_SUGGESTIONS = { hard: 6, tools: 6, soft: 4 } as const;
 
 /** Limits of the CV conversion answer. */
 export const AI_CONVERT_LIMITS = { suggestedSkills: 8, notes: 6 } as const;
+
+/** Limits of the cover-letter request and answer. */
+export const AI_LETTER_LIMITS = {
+	highlights: 3,
+	highlight: 400,
+	motivation: 500,
+	jobPost: 4000,
+	/** One paragraph of the answer (same as a rewritten paragraph in the app). */
+	paragraph: 800
+} as const;
 
 /** Limits of the CV review request and answer. */
 export const AI_REVIEW_LIMITS = {

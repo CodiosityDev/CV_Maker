@@ -1,5 +1,6 @@
 /**
- * Namespace 'ats' — core-owned messages (Bahasa Indonesia): ATS checker (one key per CheckId) and AI
+ * Namespace 'ats' — core-owned messages (Bahasa Indonesia): ATS checker (one key per CheckId), cover
+ * letter labels and checks (`letter.*`), and AI
  * assist errors (`ai.errors.<AiErrorCode>`).
  * Plain text only. Every key here must also exist in ats.en.ts.
  */
@@ -132,6 +133,89 @@ export const atsId = {
 			unavailable: 'Bantuan AI sedang tidak tersedia. Coba lagi nanti.',
 			invalid: 'Permintaan tidak bisa diproses. Muat ulang halaman lalu coba lagi.',
 			failed: 'AI belum bisa memberi saran kali ini. Jatahmu tidak berkurang; coba lagi.'
+		}
+	},
+	letter: {
+		sources: {
+			jobPortal: 'Portal lowongan kerja',
+			companySite: 'Situs web perusahaan',
+			socialMedia: 'Media sosial',
+			campus: 'Kampus / pusat karier',
+			referral: 'Rekomendasi seseorang',
+			jobFair: 'Bursa kerja',
+			other: 'Lainnya'
+		},
+		attachments: {
+			cv: 'CV',
+			diploma: 'Ijazah',
+			transcript: 'Transkrip nilai',
+			idCard: 'KTP',
+			photo: 'Pas foto',
+			certificates: 'Sertifikat',
+			portfolio: 'Portofolio',
+			skck: 'SKCK',
+			health: 'Surat keterangan sehat',
+			reference: 'Surat rekomendasi'
+		},
+		highlightSections: {
+			experience: 'Pengalaman kerja',
+			organizations: 'Organisasi',
+			projects: 'Proyek',
+			certifications: 'Sertifikasi',
+			awards: 'Prestasi',
+			skills: 'Keahlian'
+		},
+		skillGroups: {
+			hard: 'Keahlian teknis',
+			tools: 'Alat & software',
+			soft: 'Soft skills'
+		},
+		blocks: {
+			opening: 'Pembuka',
+			identity: 'Data diri',
+			qualifications: 'Kualifikasi',
+			motivation: 'Motivasi',
+			attachments: 'Lampiran',
+			contact: 'Kontak',
+			closing: 'Penutup'
+		},
+		fonts: {
+			times: 'Times New Roman',
+			arial: 'Arial',
+			calibri: 'Calibri',
+			georgia: 'Georgia'
+		},
+		aligns: {
+			left: 'Rata kiri',
+			justify: 'Rata kiri-kanan'
+		},
+		checks: {
+			positionMissing: 'Isi posisi yang dilamar.',
+			companyMissing: 'Isi nama perusahaan.',
+			nameMissing: 'Nama lengkap di CV masih kosong. Isi dulu di CV.',
+			contactMissing: 'Telepon dan email di CV masih kosong. Perusahaan perlu cara menghubungimu.',
+			cvIncomplete:
+				'CV belum berisi pendidikan atau pengalaman. Lengkapi CV agar surat lebih kuat.',
+			noHighlights: 'Pilih 1–3 hal dari CV yang mau ditonjolkan.',
+			motivationMissing:
+				'Tambahkan alasan tertarik dengan perusahaan ini agar surat tidak terasa umum.',
+			motivationGeneric:
+				'Alasanmu belum menyebut perusahaannya. Sebut satu hal spesifik tentang mereka.',
+			identityIncomplete: 'Data diri belum lengkap: tempat lahir, tanggal lahir, atau alamat.',
+			placeholder:
+				'Masih ada teks dalam kurung siku, misalnya [isi angka]. Ganti dengan isi yang benar.',
+			tooLong: 'Surat lebih dari 1 halaman. Persingkat atau pakai cek bertele-tele.',
+			dateOld: 'Tanggal surat sudah lebih dari 30 hari yang lalu. Perbarui tanggalnya.'
+		},
+		concise: {
+			issues: {
+				filler: 'Ada kata yang tidak menambah informasi, misalnya "{fillers}".',
+				tooLong: 'Paragraf terlalu panjang ({words} kata). Usahakan paling banyak 3–4 kalimat.',
+				multipleIdeas: 'Berisi terlalu banyak hal. Fokus pada satu gagasan per paragraf.',
+				repetition: 'Ada kata yang diulang. Cukup sebut sekali.',
+				vague: 'Masih umum. Sebutkan hasil, alat, atau pengalaman yang nyata.',
+				indirect: 'Kalimatnya berputar-putar. Tulis langsung dengan kalimat aktif.'
+			}
 		}
 	}
 };

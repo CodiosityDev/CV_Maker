@@ -120,6 +120,38 @@ describe('AI client', () => {
 		});
 	});
 
+	it('letter: re-removes contact details and refuses without position or company', async () => {
+		localStorage.setItem(AI_DEVICE_STORAGE_KEY, 'v1.token');
+		const result = {
+			task: 'letter',
+			opening: 'a',
+			qualifications: 'b',
+			motivation: '',
+			closing: ''
+		};
+		const { calls, client } = fakeServer([Response.json({ result, quota })]);
+		const input = {
+			locale: 'id' as const,
+			position: 'Data Analyst',
+			company: 'PT Maju',
+			source: '' as const,
+			highlights: ['Magang — hubungi saya di rizky@example.com'],
+			motivation: 'Telepon 0812-3456-7890 kapan saja',
+			availability: { immediate: true, relocate: false },
+			profile: aiProfileFromCv(cv()),
+			jobPost: ''
+		};
+		await expect(client.letter(input)).resolves.toMatchObject({ result: { task: 'letter' } });
+		const body = String(calls[0]?.init?.body);
+		expect(calls[0]?.url).toBe('/api/ai/run');
+		expect(body).not.toContain('rizky@example.com');
+		expect(body).not.toContain('3456');
+		expect(parseAiRequest(JSON.parse(body))).toBeDefined();
+		await expect(client.letter({ ...input, company: ' ' })).rejects.toMatchObject({
+			code: 'invalid'
+		});
+	});
+
 	it('turns server errors into AiError codes with the quota', async () => {
 		localStorage.setItem(AI_DEVICE_STORAGE_KEY, 'v1.token');
 		const { client } = fakeServer([

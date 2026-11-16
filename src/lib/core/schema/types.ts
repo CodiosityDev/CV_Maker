@@ -192,6 +192,135 @@ export interface CVDesign {
 	photoSize?: PhotoSize;
 }
 
+/**
+ * Italics for foreign terms in an Indonesian CV (PUEBI). Absent = on, no custom terms.
+ * Read it through `foreignMatcherForCv()` (core/foreign); English CVs ignore it.
+ */
+export interface CVForeign {
+	enabled: boolean;
+	/** Extra terms the user wants in italics (lowercase, may be several words). */
+	extra: string[];
+	/** Detected terms the user wants upright (lowercase, may be several words). */
+	ignore: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Cover letter (surat lamaran) — optional, several per CV. Built into text by core/letter.
+// ---------------------------------------------------------------------------
+
+export const LETTER_SOURCES = [
+	'jobPortal',
+	'companySite',
+	'socialMedia',
+	'campus',
+	'referral',
+	'jobFair',
+	'other'
+] as const;
+export type LetterSource = (typeof LETTER_SOURCES)[number];
+
+export const LETTER_ATTACHMENTS = [
+	'cv',
+	'diploma',
+	'transcript',
+	'idCard',
+	'photo',
+	'certificates',
+	'portfolio',
+	'skck',
+	'health',
+	'reference'
+] as const;
+export type LetterAttachment = (typeof LETTER_ATTACHMENTS)[number];
+
+/** Paragraphs the letter writes from the CV, which the user (or the AI) may rewrite. */
+export const LETTER_TEXT_KEYS = ['opening', 'qualifications', 'motivation', 'closing'] as const;
+export type LetterTextKey = (typeof LETTER_TEXT_KEYS)[number];
+
+export const LETTER_HIGHLIGHT_SECTIONS = [
+	'experience',
+	'organizations',
+	'projects',
+	'certifications',
+	'awards',
+	'skills'
+] as const;
+export type LetterHighlightSection = (typeof LETTER_HIGHLIGHT_SECTIONS)[number];
+
+/** A CV item to mention in the letter. Skills: `id` = 'hard' | 'tools' | 'soft'. */
+export interface LetterHighlightRef {
+	section: LetterHighlightSection;
+	id: string;
+}
+
+/**
+ * A piece of formatted text. `italic`: undefined = automatic (foreign terms in Indonesian letters),
+ * true/false = set by the user. Never HTML: templates render runs as elements.
+ */
+export interface RichRun {
+	text: string;
+	bold?: true;
+	italic?: boolean;
+	underline?: true;
+}
+
+export const LETTER_FONTS = ['times', 'arial', 'calibri', 'georgia'] as const;
+export type LetterFont = (typeof LETTER_FONTS)[number];
+export const LETTER_SIZES = [11, 12] as const;
+export type LetterSize = (typeof LETTER_SIZES)[number];
+export const LETTER_LINE_HEIGHTS = [1, 1.15, 1.5] as const;
+export type LetterLineHeight = (typeof LETTER_LINE_HEIGHTS)[number];
+export const LETTER_ALIGNS = ['left', 'justify'] as const;
+export type LetterAlign = (typeof LETTER_ALIGNS)[number];
+
+/** Formal choices only: no colours, no free sizes. */
+export interface LetterStyle {
+	font: LetterFont;
+	size: LetterSize;
+	lineHeight: LetterLineHeight;
+	align: LetterAlign;
+}
+
+export interface CoverLetter {
+	id: string;
+	/** Language of the LETTER (default: the CV's). */
+	locale: Locale;
+	/** Required. */
+	position: string;
+	/** Required. */
+	company: string;
+	/** '' → "Bapak/Ibu Pimpinan HRD" / "Hiring Manager". */
+	recipient: string;
+	/** Up to 3 lines; '' → "di Tempat". */
+	companyAddress: string;
+	/** Where the user found the vacancy; undefined = not said. */
+	source?: LetterSource;
+	/** Portal name, event, or the person who recommended (never sent to the AI). */
+	sourceDetail: string;
+	/** City the letter is written in. */
+	place: string;
+	/** 'YYYY-MM-DD'. */
+	date: string;
+	/** CV items to mention (max `LETTER_LIMITS.highlights`). */
+	highlights: LetterHighlightRef[];
+	/** Why this company (plain text, the user's words). */
+	motivation: string;
+	availability: { immediate: boolean; relocate: boolean };
+	/** Indonesian letters: "data diri" table (birth place/date, address). Never sent to the AI. */
+	includeIdentity: boolean;
+	identity: { birthPlace: string; birthDate?: string; address: string };
+	attachments: LetterAttachment[];
+	/** Free-text extra attachments (max `LETTER_LIMITS.otherAttachments`). */
+	otherAttachments: string[];
+	/** Paragraphs rewritten by the user or the AI; absent = written from the CV. */
+	overrides: Partial<Record<LetterTextKey, RichRun[]>>;
+	style: LetterStyle;
+	/** ISO 8601 */
+	createdAt: string;
+	/** ISO 8601 */
+	updatedAt: string;
+}
+
 export interface CVStatus {
 	wizardCompleted: boolean;
 	/** 0-based index of the wizard step to resume. */
@@ -230,6 +359,10 @@ export interface CVDocument {
 	certifications: CertificationItem[];
 	awards: AwardItem[];
 	custom: CustomSection[];
+	/** Italics for foreign terms (Indonesian CVs); absent = on. */
+	foreign?: CVForeign;
+	/** Optional cover letters for this CV (absent = none). Change them with core/letter helpers. */
+	letters?: CoverLetter[];
 	/** ISO 8601 */
 	createdAt: string;
 	/** ISO 8601 */
@@ -246,6 +379,8 @@ export interface CVMeta {
 	targetRole?: string;
 	fullName: string;
 	wizardCompleted: boolean;
+	/** Number of cover letters. */
+	letterCount: number;
 	createdAt: string;
 	updatedAt: string;
 }

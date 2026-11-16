@@ -14,7 +14,7 @@ import {
 } from '../../server/src/identity';
 import { consume, memoryQuotaStore } from '../../server/src/quota';
 import { cleanText, guardNumbers, parseAnswer } from '../../server/src/tasks';
-import type { AiProfile, AiRequest, AiTask } from '../../src/lib/core/ai/types';
+import type { AiLetterInput, AiProfile, AiRequest, AiTask } from '../../src/lib/core/ai/types';
 
 const SECRET = '0123456789abcdef0123456789abcdef-test';
 const ORIGIN = 'https://cvmaker.codiosity.com';
@@ -477,5 +477,86 @@ describe('visitor counter (from 0, never resets)', () => {
 			expect(response.status).toBe(400);
 		}
 		expect(await (await call('/api/hello')).json()).toMatchObject({ visitors: 0 });
+	});
+});
+
+describe('cover letter (task: letter)', () => {
+	const letter: AiLetterInput = {
+		locale: 'id',
+		position: 'Junior Data Analyst',
+		company: 'PT Maju Bersama',
+		source: 'jobPortal',
+		highlights: ['Data Analyst Intern — PT Nusantara: Membuat dashboard untuk 3 divisi'],
+		motivation: 'Saya suka produk analitiknya',
+		availability: { immediate: true, relocate: false },
+		profile,
+		jobPost: ''
+	};
+	const request: AiRequest = { task: 'letter', letter };
+
+	it('keeps four clean paragraphs: no greeting, sign-off, invented numbers or placeholders', () => {
+		const answer = JSON.stringify({
+			opening:
+				'Dengan hormat, saya bermaksud melamar posisi Junior Data Analyst di PT Maju Bersama yang saya temukan di portal lowongan.',
+			qualifications:
+				'Saya lulusan Sistem Informasi [Nama Kampus] dan membuat dashboard untuk 3 divisi serta menaikkan penjualan 40%.',
+			motivation:
+				'Saya tertarik dengan produk analitik PT Maju Bersama dan siap mulai bekerja secepatnya.',
+			closing: 'Atas perhatian Bapak/Ibu, saya ucapkan terima kasih. Hormat saya,'
+		});
+		const result = parseAnswer(request, answer);
+		expect(result?.task).toBe('letter');
+		if (result?.task !== 'letter') return;
+		expect(result.opening.startsWith('saya bermaksud')).toBe(true);
+		expect(result.qualifications).not.toContain('[Nama Kampus]');
+		expect(result.qualifications).toContain('3 divisi');
+		expect(result.qualifications).toContain('[isi angka]');
+		expect(result.qualifications).not.toContain('40');
+		expect(result.closing.endsWith('terima kasih.')).toBe(true);
+	});
+
+	it('refuses an answer without opening or qualifications', () => {
+		expect(
+			parseAnswer(request, '{"opening":"","qualifications":"x","motivation":"","closing":""}')
+		).toBeUndefined();
+	});
+
+	it("runs through the API with one of today's uses and no personal details", async () => {
+		const sent: ChatMessage[][] = [];
+		const provider: ChatProvider = {
+			async complete(input) {
+				sent.push(input);
+				return {
+					text: JSON.stringify({
+						opening: 'Saya bermaksud melamar posisi Junior Data Analyst di PT Maju Bersama.',
+						qualifications: 'Saya lulusan Sistem Informasi yang membuat dashboard untuk 3 divisi.',
+						motivation: 'Saya tertarik dengan produk analitik PT Maju Bersama.',
+						closing: 'Atas perhatian Bapak/Ibu, saya ucapkan terima kasih.'
+					}),
+					model: 'm'
+				};
+			}
+		};
+		const { call } = await startApi(provider);
+		const { token } = (await (await call('/api/ai/device', { method: 'POST' })).json()) as {
+			token: string;
+		};
+		const response = await call('/api/ai/run', {
+			method: 'POST',
+			headers: { 'X-Device-Token': token },
+			body: JSON.stringify(request)
+		});
+		expect(response.status).toBe(200);
+		expect(await response.json()).toMatchObject({
+			result: { task: 'letter' },
+			quota: { remaining: 2 }
+		});
+		expect(JSON.stringify(sent)).toContain('PT Maju Bersama');
+		const bad = await call('/api/ai/run', {
+			method: 'POST',
+			headers: { 'X-Device-Token': token },
+			body: JSON.stringify({ task: 'letter', letter: { ...letter, phone: '0812' } })
+		});
+		expect(bad.status).toBe(400);
 	});
 });

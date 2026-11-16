@@ -127,5 +127,86 @@ export const atsEn: AtsMessages = {
 			invalid: 'The request could not be processed. Reload the page and try again.',
 			failed: 'The AI could not make a suggestion this time. Your quota was not used; try again.'
 		}
+	},
+	letter: {
+		sources: {
+			jobPortal: 'Job portal',
+			companySite: 'Company website',
+			socialMedia: 'Social media',
+			campus: 'Campus / career centre',
+			referral: 'Someone recommended me',
+			jobFair: 'Job fair',
+			other: 'Other'
+		},
+		attachments: {
+			cv: 'CV',
+			diploma: 'Diploma',
+			transcript: 'Academic transcript',
+			idCard: 'ID card (KTP)',
+			photo: 'Photo',
+			certificates: 'Certificates',
+			portfolio: 'Portfolio',
+			skck: 'Police clearance (SKCK)',
+			health: 'Health certificate',
+			reference: 'Letter of recommendation'
+		},
+		highlightSections: {
+			experience: 'Work experience',
+			organizations: 'Organisations',
+			projects: 'Projects',
+			certifications: 'Certifications',
+			awards: 'Awards',
+			skills: 'Skills'
+		},
+		skillGroups: {
+			hard: 'Technical skills',
+			tools: 'Tools & software',
+			soft: 'Soft skills'
+		},
+		blocks: {
+			opening: 'Opening',
+			identity: 'Personal details',
+			qualifications: 'Qualifications',
+			motivation: 'Motivation',
+			attachments: 'Enclosures',
+			contact: 'Contact',
+			closing: 'Closing'
+		},
+		fonts: {
+			times: 'Times New Roman',
+			arial: 'Arial',
+			calibri: 'Calibri',
+			georgia: 'Georgia'
+		},
+		aligns: {
+			left: 'Align left',
+			justify: 'Justify'
+		},
+		checks: {
+			positionMissing: 'Fill in the position you are applying for.',
+			companyMissing: 'Fill in the company name.',
+			nameMissing: 'Your full name in the CV is empty. Fill it in the CV first.',
+			contactMissing: 'Phone and email in the CV are empty. The company needs a way to reach you.',
+			cvIncomplete: 'The CV has no education or experience yet. Complete it for a stronger letter.',
+			noHighlights: 'Choose 1–3 things from your CV to highlight.',
+			motivationMissing:
+				'Add why you want to join this company so the letter does not feel generic.',
+			motivationGeneric:
+				'Your reason does not mention the company. Name one specific thing about them.',
+			identityIncomplete: 'Personal details are incomplete: birthplace, date of birth or address.',
+			placeholder: 'There is still text in square brackets, e.g. [add number]. Replace it.',
+			tooLong: 'The letter is longer than 1 page. Shorten it or use the wordiness check.',
+			dateOld: 'The letter date is more than 30 days ago. Update it.'
+		},
+		concise: {
+			issues: {
+				filler: 'Some words add no information, e.g. "{fillers}".',
+				tooLong: 'The paragraph is too long ({words} words). Keep it to 3–4 sentences.',
+				multipleIdeas: 'Too many things at once. Keep one idea per paragraph.',
+				repetition: 'A word is repeated. Say it once.',
+				vague: 'Still general. Name real results, tools or experience.',
+				indirect: 'The sentence goes around in circles. Write it directly, in the active voice.'
+			}
+		}
 	}
 };
