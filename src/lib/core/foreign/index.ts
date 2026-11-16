@@ -20,6 +20,7 @@
  * project, certificate, issuer, language) and brand phrases ("Google …") stay upright. Users fix
  * the rest with `ignoreForeignTerm` / `addForeignTerm`.
  */
+import { CV_LABELS } from '../render/labels';
 import { FOREIGN_LIMITS } from '../schema/limits';
 import type { CVDocument, CVForeign } from '../schema/types';
 import { BRAND_WORDS, FOREIGN_WORDS, FUNCTION_WORDS, HOMOGRAPHS, ID_PREFIX } from './words';
@@ -275,15 +276,24 @@ export function foreignMatcherForCv(
 	});
 }
 
-/** CV texts that are shown with italics (the same fields the templates use). */
+/**
+ * CV texts that are shown with italics — the same fields the templates wrap with `foreignParts`,
+ * including the labels the renderer adds (experience type "Freelance", skill group "Soft Skills",
+ * thesis line, language level). Names stay upright through the matcher anyway.
+ */
 function cvTexts(cv: CVDocument): string[] {
+	const labels = CV_LABELS[cv.locale];
 	const out: string[] = [cv.personal.headline, cv.summary];
-	for (const e of cv.education) out.push(e.major, ...e.highlights);
-	for (const e of cv.experience) out.push(e.role, ...e.bullets);
+	for (const e of cv.education) out.push(e.major, e.thesisTitle ?? '', ...e.highlights);
+	for (const e of cv.experience)
+		out.push(e.role, e.type === 'fulltime' ? '' : labels.experienceType[e.type], ...e.bullets);
 	for (const o of cv.organizations) out.push(o.role, ...o.bullets);
 	for (const p of cv.projects) out.push(p.role ?? '', ...p.bullets);
 	for (const a of cv.awards) out.push(a.title, a.description ?? '');
-	out.push(...cv.skills.hard, ...cv.skills.soft, ...cv.skills.tools);
+	for (const l of cv.languages) out.push(labels.languageLevel[l.level], l.score ?? '');
+	for (const group of ['hard', 'soft', 'tools'] as const)
+		if (cv.skills[group].some((item) => item.trim()))
+			out.push(labels.skillGroups[group], ...cv.skills[group]);
 	for (const s of cv.custom)
 		for (const i of s.items) out.push(i.title, i.subtitle ?? '', ...i.bullets);
 	return out.filter((text) => text.trim().length > 0);

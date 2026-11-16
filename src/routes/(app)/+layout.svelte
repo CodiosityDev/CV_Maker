@@ -19,6 +19,7 @@
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+	const homePreload = $derived(page.route.id === '/(app)/cv/[id]/edit' ? 'hover' : 'viewport');
 	initIncognitoUiContext();
 	const incognitoUi = getIncognitoUiContext();
 	$effect(() => {
@@ -70,7 +71,12 @@
 		data-sveltekit-preload-code={page.route.id?.includes('/surat') ? 'hover' : 'viewport'}
 	>
 		<div class="site-container header-inner">
-			<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
+			<a
+				class="brand"
+				href={resolve('/(site)')}
+				data-sveltekit-preload-code={homePreload}
+				aria-label={t('nav.home')}
+			>
 				<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
 			</a>
 			<LanguageSwitcher />
@@ -94,7 +100,11 @@
 						aria-current={page.route.id?.includes('/surat') ? 'page' : undefined}
 						onclick={() => (menuOpen = false)}>{t('nav.letter')}</a
 					>
-					<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
+					<a
+						href={resolve('/(site)')}
+						data-sveltekit-preload-code={homePreload}
+						onclick={() => (menuOpen = false)}>{t('nav.home')}</a
+					>
 					<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
 					<a
 						href="https://respawnsociety.web.id"

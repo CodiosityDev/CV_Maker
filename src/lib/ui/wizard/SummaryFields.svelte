@@ -14,11 +14,17 @@
 	let {
 		store,
 		examples,
-		suggestionsData
+		suggestionsData,
+		deferAi = false,
+		onrequestGuidance,
+		guidanceFailed = false
 	}: {
 		store: CvStore;
 		examples?: Guidance;
 		suggestionsData?: SuggestionData;
+		deferAi?: boolean;
+		onrequestGuidance?: () => void;
+		guidanceFailed?: boolean;
 	} = $props();
 	let replaceOpen = $state(false);
 	let pendingSummary = $state('');
@@ -83,14 +89,30 @@
 			)
 	}
 />
-<AiAssist {store} task="summary" />
-{#if examples}
-	<details class="tips">
+<AiAssist {store} task="summary" deferLoad={deferAi} />
+{#if examples || onrequestGuidance}
+	<details
+		class="tips"
+		ontoggle={(event) => {
+			if (event.currentTarget.open) onrequestGuidance?.();
+		}}
+	>
 		<summary>{t('wizard.actionVerbs')}</summary>
-		<p>{examples.actionVerbs.join(', ')}</p>
+		{#if examples}<p>{examples.actionVerbs.join(', ')}</p>
+		{:else}<p role={guidanceFailed ? 'alert' : 'status'}>
+				{t(guidanceFailed ? 'wizard.loadError' : 'common.loading')}
+			</p>{/if}
 	</details>
-	<details class="tips summary-examples">
+	<details
+		class="tips summary-examples"
+		ontoggle={(event) => {
+			if (event.currentTarget.open) onrequestGuidance?.();
+		}}
+	>
 		<summary>{t('wizard.examples')}</summary>
+		{#if !examples}<p role={guidanceFailed ? 'alert' : 'status'}>
+				{t(guidanceFailed ? 'wizard.loadError' : 'common.loading')}
+			</p>{/if}
 		<div class="examples">
 			{#each summaryExamples.slice(0, 1) as example (example.field)}
 				<article>

@@ -61,6 +61,7 @@ function textOf(html: string): string {
 		html
 			.replace(/<!--[\s\S]*?-->/g, '')
 			.replace(/<style[\s\S]*?<\/style>/gi, '')
+			.replace(/<\/?em\b[^>]*>/gi, '')
 			.replace(/<[^>]+>/g, ' ')
 	)
 		.replace(/\s+/g, ' ')
@@ -97,8 +98,11 @@ describe('template registry', () => {
 
 	it('every CV template file is registered (no orphan CV templates)', async () => {
 		const loaded = await Promise.all(TEMPLATES.map((t) => t.load()));
-		// Cover letters take LetterModel and have their own routes, outside the CV registry.
-		const cvSources = Object.keys(SOURCES).filter((path) => !path.includes('/letter/'));
+		// Only CV templates need registry entries. Cover letters (LetterModel, own routes) and
+		// shared render helpers are still checked for purity below.
+		const cvSources = Object.keys(SOURCES).filter((path) =>
+			/\/templates\/(ats|creative)\//.test(path)
+		);
 		expect(loaded.length).toBe(cvSources.length);
 	});
 });

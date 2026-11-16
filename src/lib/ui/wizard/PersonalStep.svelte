@@ -18,12 +18,14 @@
 		store,
 		issues,
 		suggestionsData,
-		photoUrl
+		photoUrl,
+		deferAi = false
 	}: {
 		store: CvStore;
 		issues: StepIssue[];
 		suggestionsData?: SuggestionData;
 		photoUrl?: string;
+		deferAi?: boolean;
 	} = $props();
 	let busy = $state(false);
 	let photoError = $state<MessageKey>();
@@ -135,7 +137,7 @@
 		showCounter
 		bind:value={() => store.cv.personal.headline, (value) => set('headline', value)}
 	/>
-	<AiAssist {store} task="headline" />
+	<AiAssist {store} task="headline" deferLoad={deferAi} />
 	<Input
 		id="personal.email"
 		label={t('wizard.fields.email')}

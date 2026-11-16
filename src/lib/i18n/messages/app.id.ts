@@ -146,6 +146,36 @@ export const appId = {
 		aiEmpty: 'AI belum memberikan paragraf yang bisa dipakai. Suratmu tetap seperti semula.',
 		aiLoadingPreview: 'AI sedang menyiapkan saran. Isi suratmu tetap tersimpan.'
 	},
+	foreignTerms: {
+		setting: 'Istilah asing dimiringkan (PUEBI)',
+		manage: 'Atur',
+		title: 'Istilah asing',
+		description: 'Miring hanya tampil di pratinjau dan unduhan. Nama diri tetap tegak.',
+		detected: 'Istilah dalam isi CV',
+		ignoreHint: 'Ketuk istilah agar tidak dimiringkan.',
+		ignore: 'Jangan miringkan {term}',
+		occurrences: '{count} kali',
+		unused: 'Belum dipakai',
+		notItalic: 'Tidak dimiringkan',
+		restore: 'Pulihkan',
+		restoreTerm: 'Pulihkan aturan otomatis untuk {term}',
+		emptyDetected: 'Belum ada istilah asing yang terdeteksi di isi CV.',
+		emptyIgnored: 'Belum ada istilah yang kamu kecualikan.',
+		off: 'Miring otomatis sedang dimatikan. Pilihan istilahmu tetap tersimpan.',
+		addLabel: 'Tambah istilah asing',
+		add: 'Tambah istilah',
+		emptyTerm: 'Tulis istilah yang ingin ditambahkan.',
+		alreadyAdded: '{term} sudah ditambahkan.',
+		extraLimit: 'Maksimal {max} istilah tambahan per CV.',
+		ignoreLimit:
+			'Maksimal {max} pengecualian. Pulihkan satu istilah untuk mengecualikan yang lain.',
+		added: '{term} ditambahkan.',
+		ignored: '{term} tidak dimiringkan.',
+		restored: 'Aturan otomatis untuk {term} dipulihkan.',
+		readOnly:
+			'CV ini diubah di tab lain. Pilih versi CV yang ingin dipakai sebelum mengatur istilah.',
+		loadError: 'Pengaturan istilah belum bisa dimuat. Coba lagi.'
+	},
 	visualEditor: {
 		mode: 'Edit visual',
 		loading: 'Memuat editor visual…',

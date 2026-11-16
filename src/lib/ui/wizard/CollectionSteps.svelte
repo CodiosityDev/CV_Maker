@@ -34,7 +34,8 @@
 		suggestionsData,
 		onTarget,
 		examples,
-		skillSection
+		skillSection,
+		deferAi = false
 	}: {
 		store: CvStore;
 		step: WizardStepId;
@@ -43,6 +44,7 @@
 		onTarget?: () => void;
 		examples?: Guidance;
 		skillSection?: 'skills' | 'languages' | 'certifications' | 'awards';
+		deferAi?: boolean;
 	} = $props();
 
 	function fieldSuggestions(field: SuggestField, query: string, popularWhenEmpty = false) {
@@ -568,7 +570,7 @@
 		<div class="skills-sections">
 			{#if !skillSection || skillSection === 'skills'}
 				{#if suggestionsData}<SkillRecommendations {store} data={suggestionsData} {onTarget} />{/if}
-				<AiAssist {store} task="skills" />
+				<AiAssist {store} task="skills" deferLoad={deferAi} />
 				{#each ['hard', 'soft', 'tools'] as field (field)}
 					{@const group = field as 'hard' | 'soft' | 'tools'}
 					<SkillTags
