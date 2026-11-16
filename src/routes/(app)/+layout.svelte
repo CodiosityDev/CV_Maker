@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { initIncognitoUiContext, getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import { resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
+	import {
+		clearLetterOffers,
+		removeLetterOffer,
+		syncLetterOfferSession
+	} from '#lib/ui/letter/offer.svelte.ts';
 	import IncognitoBanner from '#lib/ui/IncognitoBanner.svelte';
 	import IncognitoHeader from '#lib/ui/IncognitoHeader.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
@@ -17,6 +23,7 @@
 	const incognitoUi = getIncognitoUiContext();
 	$effect(() => {
 		syncAiSession();
+		syncLetterOfferSession();
 	});
 	let menuOpen = $state(false);
 	let menu: HTMLDetailsElement | undefined = $state();
@@ -34,7 +41,10 @@
 		const stopExpire = incognito.onExpire(resetAiSession);
 		const stopEnd = incognitoUi?.registerBeforeEnd(resetAiSession);
 		const stopExternal = onExternalChange((event) => {
-			if (event.type === 'wiped') resetAiSession();
+			if (event.type === 'wiped') {
+				resetAiSession();
+				clearLetterOffers();
+			} else if (event.type === 'cv-removed') removeLetterOffer(event.id);
 		});
 		return () => {
 			stopExpire();
@@ -54,55 +64,44 @@
 	}}
 />
 
-<header class="app-header">
-	<div class="site-container header-inner">
-		<a
-			class="brand"
-			href={resolve('/(site)')}
-			data-sveltekit-preload-code="viewport"
-			aria-label={t('nav.home')}
-		>
-			<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
-		</a>
-		<LanguageSwitcher />
-		<IncognitoHeader />
-		<ThemeToggle />
-		<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
-			<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="1.75"
-					aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg
-				>
-			</summary>
-			<nav aria-label={t('nav.label')}>
-				<a
-					href={resolve('/(app)/buat')}
-					data-sveltekit-preload-code="viewport"
-					onclick={() => (menuOpen = false)}>{t('nav.create')}</a
-				>
-				<a
-					href={resolve('/(app)/cv')}
-					data-sveltekit-preload-code="viewport"
-					onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a
-				>
-				<a
-					href={resolve('/(site)')}
-					data-sveltekit-preload-code="viewport"
-					onclick={() => (menuOpen = false)}>{t('nav.home')}</a
-				>
-				<a
-					href={resolve('/(site)/faq')}
-					data-sveltekit-preload-code="viewport"
-					onclick={() => (menuOpen = false)}>{t('nav.faq')}</a
-				>
-			</nav>
-		</details>
-	</div>
-</header>
-<IncognitoBanner />
+{#if !page.route.id?.endsWith('/surat/[letterId]/print')}
+	<header
+		class="app-header"
+		data-sveltekit-preload-code={page.route.id?.includes('/surat') ? 'hover' : 'viewport'}
+	>
+		<div class="site-container header-inner">
+			<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')}>
+				<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
+			</a>
+			<LanguageSwitcher />
+			<IncognitoHeader />
+			<ThemeToggle />
+			<details class="app-menu" bind:this={menu} bind:open={menuOpen}>
+				<summary aria-label={t('nav.menu')} aria-expanded={menuOpen}>
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.75"
+						aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg
+					>
+				</summary>
+				<nav aria-label={t('nav.label')}>
+					<a href={resolve('/(app)/buat')} onclick={() => (menuOpen = false)}>{t('nav.create')}</a>
+					<a href={resolve('/(app)/cv')} onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a>
+					<a
+						href={resolve('/(app)/surat')}
+						aria-current={page.route.id?.includes('/surat') ? 'page' : undefined}
+						onclick={() => (menuOpen = false)}>{t('nav.letter')}</a
+					>
+					<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
+					<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
+				</nav>
+			</details>
+		</div>
+	</header>
+	<IncognitoBanner />
+{/if}
 <main id="main" tabindex="-1">{@render children()}</main>
 
 <style>
@@ -223,5 +222,11 @@
 	}
 	nav a:hover {
 		text-decoration: underline;
+	}
+	nav a[aria-current='page'] {
+		border-radius: var(--radius-md);
+		background: var(--color-brand-100);
+		color: var(--color-text);
+		box-shadow: inset 0 -3px 0 var(--color-brand);
 	}
 </style>

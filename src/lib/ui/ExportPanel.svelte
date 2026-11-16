@@ -15,6 +15,8 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import { toast } from '#lib/ui/toast.svelte.ts';
+	import LetterOffer from '#lib/ui/letter/LetterOffer.svelte';
+	import { markCvDownloaded } from '#lib/ui/letter/offer.svelte.ts';
 
 	let {
 		cv,
@@ -89,6 +91,7 @@
 					format
 				)
 			);
+			markCvDownloaded(current.id);
 		} catch {
 			if (active) toast.error(t('exportPanel.downloadError'));
 		} finally {
@@ -99,6 +102,32 @@
 	function selectText() {
 		textarea?.focus();
 		textarea?.select();
+	}
+
+	async function leaveForLetter(event: MouseEvent) {
+		if (
+			!beforeLeave ||
+			event.defaultPrevented ||
+			event.button !== 0 ||
+			event.ctrlKey ||
+			event.metaKey ||
+			event.altKey ||
+			event.shiftKey
+		)
+			return;
+		event.preventDefault();
+		if (busy) return;
+		const session = incognito.active;
+		const id = cv.id;
+		busy = 'leave';
+		try {
+			if ((await beforeLeave()) && sameSession(session) && cv.id === id)
+				await goto(resolve('/(app)/cv/[id]/surat', { id }), { invalidateAll: true });
+		} catch {
+			if (sameSession(session)) toast.error(t('exportPanel.navigationError'));
+		} finally {
+			if (active) busy = undefined;
+		}
 	}
 
 	async function copy() {
@@ -200,6 +229,7 @@
 		</div>
 	{/if}
 	{#if incognito.active}<p class="privacy-note">{t('incognito.downloadSafety')}</p>{/if}
+	<LetterOffer cvId={cv.id} beforeLeave={leaveForLetter} />
 </section>
 
 <style>

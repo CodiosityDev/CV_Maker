@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
+	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
@@ -13,6 +13,7 @@
 	const links = $derived([
 		{ href: resolve('/(site)'), label: t('nav.home') },
 		{ href: resolve('/(app)/buat'), label: t('nav.create') },
+		{ href: resolve('/(app)/surat'), label: t('nav.letter') },
 		{ href: resolve('/(site)/cek-ats'), label: t('nav.atsCheck') },
 		{ href: resolve('/(site)/faq'), label: t('nav.faq') },
 		{ href: resolve('/(site)/tentang'), label: t('nav.about') }
@@ -30,14 +31,10 @@
 
 <svelte:window onkeydown={escapeMenu} />
 
-<header class="site-header">
+<header class="site-header" data-sveltekit-preload-code="viewport">
 	<div class="site-container header-inner">
-		<a
-			class="brand"
-			href={resolve('/(site)')}
-			data-sveltekit-preload-code="viewport"
-			aria-label={t('nav.home')}
-			onclick={closeMenu}><Logo size={28} /><span>{t('app.name')}</span></a
+		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
+			><Logo size={28} /><span>{t('app.name')}</span></a
 		>
 		<button
 			type="button"
@@ -55,8 +52,10 @@
 					<li>
 						<a
 							href={link.href}
-							data-sveltekit-preload-code="viewport"
-							aria-current={page.url.pathname === link.href ? 'page' : undefined}
+							aria-current={page.url.pathname === link.href ||
+							(link.href.endsWith('/surat') && /\/surat(?:\/|$)/.test(page.url.pathname))
+								? 'page'
+								: undefined}
 							onclick={closeMenu}>{link.label}</a
 						>
 					</li>
@@ -76,12 +75,8 @@
 		</nav>
 		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
 		<div class="create-action">
-			<Button
-				href="/buat"
-				data-sveltekit-preload-code="viewport"
-				size="sm"
-				class="header-cta"
-				onclick={closeMenu}>{t('nav.create')}</Button
+			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+				>{t('nav.create')}</PrimaryLink
 			>
 		</div>
 	</div>

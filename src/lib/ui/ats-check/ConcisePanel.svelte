@@ -32,7 +32,12 @@
 		resetKey = '',
 		onfix,
 		onapply,
-		onundo
+		onundo,
+		pointLabel,
+		issueMessage,
+		onpointfix,
+		onreport,
+		allowDismiss = false
 	}: {
 		report: ConciseReport;
 		locale: Locale;
@@ -40,6 +45,11 @@
 		onfix?: (target: NonNullable<ConcisePoint['target']>) => void;
 		onapply?: (point: ConcisePoint, text: string) => boolean;
 		onundo?: () => void;
+		pointLabel?: (point: ConcisePoint, index: number) => string;
+		issueMessage?: (point: ConcisePoint, issue: ConcisePoint['issues'][number]) => string;
+		onpointfix?: (point: ConcisePoint) => void;
+		onreport?: (report: ConciseReport) => void;
+		allowDismiss?: boolean;
 	} = $props();
 	const uid = $props.id();
 	let module = $state.raw<AiModule>();
@@ -53,6 +63,7 @@
 	let manualText = $state<string>();
 	let manualField = $state<HTMLTextAreaElement>();
 	let copying = $state<string>();
+	let dismissed = $state<string[]>([]);
 	let mounted = true;
 	let interactedLite = false;
 	let request = 0;
@@ -133,6 +144,10 @@
 			invalidate();
 		}
 	});
+	$effect(() => {
+		const report = current;
+		untrack(() => onreport?.(report));
+	});
 
 	function invalidate() {
 		request += 1;
@@ -146,6 +161,7 @@
 		mergedEpoch = -1;
 		manualText = undefined;
 		copying = undefined;
+		dismissed = [];
 	}
 	function fresh(token: number, epoch: number, active: boolean, content: string) {
 		return mounted && token === request && sameAiSession(epoch, active) && content === signature;
@@ -295,9 +311,11 @@
 	<li data-testid="concise-point" data-point-key={point.key} data-level={point.level}>
 		<div class="point-meta">
 			<strong
-				>{point.kind === 'summary'
-					? t('wizard.fields.summary')
-					: point.item || t('concisePanel.point', { number: index + 1 })}</strong
+				>{pointLabel
+					? pointLabel(point, index)
+					: point.kind === 'summary'
+						? t('wizard.fields.summary')
+						: point.item || t('concisePanel.point', { number: index + 1 })}</strong
 			>
 			<span
 				>{t(`ats.concise.levels.${point.level}`)} · {t('concisePanel.pointScore', {
@@ -316,12 +334,14 @@
 			<ul class="reasons">
 				{#each point.issues as issue (issue)}
 					<li>
-						{t(
-							issue === 'filler' && !point.fillers.length
-								? 'concisePanel.fillerReason'
-								: `ats.concise.issues.${issue}`,
-							{ fillers: point.fillers.join('", "'), words: point.words }
-						)}
+						{issueMessage
+							? issueMessage(point, issue)
+							: t(
+									issue === 'filler' && !point.fillers.length
+										? 'concisePanel.fillerReason'
+										: `ats.concise.issues.${issue}`,
+									{ fillers: point.fillers.join('", "'), words: point.words }
+								)}
 					</li>
 				{/each}
 			</ul>
@@ -334,17 +354,31 @@
 				onclick={() => point.target && onfix?.(point.target)}>{t('concisePanel.fix')}</button
 			>
 		{/if}
-		{#if point.shorter}
+		{#if onpointfix}
+			<button
+				type="button"
+				class="text-action"
+				data-testid="concise-fix"
+				onclick={() => onpointfix?.(point)}>{t('concisePanel.fix')}</button
+			>
+		{/if}
+		{#if point.shorter && !dismissed.includes(point.key)}
 			<div class="shorter" data-testid="concise-shorter">
 				<h4>{t('concisePanel.shorter')}</h4>
 				<p><AiText text={point.shorter} /></p>
 				<div class="actions">
-					{#if onapply && point.target}<Button variant="secondary" onclick={() => apply(point)}
-							>{t('concisePanel.apply')}</Button
+					{#if onapply && (point.target || onpointfix)}<Button
+							variant="secondary"
+							onclick={() => apply(point)}>{t('concisePanel.apply')}</Button
 						>{/if}
 					<Button variant="ghost" disabled={copying !== undefined} onclick={() => void copy(point)}
 						>{t('concisePanel.copy')}</Button
 					>
+					{#if allowDismiss}<Button
+							variant="ghost"
+							onclick={() => (dismissed = [...dismissed, point.key])}
+							>{t('letterEditor.ignore')}</Button
+						>{/if}
 				</div>
 			</div>
 		{/if}

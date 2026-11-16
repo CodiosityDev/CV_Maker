@@ -33,6 +33,7 @@ export const id = {
 		label: 'Navigasi utama',
 		create: 'Buat CV',
 		myCvs: 'CV Saya',
+		letter: 'Surat Lamaran',
 		menu: 'Menu',
 		faq: 'FAQ',
 		atsCheck: 'Cek ATS',

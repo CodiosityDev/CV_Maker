@@ -34,8 +34,8 @@
 			!document.startViewTransition ||
 			window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
 			navigation.from?.url.pathname === navigation.to.url.pathname ||
-			navigation.from?.route.id === '/(app)/cv/[id]/print' ||
-			navigation.to.route.id === '/(app)/cv/[id]/print' ||
+			navigation.from?.route.id?.endsWith('/print') ||
+			navigation.to.route.id?.endsWith('/print') ||
 			document.querySelector('dialog[open]')
 		)
 			return;

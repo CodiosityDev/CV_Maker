@@ -95,9 +95,11 @@ describe('template registry', () => {
 		for (const t of templatesFor('ats')) expect(t.supportsPhoto, t.id).toBe(false);
 	});
 
-	it('every template file is registered (no orphan templates)', async () => {
+	it('every CV template file is registered (no orphan CV templates)', async () => {
 		const loaded = await Promise.all(TEMPLATES.map((t) => t.load()));
-		expect(loaded.length).toBe(Object.keys(SOURCES).length);
+		// Cover letters take LetterModel and have their own routes, outside the CV registry.
+		const cvSources = Object.keys(SOURCES).filter((path) => !path.includes('/letter/'));
+		expect(loaded.length).toBe(cvSources.length);
 	});
 });
 

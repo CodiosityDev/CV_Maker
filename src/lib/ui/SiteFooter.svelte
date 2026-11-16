@@ -1,6 +1,11 @@
 ﻿<script lang="ts">
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
+	const links = [
+		{ href: resolve('/(site)/privasi'), key: 'nav.privacy' },
+		{ href: resolve('/(site)/tentang'), key: 'nav.about' },
+		{ href: resolve('/(site)/faq'), key: 'nav.faq' }
+	] as const;
 </script>
 
 <footer>
@@ -13,14 +18,8 @@
 				></a
 			>
 		</p>
-		<nav aria-label={t('footer.links')}>
-			<a href={resolve('/(site)/privasi')} data-sveltekit-preload-code="viewport"
-				>{t('nav.privacy')}</a
-			>
-			<a href={resolve('/(site)/tentang')} data-sveltekit-preload-code="viewport"
-				>{t('nav.about')}</a
-			>
-			<a href={resolve('/(site)/faq')} data-sveltekit-preload-code="viewport">{t('nav.faq')}</a>
+		<nav aria-label={t('footer.links')} data-sveltekit-preload-code="viewport">
+			{#each links as link (link.key)}<a href={link.href}>{t(link.key)}</a>{/each}
 		</nav>
 	</div>
 </footer>

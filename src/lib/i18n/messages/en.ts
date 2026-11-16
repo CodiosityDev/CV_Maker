@@ -28,6 +28,7 @@ export const en: BaseMessages = {
 		label: 'Main navigation',
 		create: 'Create CV',
 		myCvs: 'My CVs',
+		letter: 'Cover Letter',
 		menu: 'Menu',
 		faq: 'FAQ',
 		atsCheck: 'ATS Check',
