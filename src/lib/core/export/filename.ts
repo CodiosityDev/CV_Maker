@@ -27,3 +27,19 @@ export function exportFileName(
 export function backupFileName(date = new Date()): string {
 	return `CVMaker_Backup_${date.toISOString().slice(0, 10)}.json`;
 }
+
+/**
+ * Cover letter file name: `Surat_Lamaran_Rizky_Aditya_PT_Maju_Bersama.pdf` (Indonesian letter) or
+ * `Cover_Letter_Rizky_Aditya_PT_Maju_Bersama.pdf` (English letter).
+ */
+export function letterFileName(
+	cv: { personal: { fullName?: string } },
+	letter: { company?: string; locale: 'id' | 'en' },
+	extension: Exclude<ExportExtension, 'json'>
+): string {
+	const prefix = letter.locale === 'id' ? 'Surat_Lamaran' : 'Cover_Letter';
+	const base = [prefix, slugPart(cv.personal.fullName), slugPart(letter.company)]
+		.filter(Boolean)
+		.join('_');
+	return `${base}.${extension}`;
+}

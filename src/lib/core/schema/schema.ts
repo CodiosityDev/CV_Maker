@@ -14,11 +14,21 @@ import {
 	DESIGN_SPACINGS,
 	EXPERIENCE_TYPES,
 	LANGUAGE_LEVELS,
+	LETTER_ALIGNS,
+	LETTER_ATTACHMENTS,
+	LETTER_FONTS,
+	LETTER_HIGHLIGHT_SECTIONS,
+	LETTER_LINE_HEIGHTS,
+	LETTER_SIZES,
+	LETTER_SOURCES,
+	LETTER_TEXT_KEYS,
 	PHOTO_SHAPES,
 	PHOTO_SIZES,
 	SIDE_POSITIONS,
 	type CVDesign,
 	type CVDocument,
+	type CoverLetter,
+	type RichRun,
 	type CustomSectionKey,
 	type SectionKey
 } from './types';
@@ -30,7 +40,7 @@ import {
 	YEAR_MONTH_PATTERN,
 	newId
 } from './ids';
-import { DESIGN_LIMITS, FONT_SCALE, LIMITS } from './limits';
+import { DESIGN_LIMITS, FONT_SCALE, FOREIGN_LIMITS, LETTER_LIMITS, LIMITS } from './limits';
 import { DEFAULT_SECTION_ORDER, DEFAULT_TEMPLATE_ID } from './defaults';
 
 // ---------------------------------------------------------------------------
@@ -300,6 +310,152 @@ const designSchema = v.fallback(
 );
 
 // ---------------------------------------------------------------------------
+// Foreign terms & cover letters
+// ---------------------------------------------------------------------------
+
+/** Lowercase, single-spaced, unique terms. */
+const termList = v.pipe(
+	textList(FOREIGN_LIMITS.terms * 2, FOREIGN_LIMITS.term),
+	v.transform((items) =>
+		[
+			...new Set(
+				items.map((item) => item.toLowerCase().replace(/\s+/g, ' ').trim()).filter(Boolean)
+			)
+		].slice(0, FOREIGN_LIMITS.terms)
+	)
+);
+
+const foreignSchema = v.fallback(
+	v.optional(
+		v.object({
+			enabled: v.fallback(v.boolean(), true),
+			extra: termList,
+			ignore: termList
+		})
+	),
+	undefined
+);
+
+/**
+ * Formatted text: cleaned, empty pieces dropped, neighbours with the same marks joined, total length
+ * capped at `LETTER_LIMITS.paragraph`. Only `true` survives for bold/underline.
+ */
+export function normalizeRuns(input: unknown): RichRun[] {
+	const out: RichRun[] = [];
+	let length = 0;
+	const items = Array.isArray(input) ? input.slice(0, LETTER_LIMITS.runs * 2) : [];
+	for (const item of items) {
+		if (!item || typeof item !== 'object') continue;
+		const raw = item as Record<string, unknown>;
+		if (typeof raw.text !== 'string') continue;
+		const text = cleanText(raw.text, LETTER_LIMITS.paragraph - length);
+		if (!text) continue;
+		const run: RichRun = { text };
+		if (raw.bold === true) run.bold = true;
+		if (typeof raw.italic === 'boolean') run.italic = raw.italic;
+		if (raw.underline === true) run.underline = true;
+		const last = out[out.length - 1];
+		if (
+			last &&
+			last.bold === run.bold &&
+			last.italic === run.italic &&
+			last.underline === run.underline
+		)
+			last.text += text;
+		else if (out.length < LETTER_LIMITS.runs) out.push(run);
+		else break;
+		length += text.length;
+		if (length >= LETTER_LIMITS.paragraph) break;
+	}
+	return out;
+}
+
+const DATE_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const dateString = v.fallback(v.pipe(v.string(), v.regex(DATE_PATTERN)), () =>
+	new Date().toISOString().slice(0, 10)
+);
+
+const highlightSchema = v.object({
+	section: v.picklist(LETTER_HIGHLIGHT_SECTIONS),
+	id: v.pipe(v.string(), v.regex(ID_PATTERN))
+});
+
+const letterSchema = v.object({
+	id: itemId,
+	locale: v.fallback(v.picklist(['id', 'en'] as const), 'id'),
+	position: text(LETTER_LIMITS.position),
+	company: text(LETTER_LIMITS.company),
+	recipient: text(LETTER_LIMITS.recipient),
+	companyAddress: v.pipe(
+		text(LETTER_LIMITS.companyAddress),
+		v.transform((s) => s.split('\n').slice(0, LETTER_LIMITS.addressLines).join('\n'))
+	),
+	source: v.fallback(v.optional(v.picklist(LETTER_SOURCES)), undefined),
+	sourceDetail: text(LETTER_LIMITS.sourceDetail),
+	place: text(LETTER_LIMITS.place),
+	date: dateString,
+	highlights: v.pipe(
+		v.fallback(v.array(v.unknown()), []),
+		v.transform((items) => {
+			const out: CoverLetter['highlights'] = [];
+			for (const item of items) {
+				const parsed = v.safeParse(highlightSchema, item);
+				if (!parsed.success) continue;
+				const ref = parsed.output;
+				if (!out.some((h) => h.section === ref.section && h.id === ref.id)) out.push(ref);
+				if (out.length >= LETTER_LIMITS.highlights) break;
+			}
+			return out;
+		})
+	),
+	motivation: text(LETTER_LIMITS.motivation),
+	availability: v.fallback(
+		v.object({
+			immediate: v.fallback(v.boolean(), false),
+			relocate: v.fallback(v.boolean(), false)
+		}),
+		{ immediate: false, relocate: false }
+	),
+	includeIdentity: v.fallback(v.boolean(), false),
+	identity: v.fallback(
+		v.object({
+			birthPlace: text(LETTER_LIMITS.birthPlace),
+			birthDate: v.fallback(v.optional(v.pipe(v.string(), v.regex(DATE_PATTERN))), undefined),
+			address: text(LETTER_LIMITS.address)
+		}),
+		{ birthPlace: '', address: '' }
+	),
+	attachments: v.pipe(
+		v.fallback(v.array(v.unknown()), []),
+		v.transform((items) => LETTER_ATTACHMENTS.filter((attachment) => items.includes(attachment)))
+	),
+	otherAttachments: textList(LETTER_LIMITS.otherAttachments, LETTER_LIMITS.otherAttachment),
+	overrides: v.pipe(
+		v.fallback(v.record(v.string(), v.unknown()), {}),
+		v.transform((record) => {
+			const out: CoverLetter['overrides'] = {};
+			for (const key of LETTER_TEXT_KEYS) {
+				if (!Object.hasOwn(record, key)) continue;
+				const runs = normalizeRuns(record[key]);
+				if (runs.length) out[key] = runs;
+			}
+			return out;
+		})
+	),
+	style: v.fallback(
+		v.object({
+			font: v.fallback(v.picklist(LETTER_FONTS), 'times'),
+			size: v.fallback(v.picklist(LETTER_SIZES), 12),
+			lineHeight: v.fallback(v.picklist(LETTER_LINE_HEIGHTS), 1.15),
+			align: v.fallback(v.picklist(LETTER_ALIGNS), 'left')
+		}),
+		{ font: 'times', size: 12, lineHeight: 1.15, align: 'left' }
+	),
+	createdAt: isoTimestamp,
+	updatedAt: isoTimestamp
+});
+
+// ---------------------------------------------------------------------------
 // Document
 // ---------------------------------------------------------------------------
 
@@ -326,6 +482,8 @@ const documentObject = v.object({
 	certifications: listOf(certificationSchema, LIMITS.itemsPerSection),
 	awards: listOf(awardSchema, LIMITS.itemsPerSection),
 	custom: listOf(customSectionSchema, LIMITS.customSections),
+	foreign: foreignSchema,
+	letters: v.fallback(v.optional(listOf(letterSchema, LETTER_LIMITS.perCv)), undefined),
 	createdAt: isoTimestamp,
 	updatedAt: isoTimestamp
 });
@@ -402,14 +560,23 @@ export const cvDocumentSchema = v.pipe(
 			doc.layout,
 			custom.map((section) => section.key)
 		);
-		const { design: rawDesign, ...rest } = doc;
+		const { design: rawDesign, foreign, letters: rawLetters, ...rest } = doc;
 		const design = normalizeDesign(rawDesign, layout.order);
+		// Duplicate letter ids (hand-edited backup): keep the first.
+		const letterIds = new Set<string>();
+		const letters = (rawLetters ?? []).filter((letter) => {
+			if (letterIds.has(letter.id)) return false;
+			letterIds.add(letter.id);
+			return true;
+		});
 		return {
 			...rest,
 			templateId: doc.templateId ?? DEFAULT_TEMPLATE_ID[doc.kind],
 			custom,
 			layout,
-			...(design ? { design } : {})
+			...(design ? { design } : {}),
+			...(foreign ? { foreign } : {}),
+			...(letters.length ? { letters } : {})
 		};
 	})
 );

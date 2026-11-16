@@ -1,0 +1,17 @@
+/* Cover-letter fonts (SIL OFL 1.1, see LICENSE-*.txt): metric-compatible stand-ins for Times New Roman (Tinos), Arial (Arimo), Calibri (Carlito) and Georgia (Gelasio). Loaded only on cover-letter pages; a browser downloads a file only when the installed font is missing. */
+@font-face{font-family:'CVM Tinos';font-style:normal;font-weight:400;font-display:swap;src:url('./tinos-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Tinos';font-style:italic;font-weight:400;font-display:swap;src:url('./tinos-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Tinos';font-style:normal;font-weight:700;font-display:swap;src:url('./tinos-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Tinos';font-style:italic;font-weight:700;font-display:swap;src:url('./tinos-latin-700-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Arimo';font-style:normal;font-weight:400;font-display:swap;src:url('./arimo-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Arimo';font-style:italic;font-weight:400;font-display:swap;src:url('./arimo-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Arimo';font-style:normal;font-weight:700;font-display:swap;src:url('./arimo-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Arimo';font-style:italic;font-weight:700;font-display:swap;src:url('./arimo-latin-700-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Carlito';font-style:normal;font-weight:400;font-display:swap;src:url('./carlito-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Carlito';font-style:italic;font-weight:400;font-display:swap;src:url('./carlito-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Carlito';font-style:normal;font-weight:700;font-display:swap;src:url('./carlito-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Carlito';font-style:italic;font-weight:700;font-display:swap;src:url('./carlito-latin-700-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Gelasio';font-style:normal;font-weight:400;font-display:swap;src:url('./gelasio-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Gelasio';font-style:italic;font-weight:400;font-display:swap;src:url('./gelasio-latin-400-italic.woff2') format('woff2')}
+@font-face{font-family:'CVM Gelasio';font-style:normal;font-weight:700;font-display:swap;src:url('./gelasio-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'CVM Gelasio';font-style:italic;font-weight:700;font-display:swap;src:url('./gelasio-latin-700-italic.woff2') format('woff2')}

@@ -3,10 +3,11 @@
  * uses the same schema to reject anything else (strict: too long → rejected, not truncated).
  */
 import * as v from 'valibot';
-import { EXPERIENCE_TYPES } from '../schema/types';
+import { EXPERIENCE_TYPES, LETTER_SOURCES } from '../schema/types';
 import { LIMITS } from '../schema/limits';
 import {
 	AI_CONCISE_LIMITS,
+	AI_LETTER_LIMITS,
 	AI_PROFILE_LIMITS,
 	AI_REVIEW_LIMITS,
 	AI_TASKS,
@@ -61,10 +62,23 @@ export const AiReviewInputSchema = v.strictObject({
 	jobPost: text(AI_REVIEW_LIMITS.jobPost)
 });
 
+export const AiLetterInputSchema = v.strictObject({
+	locale: v.picklist(['id', 'en']),
+	position: v.pipe(v.string(), v.minLength(1), v.maxLength(LIMITS.title)),
+	company: v.pipe(v.string(), v.minLength(1), v.maxLength(LIMITS.title)),
+	source: v.picklist(['', ...LETTER_SOURCES]),
+	highlights: list(text(AI_LETTER_LIMITS.highlight), AI_LETTER_LIMITS.highlights),
+	motivation: text(AI_LETTER_LIMITS.motivation),
+	availability: v.strictObject({ immediate: v.boolean(), relocate: v.boolean() }),
+	profile: AiProfileSchema,
+	jobPost: text(AI_LETTER_LIMITS.jobPost)
+});
+
 export const AiRequestSchema = v.union([
 	v.strictObject({ task: v.picklist(AI_TASKS), profile: AiProfileSchema }),
 	v.strictObject({ task: v.literal('review'), review: AiReviewInputSchema }),
-	v.strictObject({ task: v.literal('convert'), convert: AiReviewInputSchema })
+	v.strictObject({ task: v.literal('convert'), convert: AiReviewInputSchema }),
+	v.strictObject({ task: v.literal('letter'), letter: AiLetterInputSchema })
 ]);
 
 export const AiConciseInputSchema = v.strictObject({

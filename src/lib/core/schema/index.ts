@@ -1,5 +1,5 @@
 export * from './types';
-export { LIMITS, FONT_SCALE, DESIGN_LIMITS } from './limits';
+export { LIMITS, FONT_SCALE, DESIGN_LIMITS, LETTER_LIMITS, FOREIGN_LIMITS } from './limits';
 export { newId, newCustomSectionKey } from './ids';
 export {
 	CURRENT_SCHEMA_VERSION,
@@ -8,6 +8,6 @@ export {
 	createEmptyCv,
 	type CreateCvOptions
 } from './defaults';
-export { cvDocumentSchema, cleanText } from './schema';
+export { cvDocumentSchema, cleanText, normalizeRuns } from './schema';
 export { loadCvDocument, type LoadResult, type LoadErrorCode } from './migrations';
 export { toCvMeta } from './meta';

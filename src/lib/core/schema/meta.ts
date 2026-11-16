@@ -11,6 +11,7 @@ export function toCvMeta(cv: CVDocument): CVMeta {
 		targetRole: cv.targetRole,
 		fullName: cv.personal.fullName,
 		wizardCompleted: cv.status.wizardCompleted,
+		letterCount: cv.letters?.length ?? 0,
 		createdAt: cv.createdAt,
 		updatedAt: cv.updatedAt
 	};

@@ -77,12 +77,32 @@ describe('docx export', () => {
 		return strFromU8(xml);
 	}
 
+	/** Text of each paragraph (runs joined): what Word and an ATS read. */
+	const paragraphs = (xml: string): string[] =>
+		[...xml.matchAll(/<w:p[ >][\s\S]*?<\/w:p>/g)].map((p) =>
+			[...p[0].matchAll(/<w:t(?: [^>]*)?>([^<]*)<\/w:t>/g)].map((t) => t[1]).join('')
+		);
+
 	it('produces a valid Word document with the CV content', async () => {
 		const xml = await documentXml();
-		expect(xml).toContain('Rizky Aditya Pratama');
-		expect(xml).toContain('Pendidikan');
-		expect(xml).toContain('PT Nusantara Niaga Digital');
-		expect(xml).toContain('Membuat dashboard penjualan mingguan');
+		const text = paragraphs(xml).join('\n');
+		expect(text).toContain('Rizky Aditya Pratama');
+		expect(text).toContain('Pendidikan');
+		expect(text).toContain('PT Nusantara Niaga Digital');
+		expect(text).toContain('Membuat dashboard penjualan mingguan');
+	});
+
+	it('italicises foreign terms in an Indonesian CV only (PUEBI)', async () => {
+		const italic =
+			/<w:r>\s*<w:rPr>(?:(?!<\/w:rPr>)[\s\S])*<w:i\/>(?:(?!<\/w:rPr>)[\s\S])*<\/w:rPr>\s*<w:t(?: [^>]*)?>([^<]*)<\/w:t>/g;
+		const id = structuredClone(sampleCvAts);
+		id.locale = 'id';
+		const italics = [...(await documentXml(toRenderModel(id))).matchAll(italic)].map((m) => m[1]);
+		expect(italics).toContain('dashboard');
+		expect(italics).not.toContain('PT Nusantara Niaga Digital');
+		const en = structuredClone(sampleCvAts);
+		en.locale = 'en';
+		expect([...(await documentXml(toRenderModel(en))).matchAll(italic)]).toHaveLength(0);
 	});
 
 	it('uses real headings and real bullet lists (ATS-readable)', async () => {

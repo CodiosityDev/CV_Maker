@@ -26,9 +26,11 @@ import { displayUrl, sanitizeUrl } from '../security/url';
 import { formatDateRange, formatYearMonth, phoneHref } from './format';
 import { CV_LABELS, type CvLabels } from './labels';
 import { resolveDesign, type ResolvedDesign } from '../design/index';
+import { foreignMatcherForCv, type ForeignMatcher } from '../foreign/index';
 
 export { CV_LABELS, type CvLabels } from './labels';
 export { formatDateRange, formatYearMonth } from './format';
+export { foreignParts, type ForeignMatcher, type ForeignPart } from '../foreign/index';
 
 export interface RenderLink {
 	label: string;
@@ -93,6 +95,13 @@ export interface RenderModel {
 	design?: ResolvedDesign;
 	/** Set for the visual editor's page: templates add `data-edit={editKey(...)}` to editable texts. */
 	editing?: true;
+	/**
+	 * Indonesian CVs: foreign terms are shown in italics (PUEBI). Render content texts (headline,
+	 * summary, entry title/subtitle/meta/description, bullets, skill labels and items) with
+	 * `foreignParts(text, model.foreign)`; never the name, contacts, links, dates or section titles.
+	 * `undefined` = no italics (English CV or switched off).
+	 */
+	foreign?: ForeignMatcher;
 }
 
 export interface RenderOptions {
@@ -308,6 +317,8 @@ export function toRenderModel(cv: CVDocument, options: RenderOptions = {}): Rend
 	// Editing keeps blank bullets (and their exact text) so `data-edit` bullet indexes match the data.
 	const list: BulletList = editing ? (items) => [...items] : cleanList;
 
+	const foreign = foreignMatcherForCv(cv);
+
 	const sections: RenderSection[] = [];
 	for (const key of cv.layout.order) {
 		if (hidden.has(key)) continue;
@@ -337,6 +348,7 @@ export function toRenderModel(cv: CVDocument, options: RenderOptions = {}): Rend
 		},
 		sections,
 		...(cv.kind === 'creative' ? { design: resolveDesign(cv) } : {}),
-		...(editing ? { editing: true as const } : {})
+		...(editing ? { editing: true as const } : {}),
+		...(foreign ? { foreign } : {})
 	};
 }
