@@ -5,14 +5,24 @@
 
 <footer>
 	<div class="site-container footer-inner">
-		<p class="attribution">
-			{t('footer.madeBy')}
-			<a href="https://codiosity.com" target="_blank" rel="noopener noreferrer"
-				>{t('nav.codiosity')}<span aria-hidden="true">↗</span><span class="sr-only">
-					{t('a11y.opensNewTab')}</span
-				></a
-			>
-		</p>
+		<div class="attributions">
+			<p class="attribution">
+				{t('footer.madeBy')}
+				<a href="https://codiosity.com" target="_blank" rel="noopener noreferrer"
+					>{t('nav.codiosity')}<span aria-hidden="true">↗</span><span class="sr-only">
+						{t('a11y.opensNewTab')}</span
+					></a
+				>
+			</p>
+			<p class="attribution">
+				{t('footer.toolsQuestion')} <span aria-hidden="true">→</span>
+				<a href="https://respawnsociety.web.id" target="_blank" rel="noopener noreferrer"
+					>{t('footer.toolsSite')}<span class="sr-only"> — {t('nav.tools')}</span><span
+						aria-hidden="true">↗</span
+					><span class="sr-only"> {t('a11y.opensNewTab')}</span></a
+				>
+			</p>
+		</div>
 		<nav aria-label={t('footer.links')}>
 			<a href={resolve('/(site)/privasi')} data-sveltekit-preload-code="viewport"
 				>{t('nav.privacy')}</a
@@ -43,6 +53,10 @@
 		gap: 0 0.375rem;
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
+	}
+	.attributions {
+		display: grid;
+		gap: 0.25rem;
 	}
 	a {
 		display: inline-flex;

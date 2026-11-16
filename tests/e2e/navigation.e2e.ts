@@ -12,12 +12,20 @@ test('phone menu opens, closes with Escape, and closes after navigation', async 
 	await menu.click();
 	await expect(menu).toHaveAttribute('aria-expanded', 'true');
 	await expect(navigation).toBeVisible();
-	await expect(navigation.getByRole('link')).toHaveCount(6);
+	await expect(navigation.getByRole('link')).toHaveCount(7);
 	expect(
 		await navigation
 			.getByRole('link')
 			.evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-	).toEqual(['/', '/buat', '/cek-ats', '/faq', '/tentang', 'https://codiosity.com']);
+	).toEqual([
+		'/',
+		'/buat',
+		'/cek-ats',
+		'/faq',
+		'/tentang',
+		'https://respawnsociety.web.id',
+		'https://codiosity.com'
+	]);
 	await page.keyboard.press('Escape');
 	await expect(menu).toHaveAttribute('aria-expanded', 'false');
 	await expect(menu).toBeFocused();

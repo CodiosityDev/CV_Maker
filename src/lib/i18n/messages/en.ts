@@ -31,6 +31,7 @@ export const en: BaseMessages = {
 		menu: 'Menu',
 		faq: 'FAQ',
 		atsCheck: 'ATS Check',
+		tools: 'Image & PDF tools',
 		codiosity: 'Codiosity',
 		home: 'Home',
 		about: 'About',
@@ -38,6 +39,8 @@ export const en: BaseMessages = {
 	},
 	footer: {
 		madeBy: 'Made by',
+		toolsQuestion: 'Need image & PDF tools?',
+		toolsSite: 'Respawn Society',
 		links: 'Site links'
 	},
 	ui: {
