@@ -137,6 +137,10 @@ describe('CV settings', () => {
 		expect(terms).toContainEqual({ term: 'teamwork', count: 1, source: 'auto' });
 		expect(terms).toContainEqual({ term: 'public speaking', count: 1, source: 'auto' });
 		expect(terms).toContainEqual({ term: 'kanban board', count: 0, source: 'extra' });
+		// Labels the renderer adds are italic in the CV, so they are listed too.
+		expect(terms).toContainEqual({ term: 'soft skills', count: 1, source: 'auto' });
+		cv.experience[0]!.type = 'freelance';
+		expect(detectForeignTerms(cv)).toContainEqual({ term: 'freelance', count: 1, source: 'auto' });
 	});
 
 	it('the schema keeps valid settings and drops junk', () => {

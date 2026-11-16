@@ -2,6 +2,7 @@
 	/* eslint-disable svelte/no-navigation-without-resolve -- RenderModel supplies validated external, email and phone URLs; templates display them unchanged. */
 	import { splitColumns, type RenderModel, type RenderSection } from '#lib/core/render/index.ts';
 	import { editKey, type EditTarget } from '#lib/core/design/edit.ts';
+	import ForeignText from '#lib/templates/shared/ForeignText.svelte';
 	let { model }: { model: RenderModel } = $props();
 
 	let columns = $derived(splitColumns(model));
@@ -70,10 +71,10 @@
 		<h2 data-edit={inline({ kind: 'sectionTitle', section: section.key })}>{section.title}</h2>
 		{#if section.type === 'text'}
 			{#if model.editing}<p class="paragraph" data-edit={inline({ kind: 'summary' })}>
-					{section.paragraphs.join('\n')}
+					<ForeignText text={section.paragraphs.join('\n')} matcher={model.foreign} />
 				</p>
 			{:else}{#each section.paragraphs as paragraph, index (index)}<p class="paragraph">
-						{paragraph}
+						<ForeignText text={paragraph} matcher={model.foreign} />
 					</p>{/each}{/if}
 		{:else if section.type === 'entries'}
 			{#each section.entries as entry (entry.id)}
@@ -86,7 +87,7 @@
 							field: 'title'
 						})}
 					>
-						{entry.title}
+						<ForeignText text={entry.title} matcher={model.foreign} />
 					</h3>
 					{#if entry.subtitle}<p
 							class="subtitle"
@@ -102,7 +103,7 @@
 								? form(section.key)
 								: undefined}
 						>
-							{entry.subtitle}
+							<ForeignText text={entry.subtitle} matcher={model.foreign} />
 						</p>{/if}
 					{#if entry.dateText}<p
 							class="date"
@@ -122,7 +123,7 @@
 							data-form-field={metaField(section.key, entry.id, fact)}
 							data-form-section={form(section.key)}
 						>
-							{fact}
+							<ForeignText text={fact} matcher={model.foreign} />
 						</p>{/each}
 					{#if entry.link}
 						<p
@@ -145,14 +146,14 @@
 									})
 								: undefined}
 						>
-							{entry.description}
+							<ForeignText text={entry.description} matcher={model.foreign} />
 						</p>{/if}
 					{#if entry.bullets.length}
 						<ul>
 							{#each entry.bullets as bullet, index (index)}<li
 									data-edit={inline({ kind: 'bullet', section: section.key, id: entry.id, index })}
 								>
-									{bullet}
+									<ForeignText text={bullet} matcher={model.foreign} />
 								</li>{/each}
 						</ul>
 					{/if}
@@ -165,8 +166,8 @@
 					data-form-field={form(`skills.${group.key}`)}
 					data-form-section={form('skills')}
 				>
-					<strong>{group.label}:</strong>
-					{group.items.join(', ')}
+					<strong><ForeignText text={`${group.label}:`} matcher={model.foreign} /></strong
+					><ForeignText text={` ${group.items.join(', ')}`} matcher={model.foreign} />
 				</p>
 			{/each}
 		{/if}
@@ -226,7 +227,7 @@
 					class="headline"
 					data-edit={inline({ kind: 'personal', field: 'headline' })}
 				>
-					{model.personal.headline}
+					<ForeignText text={model.personal.headline} matcher={model.foreign} />
 				</p>{/if}
 		</header>
 		{#each mainSections as section (section.key)}{@render cvSection(section)}{/each}

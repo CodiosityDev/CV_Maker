@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import type { CvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import {
 		hasCustomDesign,
@@ -24,6 +24,10 @@
 
 	let { store, onbeforechange }: { store: CvStore; onbeforechange?: () => void } = $props();
 	const uid = $props.id();
+	let mounted = true;
+	let ForeignTermsControls = $state.raw<typeof import('./ForeignTermsControls.svelte').default>();
+	let foreignFailed = $state(false);
+	let foreignImport: Promise<typeof import('./ForeignTermsControls.svelte')> | undefined;
 	let open = $state(
 		typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
 	);
@@ -38,6 +42,41 @@
 	);
 	const hasPhoto = $derived(Boolean(store.cv.personal.photoAssetId));
 	const changed = $derived(hasCustomDesign(store.cv));
+	onDestroy(() => {
+		mounted = false;
+	});
+	$effect(() => {
+		if (open && store.cv.locale === 'id' && editable) untrack(() => void loadForeignTerms());
+	});
+	async function loadForeignTerms() {
+		if (ForeignTermsControls) return;
+		const id = store.cv.id;
+		const mode = incognito.active;
+		foreignFailed = false;
+		try {
+			const module = await (foreignImport ??= import('./ForeignTermsControls.svelte'));
+			if (
+				mounted &&
+				open &&
+				editable &&
+				store.cv.id === id &&
+				incognito.active === mode &&
+				store.cv.locale === 'id'
+			)
+				ForeignTermsControls = module.default;
+		} catch {
+			foreignImport = undefined;
+			if (
+				mounted &&
+				open &&
+				editable &&
+				store.cv.id === id &&
+				incognito.active === mode &&
+				store.cv.locale === 'id'
+			)
+				foreignFailed = true;
+		}
+	}
 
 	onMount(() => {
 		const media = window.matchMedia('(min-width: 1024px)');
@@ -141,6 +180,14 @@
 		<Button variant="secondary" disabled={!editable || !changed} onclick={reset}
 			>{t('visualEditor.reset')}</Button
 		>
+		{#if open && store.cv.locale === 'id'}
+			{#if ForeignTermsControls}<ForeignTermsControls {store} {onbeforechange} />
+			{:else if foreignFailed}<p role="alert">{t('foreignTerms.loadError')}</p>
+				<Button variant="secondary" onclick={() => void loadForeignTerms()}
+					>{t('wizard.retry')}</Button
+				>
+			{:else}<p role="status">{t('common.loading')}</p>{/if}
+		{/if}
 	</div>
 </details>
 

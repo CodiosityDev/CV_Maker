@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, tick, type Snippet } from 'svelte';
+	import { onDestroy, tick, untrack, type Snippet } from 'svelte';
 	import {
 		addCustomSection,
 		canAddCustomSection,
@@ -21,13 +21,21 @@
 	import Toggle from '../Toggle.svelte';
 	import { toast } from '../toast.svelte.ts';
 
-	let { store, renderSection }: { store: CvStore; renderSection: Snippet<[EditorSection]> } =
-		$props();
+	let {
+		store,
+		renderSection,
+		onopen
+	}: {
+		store: CvStore;
+		renderSection: Snippet<[EditorSection, boolean]>;
+		onopen?: (key: SectionKey) => void;
+	} = $props();
 	const uid = $props.id();
 	const sections = $derived(editorSections(store.cv));
 	const canAdd = $derived(canAddCustomSection(store.cv));
 	let initialized = false;
 	let expanded = $state<SectionKey[]>([]);
+	let opened = $state<SectionKey[]>([]);
 	let announcement = $state('');
 	let renameKey = $state<SectionKey>();
 	let deleteKey = $state<SectionKey>();
@@ -46,6 +54,13 @@
 		if (!initialized && sections.length) {
 			expanded = [sections[0]!.key];
 			initialized = true;
+		}
+	});
+	$effect(() => {
+		const next = expanded.filter((key) => !opened.includes(key));
+		if (next.length) {
+			opened = [...opened, ...next];
+			untrack(() => next.forEach((key) => onopen?.(key)));
 		}
 	});
 	$effect(() => {
@@ -324,7 +339,7 @@
 					aria-labelledby={`${rowId(section.key)}-toggle`}
 					hidden={!expanded.includes(section.key)}
 				>
-					{@render renderSection(section)}
+					{@render renderSection(section, opened.includes(section.key))}
 				</div>
 			</li>
 		{/each}

@@ -21,10 +21,16 @@
 		type AiModule
 	} from './session.svelte.ts';
 
-	let { store, task }: { store: CvStore; task: AiTask } = $props();
+	let {
+		store,
+		task,
+		activation
+	}: { store: CvStore; task: AiTask; activation?: { source: string; mode: boolean } } = $props();
 	const uid = $props.id();
 	const groups = ['hard', 'tools', 'soft'] as const;
 	let module = $state.raw<AiModule>();
+	let ready = $state(false);
+	let activationHandled = false;
 	let busy = $state(false);
 	let rewarding = $state(false);
 	let consentOpen = $state(false);
@@ -79,6 +85,7 @@
 	$effect(() => {
 		syncAiSession();
 		if (seenEpoch !== aiSession.epoch || removed) {
+			activationHandled = true;
 			seenEpoch = aiSession.epoch;
 			request += 1;
 			result = undefined;
@@ -86,6 +93,25 @@
 			busy = false;
 			errorKey = undefined;
 			clearUndo();
+		}
+	});
+	$effect(() => {
+		const intent = activation;
+		if (!intent || !ready || activationHandled) return;
+		activationHandled = true;
+		if (
+			mounted &&
+			!removed &&
+			intent.mode === incognito.active &&
+			!(incognito.active && incognito.expiredAt) &&
+			intent.source === JSON.stringify($state.snapshot(store.cv))
+		) {
+			untrack(ask);
+			if (!consentOpen)
+				void tick().then(() => {
+					if (mounted && !removed && root?.isConnected && document.activeElement === document.body)
+						root.querySelector<HTMLButtonElement>('.run-button')?.focus();
+				});
 		}
 	});
 	$effect(() => {
@@ -97,12 +123,16 @@
 		if (undo && signature !== undo.signature) clearUndo();
 	});
 	async function prepare() {
+		const epoch = aiSession.epoch;
+		const active = incognito.active;
+		ready = false;
 		errorKey = undefined;
 		try {
 			const loaded = await loadAiModule();
 			if (!mounted || removed) return;
 			module = loaded;
 			await refreshAiQuota();
+			if (mounted && !removed && sameAiSession(epoch, active)) ready = true;
 		} catch {
 			if (mounted && !removed) errorKey = 'ai.errors.unavailable';
 		}
