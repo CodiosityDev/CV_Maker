@@ -1,7 +1,7 @@
 ﻿<script lang="ts">
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
+	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import CvMockup from '#lib/ui/CvMockup.svelte';
 	import VisitorCounter from '#lib/ui/VisitorCounter.svelte';
 </script>
@@ -16,9 +16,7 @@
 		<div class="hero-copy">
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
-			<Button href="/buat" data-sveltekit-preload-code="viewport" size="lg"
-				>{t('nav.create')}</Button
-			>
+			<PrimaryLink href="/buat" size="lg">{t('nav.create')}</PrimaryLink>
 			<a class="ats-link" href={resolve('/(site)/cek-ats')} data-sveltekit-preload-code="viewport"
 				>{t('landing.atsCheck')}</a
 			>

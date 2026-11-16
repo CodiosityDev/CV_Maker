@@ -436,6 +436,12 @@ describe('AI', () => {
 		])
 			expect(json).not.toContain(secret);
 		expect(input.source).toBe('referral');
+		const spaced = aiLetterInput(cv, {
+			...letter,
+			position: '  Junior   Data\tAnalyst ',
+			company: ' PT  Maju '
+		});
+		expect([spaced.position, spaced.company]).toEqual(['Junior Data Analyst', 'PT Maju']);
 		expect(input.highlights.length).toBeGreaterThan(0);
 		expect(parseAiRequest({ task: 'letter', letter: input })).toBeDefined();
 		expect(aiCanWriteLetter(letter)).toBe(true);

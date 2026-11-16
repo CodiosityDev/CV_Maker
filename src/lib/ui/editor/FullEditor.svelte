@@ -385,6 +385,13 @@
 		event.preventDefault();
 		if (await flushBeforeLeave()) await goto(resolve('/(app)/cv'));
 	}
+	async function letters(event: MouseEvent) {
+		if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+			return;
+		event.preventDefault();
+		if (await flushBeforeLeave())
+			await goto(resolve('/(app)/cv/[id]/surat', { id: store.cv.id }), { invalidateAll: true });
+	}
 	async function reload() {
 		if (await store.reloadFromRepo()) loadedAt = store.cv.updatedAt;
 		else store.applyExternalChange({ type: 'wiped' });
@@ -562,8 +569,11 @@
 			</div>
 			<div class="tools">
 				<Button onclick={() => openTool('download')}>{t('editor.download')}</Button><Button
+					href={`/cv/${store.cv.id}/surat`}
 					variant="secondary"
-					onclick={() => openTool('ats')}>{t('dashboard.checkAts')}</Button
+					onclick={letters}>{t('nav.letter')}</Button
+				><Button variant="secondary" onclick={() => openTool('ats')}
+					>{t('dashboard.checkAts')}</Button
 				><Button variant="ghost" onclick={() => openTool('jobs')}
 					>{t('jobLinks.dialogTitle')}</Button
 				>

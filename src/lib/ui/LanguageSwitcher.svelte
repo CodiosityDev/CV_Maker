@@ -3,25 +3,22 @@
 
 	type Props = { disabled?: boolean; class?: string };
 	let { disabled = false, class: className = '' }: Props = $props();
+	const locales = ['id', 'en'] as const;
 </script>
 
 <div class={`language-switcher ${className}`} role="group" aria-label={t('locale.label')}>
-	<button
-		type="button"
-		class:active={i18n.locale === 'id'}
-		aria-pressed={i18n.locale === 'id'}
-		aria-label={t('locale.id')}
-		{disabled}
-		onclick={() => setLocale('id')}>{t('ui.languageId')}</button
-	>
-	<button
-		type="button"
-		class:active={i18n.locale === 'en'}
-		aria-pressed={i18n.locale === 'en'}
-		aria-label={t('locale.en')}
-		{disabled}
-		onclick={() => setLocale('en')}>{t('ui.languageEn')}</button
-	>
+	{#each locales as locale (locale)}
+		{@const active = i18n.locale === locale}
+		<button
+			type="button"
+			class:active
+			aria-pressed={active}
+			aria-label={t(`locale.${locale}`)}
+			{disabled}
+			onclick={() => setLocale(locale)}
+			>{t(locale === 'id' ? 'ui.languageId' : 'ui.languageEn')}</button
+		>
+	{/each}
 </div>
 
 <style>

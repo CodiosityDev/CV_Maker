@@ -132,5 +132,27 @@ for (const [name, open] of Object.entries(backends)) {
 			expect(await repos.cvRepo.list()).toEqual([]);
 			expect(await backend.getAllAssetIds()).toEqual([]);
 		});
+
+		it('wipes the app keys and prefixed keys from localStorage, nothing else', async () => {
+			const data = new Map<string, string>([
+				['cvmaker.theme', 'dark'],
+				['cvmaker.letterOffer.skip.cv-1', '1'],
+				['cvmaker.letterOffer.skip.cv-2', '1'],
+				['other.site', 'keep']
+			]);
+			const storage = {
+				get length() {
+					return data.size;
+				},
+				key: (i: number) => [...data.keys()][i] ?? null,
+				getItem: (k: string) => data.get(k) ?? null,
+				setItem: (k: string, v: string) => void data.set(k, v),
+				removeItem: (k: string) => void data.delete(k),
+				clear: () => data.clear()
+			};
+			Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+			await repos.storage.wipeAll();
+			expect([...data.keys()]).toEqual(['other.site']);
+		});
 	});
 }

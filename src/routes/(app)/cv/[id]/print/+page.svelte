@@ -8,6 +8,8 @@
 	import { resolveTemplate, type TemplateComponent } from '#lib/templates/registry.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import { toast } from '#lib/ui/toast.svelte.ts';
+	import LetterOffer from '#lib/ui/letter/LetterOffer.svelte';
+	import { markCvDownloaded } from '#lib/ui/letter/offer.svelte.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -145,6 +147,7 @@
 		preparePrintTitle();
 		try {
 			window.print();
+			markCvDownloaded(data.cv.id);
 		} catch {
 			restoreTitle();
 			toast.error(t('printPage.printError'));
@@ -181,6 +184,7 @@
 				<dd>{t('printPage.desktopGuide')}</dd>
 			</dl>
 		</details>
+		<LetterOffer cvId={data.cv.id} />
 		{#if loading}
 			<p class="print-status" role="status">{t('printPage.loading')}</p>
 		{:else if failed}

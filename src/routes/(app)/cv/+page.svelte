@@ -11,6 +11,7 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
+	import { clearLetterOffers, removeLetterOffer } from '#lib/ui/letter/offer.svelte.ts';
 	import JobLinks from '#lib/ui/JobLinks.svelte';
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
@@ -343,9 +344,11 @@
 	async function remove() {
 		if (busy || !deleteCv) return;
 		const id = deleteCv.id;
+		const startedInIncognito = incognito.active;
 		busy = true;
 		try {
 			await cvRepo.remove(id);
+			removeLetterOffer(id, !startedInIncognito);
 			if (!active) return;
 			forgetCv(id);
 			toast.success(t('dashboard.deleted'));
@@ -360,9 +363,11 @@
 	async function wipe(event: SubmitEvent) {
 		event.preventDefault();
 		if (busy || wipeText.trim().toUpperCase() !== t('dashboard.wipeWord')) return;
+		const startedInIncognito = incognito.active;
 		busy = true;
 		try {
 			await storage.wipeAll();
+			clearLetterOffers(!startedInIncognito);
 			resetAiSession();
 			theme.reset();
 			if (!active) return;
@@ -383,6 +388,14 @@
 </svelte:head>
 
 {#snippet actions(cv: CVMeta)}
+	<button
+		type="button"
+		disabled={busy}
+		onclick={() => {
+			menuOpen = false;
+			void goto(resolve('/(app)/cv/[id]/surat', { id: cv.id }));
+		}}>{t('nav.letter')} · {t('letterEditor.count', { count: cv.letterCount })}</button
+	>
 	<button type="button" disabled={busy} onclick={(event) => showJobs(cv, event.currentTarget)}
 		>{t('dashboard.findJobs')}</button
 	>
@@ -453,6 +466,7 @@
 					<p class="target-role">{cv.targetRole || t('dashboard.roleMissing')}</p>
 					<div class="cv-meta">
 						<span>{t(cv.kind === 'ats' ? 'dashboard.kindAts' : 'dashboard.kindCreative')}</span>
+						<span>{t('letterEditor.count', { count: cv.letterCount })}</span>
 						<span
 							>{t(
 								`templates.${resolveTemplate(cv.templateId, cv.kind).id}.name` as MessageKey

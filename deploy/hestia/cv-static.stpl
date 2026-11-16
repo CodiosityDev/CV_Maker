@@ -93,8 +93,8 @@ server {
 		try_files $uri =404;
 	}
 
-	# Client-only app routes (/buat, /cv and everything below) → SPA shell, URL unchanged.
-	location ~ ^/(buat|cv)(/|$) {
+	# Client-only app routes (/buat, /cv, /surat and everything below) → SPA shell, URL unchanged.
+	location ~ ^/(buat|cv|surat)(/|$) {
 		include /etc/nginx/snippets/cvmaker-security-headers.conf;
 		add_header Cache-Control "no-cache" always;
 		try_files /200.html =404;

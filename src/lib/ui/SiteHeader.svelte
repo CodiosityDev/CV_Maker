@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
+	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
@@ -13,6 +13,7 @@
 	const links = $derived([
 		{ href: resolve('/(site)'), label: t('nav.home') },
 		{ href: resolve('/(app)/buat'), label: t('nav.create') },
+		{ href: resolve('/(app)/surat'), label: t('nav.letter') },
 		{ href: resolve('/(site)/cek-ats'), label: t('nav.atsCheck') },
 		{ href: resolve('/(site)/faq'), label: t('nav.faq') },
 		{ href: resolve('/(site)/tentang'), label: t('nav.about') }
@@ -30,14 +31,10 @@
 
 <svelte:window onkeydown={escapeMenu} />
 
-<header class="site-header">
+<header class="site-header" data-sveltekit-preload-code="viewport">
 	<div class="site-container header-inner">
-		<a
-			class="brand"
-			href={resolve('/(site)')}
-			data-sveltekit-preload-code="viewport"
-			aria-label={t('nav.home')}
-			onclick={closeMenu}><Logo size={28} /><span>{t('app.name')}</span></a
+		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
+			><Logo size={28} /><span>{t('app.name')}</span></a
 		>
 		<button
 			type="button"
@@ -55,12 +52,25 @@
 					<li>
 						<a
 							href={link.href}
-							data-sveltekit-preload-code="viewport"
-							aria-current={page.url.pathname === link.href ? 'page' : undefined}
+							aria-current={page.url.pathname === link.href ||
+							(link.href.endsWith('/surat') && /\/surat(?:\/|$)/.test(page.url.pathname))
+								? 'page'
+								: undefined}
 							onclick={closeMenu}>{link.label}</a
 						>
 					</li>
 				{/each}
+				<li>
+					<a
+						href="https://respawnsociety.web.id"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={closeMenu}
+						>{t('nav.tools')}<span aria-hidden="true">↗</span><span class="sr-only">
+							{t('a11y.opensNewTab')}</span
+						></a
+					>
+				</li>
 				<li>
 					<a
 						href="https://codiosity.com"
@@ -76,12 +86,8 @@
 		</nav>
 		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
 		<div class="create-action">
-			<Button
-				href="/buat"
-				data-sveltekit-preload-code="viewport"
-				size="sm"
-				class="header-cta"
-				onclick={closeMenu}>{t('nav.create')}</Button
+			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+				>{t('nav.create')}</PrimaryLink
 			>
 		</div>
 	</div>
@@ -210,7 +216,7 @@
 			column-gap: 1rem;
 		}
 	}
-	@media (min-width: 768px) {
+	@media (min-width: 1280px) {
 		.menu-toggle {
 			display: none;
 		}
@@ -218,25 +224,13 @@
 			grid-area: nav;
 			display: block;
 		}
-		ul {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0.25rem 0.75rem;
-			padding-top: 0.5rem;
-		}
-		.header-inner {
-			grid-template-columns: minmax(0, 1fr) auto auto;
-			grid-template-areas: 'brand language create' 'nav nav nav';
-			gap: 0.5rem 1.5rem;
-		}
-	}
-	@media (min-width: 1024px) {
 		.header-inner {
 			grid-template-columns: auto minmax(0, 1fr) auto auto;
 			grid-template-areas: 'brand nav language create';
-			gap: 1.25rem;
+			gap: 0.75rem;
 		}
 		ul {
+			display: flex;
 			flex-wrap: nowrap;
 			justify-content: end;
 			gap: 0.25rem;
@@ -244,7 +238,7 @@
 			border: 0;
 		}
 		nav a {
-			padding-inline: 0.625rem;
+			padding-inline: 0.5rem;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {

@@ -33,9 +33,11 @@ export const id = {
 		label: 'Navigasi utama',
 		create: 'Buat CV',
 		myCvs: 'CV Saya',
+		letter: 'Surat Lamaran',
 		menu: 'Menu',
 		faq: 'FAQ',
 		atsCheck: 'Cek ATS',
+		tools: 'Alat Gambar & PDF',
 		codiosity: 'Codiosity',
 		home: 'Beranda',
 		about: 'Tentang',
@@ -43,6 +45,8 @@ export const id = {
 	},
 	footer: {
 		madeBy: 'Dibuat oleh',
+		toolsQuestion: 'Butuh alat gambar & PDF?',
+		toolsSite: 'Respawn Society',
 		links: 'Tautan situs'
 	},
 	ui: {

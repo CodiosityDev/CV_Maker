@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /buat
+Disallow: /surat
 Disallow: /cv

@@ -5,12 +5,14 @@
 
 	let { disabled = false, class: className = '' }: { disabled?: boolean; class?: string } =
 		$props();
-	const aboveWizard = $derived(page.url.pathname.startsWith('/buat/'));
+	const aboveActions = $derived(
+		page.url.pathname.startsWith('/buat/') || page.route.id === '/(app)/cv/[id]/surat/[letterId]'
+	);
 </script>
 
 <div
 	class="toaster {className}"
-	class:above-wizard={aboveWizard}
+	class:above-actions={aboveActions}
 	role="status"
 	aria-live="polite"
 	aria-atomic="false"
@@ -167,7 +169,7 @@
 		}
 	}
 	@media (max-width: 1023px) {
-		.toaster.above-wizard {
+		.toaster.above-actions {
 			bottom: calc(76px + env(safe-area-inset-bottom));
 		}
 	}

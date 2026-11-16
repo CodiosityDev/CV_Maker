@@ -14,10 +14,12 @@
 	onclick={() => theme.toggle()}
 >
 	<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-		{#if theme.current === 'dark'}<circle cx="12" cy="12" r="4" /><path
-				d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
-			/>
-		{:else}<path d="M20.4 13.2A8.5 8.5 0 0 1 10.8 3.6 8.5 8.5 0 1 0 20.4 13.2Z" />{/if}
+		<circle cx="12" cy="12" r={theme.current === 'dark' ? 4 : 0} />
+		<path
+			d={theme.current === 'dark'
+				? 'M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5'
+				: 'M20.4 13.2A8.5 8.5 0 0 1 10.8 3.6 8.5 8.5 0 1 0 20.4 13.2Z'}
+		/>
 	</svg>
 </button>
 

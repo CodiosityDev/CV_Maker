@@ -114,6 +114,8 @@ export function letterFontFamily(font: LetterFont): string {
 // ---------------------------------------------------------------------------
 
 const trim = (value: string | undefined): string => (value ?? '').trim();
+/** Whitespace collapsed to single spaces, trimmed. */
+const oneLine = (value: string | undefined): string => (value ?? '').replace(/\s+/g, ' ').trim();
 
 /** Local date as 'YYYY-MM-DD'. */
 function localDate(now: Date): string {
@@ -996,8 +998,9 @@ export function aiLetterInput(cv: CVDocument, letter: CoverLetter, jobPost = '')
 	const clean = (value: string, max: number) => redactContacts(trim(value)).slice(0, max).trim();
 	return {
 		locale: letter.locale,
-		position: trim(letter.position).slice(0, LIMITS.title),
-		company: trim(letter.company).slice(0, LIMITS.title),
+		// Same normalisation as the client (`aiClient.letter`): the consent preview = what is sent.
+		position: oneLine(letter.position).slice(0, LIMITS.title).trim(),
+		company: oneLine(letter.company).slice(0, LIMITS.title).trim(),
 		source: letter.source ?? '',
 		highlights: letter.highlights
 			.map((ref) =>
