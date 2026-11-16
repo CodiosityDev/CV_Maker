@@ -1,12 +1,15 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve -- RenderModel supplies validated external, email and phone URLs; templates display them unchanged. */
 	import type { RenderModel } from '#lib/core/render/index.ts';
+	import ForeignText from '#lib/templates/shared/ForeignText.svelte';
 	let { model }: { model: RenderModel } = $props();
 </script>
 
 <article class="ats-ringkas" data-template="ats-ringkas" lang={model.locale}>
 	<h1>{model.personal.fullName}</h1>
-	{#if model.personal.headline}<p class="headline">{model.personal.headline}</p>{/if}
+	{#if model.personal.headline}<p class="headline">
+			<ForeignText text={model.personal.headline} matcher={model.foreign} />
+		</p>{/if}
 	<p class="contact">
 		{#if model.personal.email}
 			<span>
@@ -38,15 +41,17 @@
 			<h2>{section.title}</h2>
 			{#if section.type === 'text'}
 				{#each section.paragraphs as paragraph, index (index)}
-					<p class="paragraph">{paragraph}</p>
+					<p class="paragraph"><ForeignText text={paragraph} matcher={model.foreign} /></p>
 				{/each}
 			{:else if section.type === 'entries'}
 				{#each section.entries as entry (entry.id)}
 					<div class="entry">
-						<h3>{entry.title}</h3>
+						<h3><ForeignText text={entry.title} matcher={model.foreign} /></h3>
 						{#if entry.subtitle || entry.dateText || entry.location || entry.meta.length}
 							<p class="entry-meta">
-								{#if entry.subtitle}<span class="subtitle">{entry.subtitle}</span>{/if}
+								{#if entry.subtitle}<span class="subtitle"
+										><ForeignText text={entry.subtitle} matcher={model.foreign} /></span
+									>{/if}
 								{#if entry.dateText}
 									{#if entry.subtitle}<span aria-hidden="true"> · </span>{/if}
 									<span class="date">{entry.dateText}</span>
@@ -59,17 +64,21 @@
 									{#if entry.subtitle || entry.dateText || entry.location || index > 0}
 										<span aria-hidden="true"> · </span>
 									{/if}
-									<span>{fact}</span>
+									<span><ForeignText text={fact} matcher={model.foreign} /></span>
 								{/each}
 							</p>
 						{/if}
 						{#if entry.link}
 							<p><a href={entry.link.href} rel="noopener noreferrer">{entry.link.display}</a></p>
 						{/if}
-						{#if entry.description}<p class="description">{entry.description}</p>{/if}
+						{#if entry.description}<p class="description">
+								<ForeignText text={entry.description} matcher={model.foreign} />
+							</p>{/if}
 						{#if entry.bullets.length}
 							<ul>
-								{#each entry.bullets as bullet, index (index)}<li>{bullet}</li>{/each}
+								{#each entry.bullets as bullet, index (index)}<li>
+										<ForeignText text={bullet} matcher={model.foreign} />
+									</li>{/each}
 							</ul>
 						{/if}
 					</div>
@@ -78,7 +87,10 @@
 				<p class="skills">
 					{#each section.groups as group, index (group.key)}
 						{#if index > 0}<span aria-hidden="true"> · </span>{/if}
-						<span><strong>{group.label}:</strong> {group.items.join(', ')}</span>
+						<span
+							><strong><ForeignText text={`${group.label}:`} matcher={model.foreign} /></strong
+							><ForeignText text={` ${group.items.join(', ')}`} matcher={model.foreign} /></span
+						>
 					{/each}
 				</p>
 			{/if}

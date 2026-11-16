@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
+	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
@@ -76,12 +76,8 @@
 		</nav>
 		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
 		<div class="create-action">
-			<Button
-				href="/buat"
-				data-sveltekit-preload-code="viewport"
-				size="sm"
-				class="header-cta"
-				onclick={closeMenu}>{t('nav.create')}</Button
+			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+				>{t('nav.create')}</PrimaryLink
 			>
 		</div>
 	</div>

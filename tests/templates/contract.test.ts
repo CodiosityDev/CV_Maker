@@ -61,6 +61,7 @@ function textOf(html: string): string {
 		html
 			.replace(/<!--[\s\S]*?-->/g, '')
 			.replace(/<style[\s\S]*?<\/style>/gi, '')
+			.replace(/<\/?em\b[^>]*>/gi, '')
 			.replace(/<[^>]+>/g, ' ')
 	)
 		.replace(/\s+/g, ' ')
@@ -97,7 +98,11 @@ describe('template registry', () => {
 
 	it('every template file is registered (no orphan templates)', async () => {
 		const loaded = await Promise.all(TEMPLATES.map((t) => t.load()));
-		expect(loaded.length).toBe(Object.keys(SOURCES).length);
+		// Shared render helpers are checked for purity below; only CV templates need registry entries.
+		const cvSources = Object.keys(SOURCES).filter((path) =>
+			/\/templates\/(ats|creative)\//.test(path)
+		);
+		expect(loaded.length).toBe(cvSources.length);
 	});
 });
 

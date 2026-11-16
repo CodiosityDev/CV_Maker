@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { initIncognitoUiContext, getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
@@ -13,6 +14,7 @@
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+	const homePreload = $derived(page.route.id === '/(app)/cv/[id]/edit' ? 'hover' : 'viewport');
 	initIncognitoUiContext();
 	const incognitoUi = getIncognitoUiContext();
 	$effect(() => {
@@ -59,7 +61,7 @@
 		<a
 			class="brand"
 			href={resolve('/(site)')}
-			data-sveltekit-preload-code="viewport"
+			data-sveltekit-preload-code={homePreload}
 			aria-label={t('nav.home')}
 		>
 			<Logo size={28} /><span class="brand-name">{t('app.name')}</span>
@@ -90,7 +92,7 @@
 				>
 				<a
 					href={resolve('/(site)')}
-					data-sveltekit-preload-code="viewport"
+					data-sveltekit-preload-code={homePreload}
 					onclick={() => (menuOpen = false)}>{t('nav.home')}</a
 				>
 				<a

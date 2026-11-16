@@ -20,7 +20,7 @@
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { loadSuggestions, normalize, type SuggestionData } from '#lib/core/suggest/index.ts';
-	import type { CustomSectionKey } from '#lib/core/schema/types.ts';
+	import type { CustomSectionKey, SectionKey } from '#lib/core/schema/types.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import { toast } from '#lib/ui/toast.svelte.ts';
@@ -28,13 +28,9 @@
 	import Card from '#lib/ui/Card.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import CvPreview from '#lib/ui/CvPreview.svelte';
-	import TemplatePicker from '#lib/ui/TemplatePicker.svelte';
 	import PersonalStep from '#lib/ui/wizard/PersonalStep.svelte';
-	import CareerFields from '#lib/ui/wizard/CareerFields.svelte';
 	import SummaryFields from '#lib/ui/wizard/SummaryFields.svelte';
-	import CollectionSteps from '#lib/ui/wizard/CollectionSteps.svelte';
 	import SectionList from './SectionList.svelte';
-	import CustomSectionFields from './CustomSectionFields.svelte';
 
 	let { initial }: { initial: CVDocument } = $props();
 	const store = untrack(() => createCvStore(initial));
@@ -65,6 +61,26 @@
 	let toolFailed = $state(false);
 	let toolRequest = 0;
 	let appearanceOpen = $state(false);
+	let targetOpen = $state(false);
+	type OptionalField = 'target' | 'collection' | 'custom' | 'appearance';
+	let CareerFields = $state.raw<typeof import('#lib/ui/wizard/CareerFields.svelte').default>();
+	let CollectionSteps =
+		$state.raw<typeof import('#lib/ui/wizard/CollectionSteps.svelte').default>();
+	let CustomSectionFields = $state.raw<typeof import('./CustomSectionFields.svelte').default>();
+	let TemplatePicker = $state.raw<typeof import('#lib/ui/TemplatePicker.svelte').default>();
+	let careerImport: Promise<typeof import('#lib/ui/wizard/CareerFields.svelte')> | undefined;
+	let collectionImport: Promise<typeof import('#lib/ui/wizard/CollectionSteps.svelte')> | undefined;
+	let customImport: Promise<typeof import('./CustomSectionFields.svelte')> | undefined;
+	let appearanceImport: Promise<typeof import('#lib/ui/TemplatePicker.svelte')> | undefined;
+	const fieldFailed = $state<Record<OptionalField, boolean>>({
+		target: false,
+		collection: false,
+		custom: false,
+		appearance: false
+	});
+	let ForeignTermsControls = $state.raw<typeof import('./ForeignTermsControls.svelte').default>();
+	let foreignFailed = $state(false);
+	let foreignImport: Promise<typeof import('./ForeignTermsControls.svelte')> | undefined;
 	let container = $state<HTMLDivElement>();
 	let removalNotice = $state<HTMLDivElement>();
 	let photoUrl = $state<string>();
@@ -72,6 +88,9 @@
 	let photoMissing = $state(false);
 	let suggestionsData = $state.raw<SuggestionData>();
 	let examples = $state.raw<Guidance>();
+	let suggestionsWanted = $state(false);
+	let guidanceWanted = $state(false);
+	let suggestionsFailed = $state(false);
 	let guidanceFailed = $state(false);
 	let guidanceRetry = $state(0);
 	const model = $derived(toRenderModel(store.cv, { photoUrl }));
@@ -87,6 +106,7 @@
 	let atsRetry = $state(0);
 	let jobPost = $state('');
 	let analysisRequest = 0;
+	let focusRequest = 0;
 	let keywordUndo: number | undefined;
 	let keywordSignature: string | undefined;
 
@@ -151,22 +171,168 @@
 	});
 	$effect(() => {
 		const locale = store.cv.locale;
+		if (appearanceOpen && !removed && !expired)
+			untrack(() => {
+				void loadField('appearance');
+				if (locale === 'id') void loadForeignTerms();
+			});
+	});
+	$effect(() => {
+		if (targetOpen && !removed && !expired)
+			untrack(() => {
+				void loadField('target');
+				requestSuggestions();
+			});
+	});
+	async function loadField(field: OptionalField) {
+		if (
+			!mounted ||
+			removed ||
+			expired ||
+			(field === 'target' && CareerFields) ||
+			(field === 'collection' && CollectionSteps) ||
+			(field === 'custom' && CustomSectionFields) ||
+			(field === 'appearance' && TemplatePicker)
+		)
+			return;
+		const id = store.cv.id;
+		const mode = incognito.active;
+		const expires = incognito.expiredAt;
+		const current = () =>
+			mounted &&
+			!removed &&
+			!expired &&
+			store.cv.id === id &&
+			incognito.active === mode &&
+			incognito.expiredAt === expires;
+		fieldFailed[field] = false;
+		try {
+			if (field === 'target') {
+				const module = await (careerImport ??= import('#lib/ui/wizard/CareerFields.svelte'));
+				if (current()) CareerFields = module.default;
+			} else if (field === 'collection') {
+				const module = await (collectionImport ??= import('#lib/ui/wizard/CollectionSteps.svelte'));
+				if (current()) CollectionSteps = module.default;
+			} else if (field === 'custom') {
+				const module = await (customImport ??= import('./CustomSectionFields.svelte'));
+				if (current()) CustomSectionFields = module.default;
+			} else {
+				const module = await (appearanceImport ??= import('#lib/ui/TemplatePicker.svelte'));
+				if (current()) TemplatePicker = module.default;
+			}
+		} catch {
+			if (field === 'target') careerImport = undefined;
+			else if (field === 'collection') collectionImport = undefined;
+			else if (field === 'custom') customImport = undefined;
+			else appearanceImport = undefined;
+			if (current()) fieldFailed[field] = true;
+		}
+	}
+	function openSection(key: SectionKey) {
+		if (!mounted || removed || expired || key === 'summary') return;
+		if (key.startsWith('custom:')) void loadField('custom');
+		else {
+			void loadField('collection');
+			requestGuidance();
+		}
+	}
+	function requestSuggestions() {
+		if (mounted && !removed && !expired) suggestionsWanted = true;
+	}
+	function requestGuidance() {
+		if (!mounted || removed || expired) return;
+		guidanceWanted = true;
+		requestSuggestions();
+	}
+	function suggestionFocus(event: FocusEvent) {
+		if (event.target instanceof Element && event.target.matches('input[role="combobox"]'))
+			requestSuggestions();
+	}
+	async function loadForeignTerms() {
+		if (ForeignTermsControls) return;
+		const id = store.cv.id;
+		const mode = incognito.active;
+		foreignFailed = false;
+		try {
+			const module = await (foreignImport ??= import('./ForeignTermsControls.svelte'));
+			if (
+				mounted &&
+				!removed &&
+				!expired &&
+				store.cv.id === id &&
+				incognito.active === mode &&
+				store.cv.locale === 'id' &&
+				appearanceOpen
+			)
+				ForeignTermsControls = module.default;
+		} catch {
+			foreignImport = undefined;
+			if (
+				mounted &&
+				store.cv.id === id &&
+				incognito.active === mode &&
+				store.cv.locale === 'id' &&
+				appearanceOpen
+			)
+				foreignFailed = true;
+		}
+	}
+	$effect(() => {
+		const locale = store.cv.locale;
+		const mode = incognito.active;
+		const id = store.cv.id;
 		void guidanceRetry;
 		let current = true;
 		suggestionsData = undefined;
+		suggestionsFailed = false;
+		if (suggestionsWanted && !removed && !expired)
+			void loadSuggestions(locale).then(
+				(data) => {
+					if (
+						current &&
+						mounted &&
+						!removed &&
+						!expired &&
+						store.cv.id === id &&
+						incognito.active === mode &&
+						store.cv.locale === locale
+					)
+						suggestionsData = data;
+				},
+				() => {
+					if (current && mounted) suggestionsFailed = true;
+				}
+			);
+		return () => {
+			current = false;
+		};
+	});
+	$effect(() => {
+		const locale = store.cv.locale;
+		const mode = incognito.active;
+		const id = store.cv.id;
+		void guidanceRetry;
+		let current = true;
 		examples = undefined;
 		guidanceFailed = false;
-		void Promise.all([loadSuggestions(locale), loadGuidance(locale)]).then(
-			([suggestions, guidance]) => {
-				if (current) {
-					suggestionsData = suggestions;
-					examples = guidance;
+		if (guidanceWanted && !removed && !expired)
+			void loadGuidance(locale).then(
+				(data) => {
+					if (
+						current &&
+						mounted &&
+						!removed &&
+						!expired &&
+						store.cv.id === id &&
+						incognito.active === mode &&
+						store.cv.locale === locale
+					)
+						examples = data;
+				},
+				() => {
+					if (current && mounted) guidanceFailed = true;
 				}
-			},
-			() => {
-				if (current) guidanceFailed = true;
-			}
-		);
+			);
 		return () => {
 			current = false;
 		};
@@ -279,6 +445,7 @@
 	}
 	function openTool(next: 'download' | 'ats' | 'jobs') {
 		if (!mounted || removed || expired) return;
+		if (next === 'jobs') requestSuggestions();
 		tool = next;
 		toolOpen = true;
 		void loadTool();
@@ -341,6 +508,7 @@
 	function selectView(next: 'edit' | 'preview' | 'visual') {
 		if (next === 'visual' && !visualAllowed) return;
 		if (next === view && (next !== 'visual' || VisualEditor || visualLoading)) return;
+		focusRequest += 1;
 		view = next;
 		if (next === 'visual') void loadVisual();
 		else clearVisual();
@@ -410,16 +578,32 @@
 		else store.undo();
 	}
 	async function focusField(field: string, section?: string) {
+		const request = ++focusRequest;
+		const id = store.cv.id;
+		const mode = incognito.active;
+		const expires = incognito.expiredAt;
+		let focusAnchor: Element | null | undefined;
+		const current = () =>
+			mounted &&
+			request === focusRequest &&
+			view === 'edit' &&
+			!removed &&
+			!expired &&
+			container?.isConnected &&
+			store.cv.id === id &&
+			incognito.active === mode &&
+			incognito.expiredAt === expires &&
+			(focusAnchor === undefined ||
+				!document.activeElement?.isConnected ||
+				document.activeElement === document.body ||
+				document.activeElement === focusAnchor);
 		toolOpen = false;
 		view = 'edit';
 		clearVisual();
 		await tick();
-		if (!mounted || removed || !container?.isConnected) return;
-		const control =
-			document.getElementById(field) ??
-			document.getElementById(`${field}-month`) ??
-			document.getElementById(`${field}.0`) ??
-			document.getElementById(`${field}-add`);
+		if (!current()) return;
+		// Modal close restores its trigger before this tick; only later focus moves cancel the jump.
+		focusAnchor = document.activeElement;
 		const row = section
 			? [...(container?.querySelectorAll<HTMLElement>('[data-section-key]') ?? [])].find(
 					(node) => node.dataset.sectionKey === section
@@ -427,13 +611,25 @@
 			: undefined;
 		const toggle = row?.querySelector<HTMLButtonElement>('[data-section-toggle]');
 		if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
+		if (row instanceof HTMLDetailsElement) row.open = true;
+		if (section === 'target') await loadField('target');
+		else if (section?.startsWith('custom:')) await loadField('custom');
+		else if (section && section !== 'personal' && section !== 'summary')
+			await loadField('collection');
+		await tick();
+		if (!current()) return;
+		const control =
+			document.getElementById(field) ??
+			document.getElementById(`${field}-month`) ??
+			document.getElementById(`${field}.0`) ??
+			document.getElementById(`${field}-add`);
 		let disclosure = control?.closest('details') ?? row?.querySelector('details');
 		while (disclosure) {
 			disclosure.open = true;
 			disclosure = disclosure.parentElement?.closest('details') ?? null;
 		}
 		await tick();
-		if (!mounted || removed || !container?.isConnected) return;
+		if (!current()) return;
 		const target = control ?? toggle ?? row?.querySelector<HTMLElement>('summary');
 		target?.focus({ preventScroll: true });
 		target?.scrollIntoView({ block: 'center', behavior: 'instant' });
@@ -487,6 +683,15 @@
 </script>
 
 <svelte:window onkeydown={shortcut} />
+
+{#snippet fieldStatus(field: OptionalField)}
+	<p role={fieldFailed[field] ? 'alert' : 'status'}>
+		{t(fieldFailed[field] ? 'visualEditor.toolLoadError' : 'common.loading')}
+	</p>
+	{#if fieldFailed[field]}
+		<Button variant="ghost" onclick={() => void loadField(field)}>{t('wizard.retry')}</Button>
+	{/if}
+{/snippet}
 
 <div class="full-editor" bind:this={container} data-testid="full-editor">
 	{#if removed}
@@ -594,8 +799,8 @@
 			hidden={view === 'visual'}
 			inert={view === 'visual'}
 		>
-			<div class="editor-form">
-				{#if guidanceFailed}<p class="notice">
+			<div class="editor-form" onfocusin={suggestionFocus}>
+				{#if guidanceFailed || suggestionsFailed}<p class="notice">
 						{t('wizard.loadError')}
 						<Button variant="ghost" onclick={() => guidanceRetry++}>{t('wizard.retry')}</Button>
 					</p>{/if}
@@ -612,50 +817,77 @@
 								issues={[]}
 								{suggestionsData}
 								{photoUrl}
+								deferAi={true}
 							/>{#if photoError || photoMissing}<p class="error">
 									{t(photoMissing ? 'wizard.photoMissing' : 'wizard.photoFailed')}
 								</p>{/if}
 						</div>
 					</details>
-					<details class="fixed-section" data-section-key="target">
+					<details class="fixed-section" data-section-key="target" bind:open={targetOpen}>
 						<summary>{t('wizard.steps.target.title')}</summary>
-						<div class="section-body"><CareerFields {store} {suggestionsData} /></div>
+						<div class="section-body">
+							{#if CareerFields}<CareerFields {store} {suggestionsData} />
+							{:else if targetOpen}{@render fieldStatus('target')}{/if}
+						</div>
 					</details>
 				</form>
-				<SectionList {store}>
-					{#snippet renderSection(section)}
+				<SectionList {store} onopen={openSection}>
+					{#snippet renderSection(section, opened)}
 						<form
 							novalidate
 							autocomplete={incognito.active ? 'off' : undefined}
 							onsubmit={(event) => event.preventDefault()}
 						>
-							{#if section.key === 'summary'}<SummaryFields {store} {examples} {suggestionsData} />
-							{:else if section.key === 'education' || section.key === 'experience' || section.key === 'organizations' || section.key === 'projects'}<CollectionSteps
+							{#if section.key === 'summary'}<SummaryFields
 									{store}
-									step={section.key}
-									issues={[]}
 									{examples}
 									{suggestionsData}
+									deferAi={true}
+									onrequestGuidance={requestGuidance}
+									{guidanceFailed}
 								/>
-							{:else if section.key === 'skills' || section.key === 'languages' || section.key === 'certifications' || section.key === 'awards'}<CollectionSteps
-									{store}
-									step="skills"
-									skillSection={section.key}
-									issues={[]}
-									{examples}
-									{suggestionsData}
-								/>
-							{:else}<CustomSectionFields
-									{store}
-									sectionKey={section.key as CustomSectionKey}
-								/>{/if}
+							{:else if opened && section.custom}
+								{#if CustomSectionFields}<CustomSectionFields
+										{store}
+										sectionKey={section.key as CustomSectionKey}
+									/>
+								{:else}{@render fieldStatus('custom')}{/if}
+							{:else if opened && CollectionSteps}
+								{#if section.key === 'education' || section.key === 'experience' || section.key === 'organizations' || section.key === 'projects'}<CollectionSteps
+										{store}
+										step={section.key}
+										issues={[]}
+										{examples}
+										{suggestionsData}
+										deferAi={true}
+									/>
+								{:else if section.key === 'skills' || section.key === 'languages' || section.key === 'certifications' || section.key === 'awards'}<CollectionSteps
+										{store}
+										step="skills"
+										skillSection={section.key}
+										issues={[]}
+										{examples}
+										{suggestionsData}
+										deferAi={true}
+									/>
+								{/if}
+							{:else if opened}{@render fieldStatus('collection')}{/if}
 						</form>
 					{/snippet}
 				</SectionList>
 				<details class="fixed-section" bind:open={appearanceOpen}>
 					<summary>{t('editor.appearance')}</summary>
 					<div class="section-body">
-						{#if appearanceOpen}<TemplatePicker {store} {model} />{/if}
+						{#if TemplatePicker}<TemplatePicker {store} {model} />
+						{:else if appearanceOpen}{@render fieldStatus('appearance')}{/if}
+						{#if store.cv.locale === 'id'}
+							{#if ForeignTermsControls}<ForeignTermsControls {store} />
+							{:else if foreignFailed}<p role="alert">{t('foreignTerms.loadError')}</p>
+								<Button variant="secondary" onclick={() => void loadForeignTerms()}
+									>{t('wizard.retry')}</Button
+								>
+							{:else if appearanceOpen}<p role="status">{t('common.loading')}</p>{/if}
+						{/if}
 					</div>
 				</details>
 			</div>
