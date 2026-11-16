@@ -17,7 +17,16 @@ test('phone menu opens, closes with Escape, and closes after navigation', async 
 		await navigation
 			.getByRole('link')
 			.evaluateAll((links) => links.map((link) => link.getAttribute('href')))
-	).toEqual(['/', '/buat', '/surat', '/cek-ats', '/faq', '/tentang', 'https://codiosity.com']);
+	).toEqual([
+		'/',
+		'/buat',
+		'/surat',
+		'/cek-ats',
+		'/faq',
+		'/tentang',
+		'https://respawnsociety.web.id',
+		'https://codiosity.com'
+	]);
 	await expect(
 		navigation.getByRole('link', { name: 'Surat Lamaran', exact: true })
 	).toHaveAttribute('href', '/surat');

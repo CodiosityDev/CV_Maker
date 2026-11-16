@@ -96,6 +96,15 @@
 					>
 					<a href={resolve('/(site)')} onclick={() => (menuOpen = false)}>{t('nav.home')}</a>
 					<a href={resolve('/(site)/faq')} onclick={() => (menuOpen = false)}>{t('nav.faq')}</a>
+					<a
+						href="https://respawnsociety.web.id"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={() => (menuOpen = false)}
+						>{t('nav.tools')}<span aria-hidden="true">↗</span><span class="sr-only">
+							{t('a11y.opensNewTab')}</span
+						></a
+					>
 				</nav>
 			</details>
 		</div>
@@ -212,6 +221,7 @@
 	nav a {
 		display: inline-flex;
 		align-items: center;
+		gap: 0.375rem;
 		min-width: 44px;
 		min-height: 44px;
 		padding-inline: 12px;

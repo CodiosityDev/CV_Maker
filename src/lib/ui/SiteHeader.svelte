@@ -62,6 +62,17 @@
 				{/each}
 				<li>
 					<a
+						href="https://respawnsociety.web.id"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={closeMenu}
+						>{t('nav.tools')}<span aria-hidden="true">↗</span><span class="sr-only">
+							{t('a11y.opensNewTab')}</span
+						></a
+					>
+				</li>
+				<li>
+					<a
 						href="https://codiosity.com"
 						target="_blank"
 						rel="noopener noreferrer"
@@ -205,7 +216,7 @@
 			column-gap: 1rem;
 		}
 	}
-	@media (min-width: 768px) {
+	@media (min-width: 1280px) {
 		.menu-toggle {
 			display: none;
 		}
@@ -213,25 +224,13 @@
 			grid-area: nav;
 			display: block;
 		}
-		ul {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 0.25rem 0.75rem;
-			padding-top: 0.5rem;
-		}
-		.header-inner {
-			grid-template-columns: minmax(0, 1fr) auto auto;
-			grid-template-areas: 'brand language create' 'nav nav nav';
-			gap: 0.5rem 1.5rem;
-		}
-	}
-	@media (min-width: 1024px) {
 		.header-inner {
 			grid-template-columns: auto minmax(0, 1fr) auto auto;
 			grid-template-areas: 'brand nav language create';
-			gap: 1.25rem;
+			gap: 0.75rem;
 		}
 		ul {
+			display: flex;
 			flex-wrap: nowrap;
 			justify-content: end;
 			gap: 0.25rem;
@@ -239,7 +238,7 @@
 			border: 0;
 		}
 		nav a {
-			padding-inline: 0.625rem;
+			padding-inline: 0.5rem;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
