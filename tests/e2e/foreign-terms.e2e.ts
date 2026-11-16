@@ -474,6 +474,8 @@ for (const theme of ['light', 'dark'] as const)
 		test('all Creative templates print italics, inline typing and paste retain their caret, and English hides automatic italics', async ({
 			page
 		}) => {
+			// Three templates, each printed, typed into and reloaded: longer than one page flow.
+			test.setTimeout(90_000);
 			await enter(page);
 			for (const template of creative) {
 				await choose(page, template);
