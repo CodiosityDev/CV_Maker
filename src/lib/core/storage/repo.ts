@@ -71,6 +71,9 @@ export interface StorageControl {
 
 const COPY_SUFFIX: Record<Locale, string> = { id: '(salinan)', en: '(copy)' };
 
+/** Key prefixes in localStorage owned by this app (every key starting with one is removed by wipeAll). */
+export const LOCAL_STORAGE_PREFIXES = ['cvmaker.letterOffer.'] as const;
+
 /** Keys in localStorage owned by this app (removed by wipeAll). */
 export const LOCAL_STORAGE_KEYS = [
 	'cvmaker.theme',
@@ -259,6 +262,11 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 			await (await getBackend()).clear();
 			try {
 				for (const key of LOCAL_STORAGE_KEYS) localStorage.removeItem(key);
+				for (let i = localStorage.length - 1; i >= 0; i--) {
+					const key = localStorage.key(i);
+					if (key && LOCAL_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix)))
+						localStorage.removeItem(key);
+				}
 			} catch {
 				// localStorage may be unavailable; nothing else to clear.
 			}

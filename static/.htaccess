@@ -24,9 +24,9 @@
 	RewriteCond %{DOCUMENT_ROOT}/$1.html -f
 	RewriteRule ^(.+?)/?$ /$1.html [L]
 
-	# App routes rendered in the browser (/buat, /buat/<id>, /cv, /cv/<id>/…) → the app shell.
+	# App routes rendered in the browser (/buat, /buat/<id>, /cv, /cv/<id>/…, /surat) → the app shell.
 	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteRule ^(buat|cv)(/.*)?$ /200.html [L]
+	RewriteRule ^(buat|cv|surat)(/.*)?$ /200.html [L]
 </IfModule>
 
 # Unknown paths: the app shows its own "not found" page (status stays 404).

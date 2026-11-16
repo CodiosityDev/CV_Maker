@@ -32,7 +32,12 @@ export const { cvRepo, assetRepo, storage } = createRepositories(getBackend);
 /** Backup (export JSON) and restore (import JSON) of CVs incl. photos. */
 export const backupRepo = createBackupRepository(getBackend);
 
-export { createRepositories, LOCAL_STORAGE_KEYS, ORPHAN_MIN_AGE_MS } from './repo';
+export {
+	createRepositories,
+	LOCAL_STORAGE_KEYS,
+	LOCAL_STORAGE_PREFIXES,
+	ORPHAN_MIN_AGE_MS
+} from './repo';
 export {
 	createBackupRepository,
 	BackupError,
