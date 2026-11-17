@@ -5,11 +5,13 @@
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
 	import { cvRepo, incognito, storage, onExternalChange } from '#lib/core/storage/index.ts';
+	import { homeRecentEnabled, setHomeRecentEnabled } from '#lib/core/home/index.ts';
 	import { loadSuggestions, type SuggestionData } from '#lib/core/suggest/index.ts';
 	import { i18n, t, type MessageKey } from '#lib/i18n/index.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import Toggle from '#lib/ui/Toggle.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
 	import { clearLetterOffers, removeLetterOffer } from '#lib/ui/letter/offer.svelte.ts';
 	import JobLinks from '#lib/ui/JobLinks.svelte';
@@ -45,6 +47,8 @@
 	const wipeInstruction = $derived(t('dashboard.wipeInput').split('{word}'));
 	let active = $state(false);
 	let listRequest = 0;
+	let showOnHome = $state(homeRecentEnabled());
+	$effect(() => setHomeRecentEnabled(showOnHome));
 
 	async function refresh() {
 		const request = ++listRequest;
@@ -500,6 +504,15 @@
 		</div>
 	{/if}
 
+	{#if cvs.length && !incognito.active}
+		<Toggle
+			class="home-toggle"
+			label={t('dashboard.homeRecent')}
+			hint={t('dashboard.homeRecentHint')}
+			bind:checked={showOnHome}
+		/>
+	{/if}
+
 	{#if incognito.active}
 		<section class="session-end" aria-labelledby="session-end-heading">
 			<div>
@@ -832,6 +845,9 @@
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.7;
+	}
+	.dashboard :global(.home-toggle) {
+		margin-top: 32px;
 	}
 	.danger-zone p,
 	.session-end p {

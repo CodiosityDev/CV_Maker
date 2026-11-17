@@ -6,6 +6,8 @@
  *   site  (messages/site.id.ts, site.en.ts) — landing, privacy, about     → registered by (site) layout
  *   app   (messages/app.id.ts, app.en.ts)   — wizard, preview, editor, …  → registered by (app) layout
  *   ats   (messages/ats.id.ts, ats.en.ts)   — ATS checker messages (core) → registered by (app) layout
+ *   home  (messages/home.id.ts, home.en.ts) — home "your CVs" strip → registered by the lazy
+ *         ui/home/RecentCvs.svelte itself (then `await ensureMessages()` before showing text)
  *
  * Indonesian base is always bundled. A route group registers its Indonesian namespace synchronously
  * (static import → no flash, works in prerender) and English parts are loaded on demand.
@@ -14,16 +16,18 @@ import { id as baseId } from './messages/id';
 import type { siteId } from './messages/site.id';
 import type { appId } from './messages/app.id';
 import type { atsId } from './messages/ats.id';
+import type { homeId } from './messages/home.id';
 import type { DeepStringRecord, LeafPaths, Locale, MessageParams } from './types';
 
 export type BaseMessages = DeepStringRecord<typeof baseId>;
 export type SiteMessages = DeepStringRecord<typeof siteId>;
 export type AppMessages = DeepStringRecord<typeof appId>;
 export type AtsMessages = DeepStringRecord<typeof atsId>;
-export type Messages = BaseMessages & SiteMessages & AppMessages & AtsMessages;
+export type HomeMessages = DeepStringRecord<typeof homeId>;
+export type Messages = BaseMessages & SiteMessages & AppMessages & AtsMessages & HomeMessages;
 export type MessageKey = LeafPaths<Messages>;
 
-export type Namespace = 'site' | 'app' | 'ats';
+export type Namespace = 'site' | 'app' | 'ats' | 'home';
 type Part = 'base' | Namespace;
 type Dict = Record<string, unknown>;
 
@@ -36,7 +40,8 @@ const englishLoaders: Record<Part, () => Promise<Dict>> = {
 	base: () => import('./messages/en').then((m) => m.en),
 	site: () => import('./messages/site.en').then((m) => m.siteEn),
 	app: () => import('./messages/app.en').then((m) => m.appEn),
-	ats: () => import('./messages/ats.en').then((m) => m.atsEn)
+	ats: () => import('./messages/ats.en').then((m) => m.atsEn),
+	home: () => import('./messages/home.en').then((m) => m.homeEn)
 };
 
 /**

@@ -1,9 +1,26 @@
 ﻿<script lang="ts">
+	import { onMount, type Component } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import CvMockup from '#lib/ui/CvMockup.svelte';
 	import VisitorCounter from '#lib/ui/VisitorCounter.svelte';
+
+	// Returning visitors: their CVs as paper previews above the hero (like the Google Docs home).
+	// Loaded after hydration; on failure (offline, blocked storage) the landing stays as it is.
+	let RecentCvs = $state<Component>();
+	onMount(() => {
+		let active = true;
+		import('#lib/ui/home/load.ts')
+			.then((m) => m.loadHomeRecent())
+			.then(
+				(component) => {
+					if (active) RecentCvs = component;
+				},
+				() => {}
+			);
+		return () => (active = false);
+	});
 </script>
 
 <svelte:head>
@@ -12,6 +29,7 @@
 </svelte:head>
 
 <main id="main" tabindex="-1">
+	{#if RecentCvs}<RecentCvs />{/if}
 	<section class="hero site-container" aria-labelledby="hero-title">
 		<div class="hero-copy">
 			<h1 id="hero-title">{t('landing.headline')}</h1>

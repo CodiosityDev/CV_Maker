@@ -827,6 +827,8 @@ export const appId = {
 		checkAts: 'Cek ATS',
 		pageTitle: 'CV Saya — CV Maker',
 		title: 'CV Saya',
+		homeRecent: 'Tampilkan CV di beranda',
+		homeRecentHint: 'Matikan jika komputer ini dipakai bersama orang lain.',
 		localNote:
 			'CV kamu hanya tersimpan di browser ini. Jika data browser dihapus, CV ikut hilang — unduh PDF/Word sebagai arsip.',
 		memoryWarning:
