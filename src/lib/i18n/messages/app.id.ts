@@ -943,6 +943,9 @@ export const appId = {
 			unauthenticated: 'Sesi berakhir. Masuk lagi.',
 			password: 'Kata sandi salah.',
 			taken: 'Alamat itu sudah dipakai. Pilih yang lain.',
+			limit: 'Maksimal 3 CV. Hapus salah satu dulu.',
+			full: 'Penyimpanan cadangan penuh. Coba lagi nanti.',
+			reconnect: 'Sambungan Google Drive terputus. Hubungkan lagi.',
 			notFound: 'Tidak ditemukan.',
 			expired: 'Tautan tidak berlaku atau sudah dipakai.',
 			busy: 'Terlalu banyak percobaan. Coba lagi nanti.',
@@ -1008,5 +1011,45 @@ export const appId = {
 		privacyNote:
 			'Yang dikirim ke server hanya salinan CV ini (tanpa surat lamaran), sesuai pilihan di atas.',
 		openLink: 'Buka link'
+	},
+	cvLimit: {
+		title: 'Sudah ada 3 CV',
+		body: 'Kamu bisa menyimpan maksimal 3 CV. Hapus CV yang tidak dipakai lagi untuk membuat yang baru.',
+		paid: 'Paket berbayar untuk lebih banyak CV segera hadir.',
+		manage: 'Kelola CV Saya',
+		count: '{count} dari {max} CV',
+		restoreLimited: '{count} CV tidak dipulihkan karena sudah ada 3 CV di perangkat ini.'
+	},
+	backup: {
+		title: 'Cadangan',
+		intro:
+			'CV tetap tersimpan di perangkat ini. Cadangan menyimpan salinannya agar bisa dipulihkan di perangkat lain.',
+		auto: 'Cadangkan otomatis',
+		autoHint:
+			'Setelah CV berubah, salinan terbaru disimpan ke akunmu (paling sering 30 menit sekali).',
+		now: 'Cadangkan sekarang',
+		saved: 'CV dicadangkan.',
+		usage: '{used} dari {limit} terpakai',
+		empty: 'Belum ada cadangan.',
+		item: '{date} · {count} CV · {size}',
+		restore: 'Pulihkan',
+		restored: '{count} CV dipulihkan ke perangkat ini.',
+		restoredNone: 'Tidak ada CV yang dipulihkan.',
+		delete: 'Hapus',
+		deleted: 'Cadangan dihapus.',
+		lastAuto: 'Cadangan otomatis terakhir: {date}',
+		driveTitle: 'Google Drive (gratis)',
+		driveIntro:
+			'Simpan file cadangan ke Google Drive-mu sendiri. CV Maker hanya bisa melihat file yang ia buat, tidak bisa membaca file lain di Drive-mu.',
+		driveConnect: 'Hubungkan Google Drive',
+		driveConnected: 'Google Drive terhubung.',
+		driveFailed: 'Google Drive belum terhubung. Coba lagi.',
+		driveSave: 'Simpan ke Drive',
+		driveSaved: 'Cadangan disimpan ke Google Drive.',
+		driveRestore: 'Pulihkan dari Drive',
+		driveLast: 'Terakhir disimpan: {date}',
+		driveDisconnect: 'Putuskan Drive',
+		driveDisconnected: 'Google Drive diputus.',
+		driveUnavailable: 'Google Drive belum tersedia.'
 	}
 };

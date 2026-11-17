@@ -48,6 +48,8 @@ export interface ServerConfig {
 	};
 	/** Unset → in-memory quota (development only: resets on restart). */
 	db?: { host: string; port: number; user: string; password: string; database: string };
+	/** Cloud backups: BACKUP_USER_MB per user (owner: max 3 CVs, so 5 MB) and BACKUP_TOTAL_GB for everyone together. */
+	backup: { userBytes: number; totalBytes: number };
 	/** Accounts. Each login method is off until its settings are present. */
 	auth: {
 		/** GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (Google Cloud → OAuth client, type "Web"). */
@@ -137,6 +139,10 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 					database: dbName
 				}
 			: undefined,
+		backup: {
+			userBytes: int(env, 'BACKUP_USER_MB', 5, 1) * 1024 * 1024,
+			totalBytes: int(env, 'BACKUP_TOTAL_GB', 20, 1) * 1024 ** 3
+		},
 		auth: authConfig(env)
 	};
 }

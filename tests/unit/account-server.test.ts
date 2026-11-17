@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createAccountRoutes } from '../../server/src/account/routes';
 import { hashPassword, verifyPassword } from '../../server/src/account/crypto';
 import type { GoogleClient } from '../../server/src/account/google';
+import type { DriveClient } from '../../server/src/account/drive';
 import type { Mailer } from '../../server/src/account/mail';
 import { memoryAccountStore, type AccountStore } from '../../server/src/account/store';
 import { HttpError, send } from '../../server/src/http';
@@ -24,7 +25,14 @@ interface Harness {
 
 let server: Server | undefined;
 
-async function start(options: { mail?: boolean; google?: GoogleClient } = {}): Promise<Harness> {
+async function start(
+	options: {
+		mail?: boolean;
+		google?: GoogleClient;
+		drive?: DriveClient;
+		backup?: { userBytes: number; totalBytes: number };
+	} = {}
+): Promise<Harness> {
 	const accounts = memoryAccountStore();
 	const mails: Harness['mails'] = [];
 	const now = { value: Date.parse('2026-11-17T03:00:00.000Z') };
@@ -35,6 +43,8 @@ async function start(options: { mail?: boolean; google?: GoogleClient } = {}): P
 		quota: memoryQuotaStore(),
 		mailer: options.mail === false ? undefined : mailer,
 		google: options.google,
+		drive: options.drive,
+		backup: options.backup,
 		now: () => now.value
 	});
 	server = createServer(async (req, res) => {
@@ -545,5 +555,177 @@ describe('Google login', () => {
 		const h = await start({ google: fakeGoogle(null) });
 		const done = await signIn(h, client(h.base));
 		expect(done.headers.get('location')).toBe('/masuk?error=google');
+	});
+});
+
+const backupFile = (count = 1) => ({
+	format: 'cvmaker-backup',
+	version: 1,
+	exportedAt: '2026-11-17T00:00:00.000Z',
+	cvs: Array.from({ length: count }, (_, i) => ({
+		...structuredClone(sampleCvAts),
+		id: `cv-${i}`
+	})),
+	assets: []
+});
+
+describe('3 CVs per user on the server', () => {
+	it('refuses a 4th shared CV', async () => {
+		const h = await start();
+		const owner = await verifiedUser(h);
+		for (let i = 0; i < 3; i++) {
+			expect((await owner.request('PUT', `/api/shares/cv-${i}`, shareBody())).status).toBe(200);
+		}
+		const fourth = await owner.request('PUT', '/api/shares/cv-3', shareBody());
+		expect(fourth.status).toBe(403);
+		expect(fourth.json.error).toBe('limit');
+		// Updating an existing link still works.
+		expect((await owner.request('PUT', '/api/shares/cv-0', shareBody())).status).toBe(200);
+	});
+});
+
+describe('cloud backups', () => {
+	it('stores cleaned versions (max 3 CVs each) that only the owner can read', async () => {
+		const h = await start();
+		const owner = await verifiedUser(h);
+		expect((await client(h.base).request('POST', '/api/backups', backupFile())).status).toBe(401);
+
+		const saved = await owner.request('POST', '/api/backups', backupFile(5));
+		expect(saved.status).toBe(200);
+		const backup = saved.json.backup as { id: string; cvCount: number };
+		expect(backup.cvCount).toBe(3);
+		expect(saved.json.usage).toMatchObject({ limit: 5 * 1024 * 1024 });
+
+		const list = await owner.request('GET', '/api/backups');
+		expect((list.json.backups as unknown[]).length).toBe(1);
+		const file = await owner.request('GET', `/api/backups/${backup.id}`);
+		expect(file.json.format).toBe('cvmaker-backup');
+		expect((file.json.cvs as unknown[]).length).toBe(3);
+
+		const other = await verifiedUser(h, 'budi@example.com');
+		expect((await other.request('GET', `/api/backups/${backup.id}`)).status).toBe(404);
+		expect((await owner.request('POST', '/api/backups', { format: 'nope' })).status).toBe(400);
+
+		await owner.request('DELETE', `/api/backups/${backup.id}`);
+		expect(((await owner.request('GET', '/api/backups')).json.backups as unknown[]).length).toBe(0);
+	});
+
+	it('drops the oldest versions when the user quota is full, and refuses when the server is full', async () => {
+		const probe = await start();
+		const first = await (await verifiedUser(probe)).request('POST', '/api/backups', backupFile());
+		const size = (first.json.backup as { bytes: number }).bytes;
+		await new Promise<void>((resolve) => server!.close(() => resolve()));
+
+		const h = await start({ backup: { userBytes: Math.floor(size * 2.5), totalBytes: size * 3 } });
+		const owner = await verifiedUser(h);
+		for (let i = 0; i < 3; i++) {
+			expect((await owner.request('POST', '/api/backups', backupFile())).status).toBe(200);
+		}
+		expect(((await owner.request('GET', '/api/backups')).json.backups as unknown[]).length).toBe(2);
+		const other = await verifiedUser(h, 'budi@example.com');
+		expect((await other.request('POST', '/api/backups', backupFile())).status).toBe(200);
+		const full = await other.request('POST', '/api/backups', backupFile());
+		expect(full.status).toBe(507);
+		expect(full.json.error).toBe('full');
+	});
+});
+
+describe('Google Drive backups', () => {
+	function fakeDrive() {
+		const state = {
+			files: new Map<string, string>(),
+			revoked: [] as string[],
+			valid: true
+		};
+		const drive: DriveClient = {
+			connectUrl: (s) => `https://accounts.google.com/o/oauth2/v2/auth?scope=drive&state=${s}`,
+			connect: async () => 'refresh-token',
+			accessToken: async () =>
+				state.valid ? { ok: true, value: 'access' } : { ok: false, reason: 'unauthorized' },
+			upload: async (_token, fileId, json) => {
+				const id = fileId ?? 'file-1';
+				state.files.set(id, json);
+				return { ok: true, value: id };
+			},
+			download: async (_token, fileId) => {
+				const json = state.files.get(fileId);
+				return json ? { ok: true, value: json } : { ok: false, reason: 'missing' };
+			},
+			revoke: async (token) => void state.revoked.push(token)
+		};
+		return { drive, state };
+	}
+	const google: GoogleClient = {
+		authUrl: (s) => `https://accounts.google.com/o/oauth2/v2/auth?state=${s}`,
+		exchange: async () => null
+	};
+	const fromGoogle = { Origin: '', 'Sec-Fetch-Site': 'cross-site' };
+
+	async function connect(browser: ReturnType<typeof client>) {
+		const begin = await browser.request('GET', '/api/drive/connect?next=%2Fakun');
+		expect(begin.status).toBe(302);
+		const state = new URL(begin.headers.get('location') ?? '').searchParams.get('state');
+		return browser.request(
+			'GET',
+			`/api/auth/google/callback?code=c&state=${state}`,
+			undefined,
+			fromGoogle
+		);
+	}
+
+	it('connects, saves, restores and disconnects; the token is stored encrypted', async () => {
+		const { drive, state } = fakeDrive();
+		const h = await start({ google, drive });
+		const owner = await verifiedUser(h);
+		expect((await owner.request('GET', '/api/drive')).json).toEqual({
+			available: true,
+			connected: false,
+			lastBackupAt: null
+		});
+		const done = await connect(owner);
+		expect(done.headers.get('location')).toBe('/akun?drive=connected');
+		const user = await h.accounts.userByEmail('nadia@example.com');
+		const link = await h.accounts.driveLink(user!.id);
+		expect(link?.token).toBeTruthy();
+		expect(link?.token).not.toContain('refresh-token');
+
+		const saved = await owner.request('POST', '/api/drive/backup', backupFile(4));
+		expect(saved.status).toBe(200);
+		expect(JSON.parse(state.files.get('file-1')!).cvs).toHaveLength(3);
+		const restored = await owner.request('GET', '/api/drive/backup');
+		expect((restored.json.cvs as unknown[]).length).toBe(3);
+
+		await owner.request('POST', '/api/drive/disconnect', {});
+		expect(state.revoked).toEqual(['refresh-token']);
+		expect((await owner.request('GET', '/api/drive')).json.connected).toBe(false);
+	});
+
+	it('asks to reconnect when the user revoked access in Google', async () => {
+		const { drive, state } = fakeDrive();
+		const h = await start({ google, drive });
+		const owner = await verifiedUser(h);
+		await connect(owner);
+		state.valid = false;
+		const saved = await owner.request('POST', '/api/drive/backup', backupFile());
+		expect(saved.status).toBe(409);
+		expect(saved.json.error).toBe('reconnect');
+		expect((await owner.request('GET', '/api/drive')).json.connected).toBe(false);
+	});
+
+	it('only the user who started can finish connecting', async () => {
+		const { drive } = fakeDrive();
+		const h = await start({ google, drive });
+		const owner = await verifiedUser(h);
+		const begin = await owner.request('GET', '/api/drive/connect');
+		const state = new URL(begin.headers.get('location') ?? '').searchParams.get('state');
+		const attacker = await verifiedUser(h, 'budi@example.com');
+		attacker.jar.set('__Host-cvm_oauth', owner.jar.get('__Host-cvm_oauth')!);
+		const done = await attacker.request(
+			'GET',
+			`/api/auth/google/callback?code=c&state=${state}`,
+			undefined,
+			fromGoogle
+		);
+		expect(done.headers.get('location')).toBe('/akun?drive=failed');
 	});
 });

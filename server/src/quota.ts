@@ -29,7 +29,9 @@ export type QuotaScope =
 	| 'mail'
 	| 'mailip'
 	| 'sharepw'
-	| 'report';
+	| 'report'
+	| 'backup'
+	| 'drive';
 
 /** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */
 export type TotalName = 'visitors';

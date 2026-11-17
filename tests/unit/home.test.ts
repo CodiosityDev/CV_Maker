@@ -140,7 +140,7 @@ describe('loadRecentCvs', () => {
 
 	it('returns the newest CVs first, limited, with render models', async () => {
 		const { repos } = await setup();
-		for (let i = 0; i < 6; i++) {
+		for (let i = 0; i < 3; i++) {
 			await repos.cvRepo.save({
 				...structuredClone(sampleCvAts),
 				id: `cv-${i}`,
@@ -148,11 +148,11 @@ describe('loadRecentCvs', () => {
 				updatedAt: `2026-11-0${i + 1}T00:00:00.000Z`
 			});
 		}
-		const list = await loadRecentCvs({ repos });
-		expect(list.items.map((item) => item.meta.id)).toEqual(['cv-5', 'cv-4', 'cv-3', 'cv-2']);
-		expect(list.items[0]?.meta.title).toBe('CV 5');
+		const list = await loadRecentCvs({ repos, limit: 2 });
+		expect(list.items.map((item) => item.meta.id)).toEqual(['cv-2', 'cv-1']);
+		expect(list.items[0]?.meta.title).toBe('CV 2');
 		expect(list.items[0]?.model.personal.fullName).toBe(sampleCvAts.personal.fullName);
-		expect((await loadRecentCvs({ repos, limit: Infinity })).items).toHaveLength(6);
+		expect((await loadRecentCvs({ repos, limit: Infinity })).items).toHaveLength(3);
 		expect((await loadRecentCvs({ repos, limit: -1 })).items).toHaveLength(0);
 	});
 

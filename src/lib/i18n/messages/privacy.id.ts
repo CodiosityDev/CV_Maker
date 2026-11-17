@@ -1,6 +1,11 @@
 /** Privacy page — Bahasa Indonesia. Registered by /privasi only (not part of the landing bundle). */
 export const privacyId = {
 	privacy: {
+		backupTitle: 'Cadangan (khusus akun)',
+		backupCopy:
+			'Jika kamu login, salinan maksimal 3 CV terbarumu (termasuk surat lamaran dan foto) dicadangkan otomatis ke server CV Maker setelah ada perubahan; kamu bisa mematikannya di halaman Akun. Beberapa versi terakhir disimpan dan versi lama terhapus otomatis. Tanpa login, tidak ada yang dicadangkan.',
+		driveCopy:
+			'Jika kamu menghubungkan Google Drive, file cadangan disimpan di Drive milikmu. CV Maker hanya meminta izin untuk file yang ia buat sendiri dan tidak bisa membaca file lain di Drive-mu. Token aksesnya disimpan terenkripsi, file cadangan hanya melewati server saat dikirim, dan kamu bisa memutuskan sambungan kapan saja.',
 		accountTitle: 'Akun (opsional)',
 		accountCopy:
 			'Akun hanya dibutuhkan untuk membagikan CV lewat link. Server menyimpan email, nama (jika diisi), hash kata sandi (bukan kata sandinya) atau ID akun Google, dan sesi login dalam bentuk hash. Login dengan Google hanya meminta nama dan email. Email hanya dipakai untuk konfirmasi dan atur ulang kata sandi. Sesi login memakai satu cookie penting (HttpOnly) yang hanya dikirim ke situs ini.',

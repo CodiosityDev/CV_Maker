@@ -11,6 +11,7 @@ import { memoryQuotaStore, type QuotaStore } from './quota';
 import { mysqlQuotaStore } from './quota-mysql';
 import { createAccountRoutes } from './account/routes';
 import { createGoogleClient } from './account/google';
+import { createDriveClient } from './account/drive';
 import { smtpMailer } from './account/mail';
 import { memoryAccountStore, type AccountStore } from './account/store';
 import { mysqlAccountStore } from './account/store-mysql';
@@ -42,6 +43,14 @@ async function main(): Promise<void> {
 				})
 			: undefined,
 		mailer: config.auth.mail ? smtpMailer(config.auth.mail) : undefined,
+		// Same Google client and callback as login; the scope is only asked for when connecting Drive.
+		drive: config.auth.google
+			? createDriveClient({
+					...config.auth.google,
+					redirectUri: `${config.appOrigin}/api/auth/google/callback`
+				})
+			: undefined,
+		backup: config.backup,
 		log
 	});
 

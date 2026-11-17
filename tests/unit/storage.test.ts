@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { StorageBackend } from '../../src/lib/core/storage/backend';
 import { openIdbBackend } from '../../src/lib/core/storage/idb-backend';
 import { createMemoryBackend } from '../../src/lib/core/storage/memory-backend';
-import { createRepositories } from '../../src/lib/core/storage/repo';
+import { createRepositories, CvLimitError } from '../../src/lib/core/storage/repo';
+import { MAX_CVS } from '../../src/lib/core/schema/limits';
 import { sampleCvAts, sampleCvCreative } from '../../src/lib/core/fixtures/index';
 
 const backends: Record<string, () => Promise<StorageBackend>> = {
@@ -29,6 +30,27 @@ for (const [name, open] of Object.entries(backends)) {
 			globalThis.indexedDB = new IDBFactory();
 			backend = await open();
 			repos = createRepositories(async () => backend);
+		});
+
+		it('allows at most MAX_CVS CVs; existing ones keep saving', async () => {
+			const { cvRepo } = repos;
+			for (let i = 0; i < MAX_CVS; i++) await cvRepo.create({ kind: 'ats', locale: 'id' });
+			expect(await cvRepo.remaining()).toBe(0);
+			await expect(cvRepo.create({ kind: 'ats', locale: 'id' })).rejects.toBeInstanceOf(
+				CvLimitError
+			);
+			const [first] = await cvRepo.list();
+			await expect(cvRepo.duplicate(first!.id)).rejects.toBeInstanceOf(CvLimitError);
+			await expect(
+				cvRepo.save({ ...structuredClone(sampleCvAts), id: 'new-one' })
+			).rejects.toBeInstanceOf(CvLimitError);
+			// Updating an existing CV still works, and deleting one frees a slot.
+			const doc = (await cvRepo.get(first!.id))!;
+			await cvRepo.save({ ...doc, title: 'Diubah' });
+			expect((await cvRepo.get(first!.id))?.title).toBe('Diubah');
+			await cvRepo.remove(first!.id);
+			expect(await cvRepo.remaining()).toBe(1);
+			await cvRepo.create({ kind: 'creative', locale: 'en' });
 		});
 
 		it('reports its mode', async () => {
