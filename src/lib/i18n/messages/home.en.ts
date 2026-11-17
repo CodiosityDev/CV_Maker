@@ -18,7 +18,7 @@ export const homeEn: HomeMessages = {
 		hidden: 'Your CVs no longer appear on the home page on this device.',
 		show: 'Show again',
 		delete: 'Delete {title}',
-		confirm: 'Delete this CV from this device? This cannot be undone.',
+		confirm: 'Delete this CV? Any link you shared for it is deleted too. This cannot be undone.',
 		confirmDelete: 'Delete',
 		cancel: 'Cancel',
 		deleted: 'CV deleted.',

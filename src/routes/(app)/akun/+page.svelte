@@ -36,6 +36,21 @@
 		fileUrl: string | null;
 	}>();
 	let name = $state('');
+	/** Shared CV whose "Hapus dari server" is being confirmed. */
+	let removingShare = $state<string>();
+
+	async function deleteShare(cvId: string) {
+		await act(
+			`share-${cvId}`,
+			() => shareClient.remove(cvId),
+			() => {
+				shares = shares.filter((share) => share.cvId !== cvId);
+				shareSync.forget(cvId);
+				removingShare = undefined;
+				toast.success(t('share.removed'));
+			}
+		);
+	}
 	let nameSaved = $state('');
 	$effect(() => {
 		// Fill the field once the account is known (and after other tabs change it).
@@ -243,6 +258,27 @@
 									href={resolve('/(share)/u/[slug]', { slug: share.slug })}
 									target="_blank"
 									rel="noopener noreferrer">/u/{share.slug}</a
+								>
+							{/if}
+							{#if removingShare === share.cvId}
+								<div class="row" role="group" aria-label={t('share.removeConfirm')}>
+									<span class="muted">{t('share.removeConfirm')}</span>
+									<Button
+										variant="danger"
+										size="sm"
+										loading={working === `share-${share.cvId}`}
+										onclick={() => deleteShare(share.cvId)}>{t('share.remove')}</Button
+									>
+									<Button variant="ghost" size="sm" onclick={() => (removingShare = undefined)}
+										>{t('common.cancel')}</Button
+									>
+								</div>
+							{:else}
+								<Button
+									variant="ghost"
+									size="sm"
+									disabled={Boolean(working)}
+									onclick={() => (removingShare = share.cvId)}>{t('share.remove')}</Button
 								>
 							{/if}
 						</li>

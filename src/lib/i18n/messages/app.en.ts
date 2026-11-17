@@ -863,7 +863,7 @@ export const appEn: AppMessages = {
 		delete: 'Delete',
 		deleteTitle: 'Delete this CV?',
 		deleteDescription:
-			'The CV “{title}” will be permanently deleted from this browser. This cannot be undone. Download your CV first if you still need it.',
+			'The CV “{title}” will be permanently deleted from this browser, together with its shared link if it has one. This cannot be undone. Download your CV first if you still need it.',
 		deleted: 'CV deleted from this device.',
 		actionError: 'That did not work. Please try again.',
 		missing: 'This CV no longer exists. Your CV list has been refreshed.',
@@ -1037,5 +1037,45 @@ export const appEn: AppMessages = {
 		driveDisconnect: 'Disconnect Drive',
 		driveDisconnected: 'Google Drive disconnected.',
 		driveUnavailable: 'Google Drive is not available yet.'
+	},
+	adminPanel: {
+		pageTitle: 'Admin — CV Maker',
+		title: 'Admin',
+		loginTitle: 'Admin sign-in',
+		username: 'Username',
+		password: 'Password',
+		login: 'Sign in',
+		logout: 'Sign out',
+		wrong: 'Wrong username or password.',
+		busy: 'Too many attempts. Try again tomorrow.',
+		unavailable: 'The admin page is not enabled on the server yet.',
+		reportsTitle: 'Reports on shared CVs',
+		empty: 'No reports yet.',
+		refresh: 'Reload',
+		total: '{count} reports',
+		last: 'Latest: {date}',
+		owner: 'Owner: {email}',
+		statusActive: 'Active',
+		statusBlocked: 'Blocked',
+		view: 'View CV',
+		hide: 'Close preview',
+		block: 'Block',
+		unblock: 'Unblock',
+		dismiss: 'Dismiss reports',
+		remove: 'Delete link',
+		removeConfirm:
+			'Delete this CV copy from the server? The link stops working and this cannot be undone.',
+		blocked: 'Link blocked.',
+		unblocked: 'Link unblocked.',
+		dismissed: 'Reports dismissed.',
+		removed: 'Link deleted.',
+		failed: 'That did not work. Try again.',
+		reasons: {
+			spam: 'Spam or advertising',
+			impersonation: 'Uses someone else’s identity',
+			offensive: 'Abusive or inappropriate content',
+			'personal-data': 'Personal data without consent',
+			other: 'Other'
+		}
 	}
 };

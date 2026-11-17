@@ -397,6 +397,9 @@
 		busy = true;
 		try {
 			await cvRepo.remove(id);
+			// Its shared link (if any) is deleted from the server too.
+			if (!startedInIncognito)
+				void import('#lib/core/share/publish.ts').then((m) => m.removeSharedCopy(id));
 			removeLetterOffer(id, !startedInIncognito);
 			if (!active) return;
 			forgetCv(id);

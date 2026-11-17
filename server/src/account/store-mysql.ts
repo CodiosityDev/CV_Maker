@@ -12,7 +12,7 @@ import {
 	SHARE_ACCESS,
 	type ShareAccess
 } from '../../../src/lib/core/share/index';
-import type { AccountStore, ShareRecord, UserRecord } from './store';
+import type { AccountStore, ReportSummary, ShareRecord, UserRecord } from './store';
 
 const USERS = 'cvmaker_users';
 const SESSIONS = 'cvmaker_sessions';
@@ -351,6 +351,40 @@ export async function mysqlAccountStore(
 				reason,
 				at
 			]);
+		},
+		async reportCount(shareId) {
+			const row = await one(`SELECT COUNT(*) AS n FROM ${REPORTS} WHERE share_id = ?`, [shareId]);
+			return Number(row?.n ?? 0);
+		},
+		async reportSummaries() {
+			const [rows] = await pool.execute<Row[]>(
+				`SELECT share_id, reason, COUNT(*) AS n, MAX(created_at) AS last_at FROM ${REPORTS}
+				 GROUP BY share_id, reason`
+			);
+			const byShare = new Map<string, ReportSummary>();
+			for (const row of rows) {
+				const shareId = String(row.share_id);
+				const summary = byShare.get(shareId) ?? { shareId, total: 0, reasons: {}, lastAt: 0 };
+				const n = Number(row.n);
+				summary.total += n;
+				summary.reasons[String(row.reason)] = n;
+				summary.lastAt = Math.max(summary.lastAt, Number(row.last_at));
+				byShare.set(shareId, summary);
+			}
+			return [...byShare.values()].sort((a, b) => b.lastAt - a.lastAt);
+		},
+		async deleteReports(shareId) {
+			await pool.execute(`DELETE FROM ${REPORTS} WHERE share_id = ?`, [shareId]);
+		},
+		async shareById(id) {
+			return toShare(await one(`SELECT * FROM ${SHARES} WHERE id = ?`, [id]));
+		},
+		async setShareBlocked(id, blocked) {
+			await pool.execute(`UPDATE ${SHARES} SET blocked = ? WHERE id = ?`, [blocked ? 1 : 0, id]);
+		},
+		async deleteShareById(id) {
+			await pool.execute(`DELETE FROM ${REPORTS} WHERE share_id = ?`, [id]);
+			await pool.execute(`DELETE FROM ${SHARES} WHERE id = ?`, [id]);
 		},
 		async driveLink(userId) {
 			const row = await one(`SELECT * FROM ${DRIVE} WHERE user_id = ?`, [userId]);

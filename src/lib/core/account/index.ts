@@ -294,12 +294,77 @@ export function createAccountClients(fetcher: Fetch = (...args) => globalThis.fe
 		disconnect: () => call(fetcher, 'POST', '/drive/disconnect', {}, ok)
 	};
 
-	return { accountClient, shareClient, driveClient };
+	/** Site admin (/admin): reports on shared CVs. */
+	const adminClient = {
+		me: () =>
+			call(fetcher, 'GET', '/admin/me', undefined, (raw) => ({
+				admin: (raw as { admin?: unknown } | null)?.admin === true
+			})),
+		login: (username: string, password: string) =>
+			call(fetcher, 'POST', '/admin/login', { username, password }, ok),
+		logout: () => call(fetcher, 'POST', '/admin/logout', {}, ok),
+		reports: () =>
+			call(fetcher, 'GET', '/admin/reports', undefined, (raw) => {
+				const list = (raw as { reports?: unknown } | null)?.reports;
+				return Array.isArray(list)
+					? list.map(parseAdminReport).filter((r): r is AdminReport => r !== null)
+					: null;
+			}),
+		/** The reported CV (even when blocked or private), parsed like a visitor's view. */
+		preview: (shareId: string) =>
+			call(
+				fetcher,
+				'GET',
+				`/admin/shares/${encodeURIComponent(shareId)}`,
+				undefined,
+				parsePublicShare
+			),
+		block: (shareId: string, blocked: boolean) =>
+			call(fetcher, 'POST', `/admin/shares/${encodeURIComponent(shareId)}/block`, { blocked }, ok),
+		dismiss: (shareId: string) =>
+			call(fetcher, 'POST', `/admin/shares/${encodeURIComponent(shareId)}/dismiss`, {}, ok),
+		remove: (shareId: string) =>
+			call(fetcher, 'DELETE', `/admin/shares/${encodeURIComponent(shareId)}`, undefined, ok)
+	};
+
+	return { accountClient, shareClient, driveClient, adminClient };
 }
 
-export const { accountClient, shareClient, driveClient } = createAccountClients();
+export const { accountClient, shareClient, driveClient, adminClient } = createAccountClients();
 
 /** Where connecting Google Drive starts (a full-page navigation). */
 export function driveConnectUrl(next = '/akun'): string {
 	return `${API}/drive/connect?next=${encodeURIComponent(safeNext(next))}`;
+}
+
+export interface AdminReport {
+	shareId: string;
+	slug: string;
+	access: string;
+	blocked: boolean;
+	ownerEmail: string;
+	total: number;
+	reasons: Record<string, number>;
+	lastAt: string;
+}
+
+function parseAdminReport(raw: unknown): AdminReport | null {
+	if (typeof raw !== 'object' || raw === null) return null;
+	const r = raw as Record<string, unknown>;
+	if (typeof r.shareId !== 'string' || typeof r.slug !== 'string') return null;
+	const reasons: Record<string, number> = {};
+	if (typeof r.reasons === 'object' && r.reasons !== null) {
+		for (const [key, value] of Object.entries(r.reasons))
+			if (typeof value === 'number') reasons[key] = value;
+	}
+	return {
+		shareId: r.shareId,
+		slug: r.slug,
+		access: typeof r.access === 'string' ? r.access : '',
+		blocked: r.blocked === true,
+		ownerEmail: typeof r.ownerEmail === 'string' ? r.ownerEmail : '',
+		total: typeof r.total === 'number' ? r.total : 0,
+		reasons,
+		lastAt: typeof r.lastAt === 'string' ? r.lastAt : ''
+	};
 }

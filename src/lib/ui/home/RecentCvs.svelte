@@ -95,6 +95,8 @@
 		deleting = true;
 		try {
 			await cvRepo.remove(id);
+			// Its shared link (if any) goes too; the module only loads for logged-in browsers' work.
+			void import('#lib/core/share/publish.ts').then((m) => m.removeSharedCopy(id));
 			confirming = undefined;
 			items = items.filter((item) => item.meta.id !== id);
 			toast.success(t('homeRecent.deleted'));

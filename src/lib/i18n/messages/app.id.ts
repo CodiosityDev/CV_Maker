@@ -861,7 +861,7 @@ export const appId = {
 		delete: 'Hapus',
 		deleteTitle: 'Hapus CV ini?',
 		deleteDescription:
-			'CV “{title}” akan dihapus permanen dari browser ini. Tindakan ini tidak bisa diurungkan. Unduh CV terlebih dahulu bila masih diperlukan.',
+			'CV “{title}” akan dihapus permanen dari browser ini, beserta link-nya jika pernah dibagikan. Tindakan ini tidak bisa diurungkan. Unduh CV terlebih dahulu bila masih diperlukan.',
 		deleted: 'CV dihapus dari perangkat ini.',
 		actionError: 'Tindakan belum berhasil. Coba lagi.',
 		missing: 'CV ini sudah tidak ada. Daftar CV telah diperbarui.',
@@ -1035,5 +1035,45 @@ export const appId = {
 		driveDisconnect: 'Putuskan Drive',
 		driveDisconnected: 'Google Drive diputus.',
 		driveUnavailable: 'Google Drive belum tersedia.'
+	},
+	adminPanel: {
+		pageTitle: 'Admin — CV Maker',
+		title: 'Admin',
+		loginTitle: 'Masuk admin',
+		username: 'Username',
+		password: 'Kata sandi',
+		login: 'Masuk',
+		logout: 'Keluar',
+		wrong: 'Username atau kata sandi salah.',
+		busy: 'Terlalu banyak percobaan. Coba lagi besok.',
+		unavailable: 'Halaman admin belum diaktifkan di server.',
+		reportsTitle: 'Laporan CV yang dibagikan',
+		empty: 'Belum ada laporan.',
+		refresh: 'Muat ulang',
+		total: '{count} laporan',
+		last: 'Terakhir: {date}',
+		owner: 'Pemilik: {email}',
+		statusActive: 'Aktif',
+		statusBlocked: 'Diblokir',
+		view: 'Lihat CV',
+		hide: 'Tutup pratinjau',
+		block: 'Blokir',
+		unblock: 'Buka blokir',
+		dismiss: 'Abaikan laporan',
+		remove: 'Hapus link',
+		removeConfirm:
+			'Hapus salinan CV ini dari server? Link berhenti berfungsi dan tidak bisa dibatalkan.',
+		blocked: 'Link diblokir.',
+		unblocked: 'Blokir dibuka.',
+		dismissed: 'Laporan diabaikan.',
+		removed: 'Link dihapus.',
+		failed: 'Tindakan belum berhasil. Coba lagi.',
+		reasons: {
+			spam: 'Spam atau iklan',
+			impersonation: 'Memakai identitas orang lain',
+			offensive: 'Isi kasar atau tidak pantas',
+			'personal-data': 'Data pribadi tanpa izin',
+			other: 'Lainnya'
+		}
 	}
 };

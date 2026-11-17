@@ -41,6 +41,14 @@ export interface ShareRecord {
 
 export type TokenPurpose = 'verify' | 'reset';
 
+export interface ReportSummary {
+	shareId: string;
+	total: number;
+	/** Count per reason (REPORT_REASONS). */
+	reasons: Record<string, number>;
+	lastAt: number;
+}
+
 export interface DriveLink {
 	/** Refresh token, sealed with secret-box.ts. */
 	token: string;
@@ -83,6 +91,17 @@ export interface AccountStore {
 	deleteShare(userId: string, cvId: string): Promise<void>;
 	countView(shareId: string): Promise<void>;
 	addReport(shareId: string, reason: string, at: number): Promise<void>;
+	/** Reports so far for one shared CV. */
+	reportCount(shareId: string): Promise<number>;
+	/** Admin: every reported shared CV with its report counts, most recent first. */
+	reportSummaries(): Promise<ReportSummary[]>;
+	/** Admin: dismiss (delete) the reports of a shared CV. */
+	deleteReports(shareId: string): Promise<void>;
+	shareById(id: string): Promise<ShareRecord | null>;
+	/** Admin: a blocked link answers 404 to everyone; the owner cannot re-enable it. */
+	setShareBlocked(id: string, blocked: boolean): Promise<void>;
+	/** Admin: delete a shared CV and its reports. */
+	deleteShareById(id: string): Promise<void>;
 
 	driveLink(userId: string): Promise<DriveLink | null>;
 	saveDriveLink(userId: string, link: DriveLink): Promise<void>;
@@ -189,6 +208,41 @@ export function memoryAccountStore(): AccountStore {
 		},
 		async addReport(shareId, reason, at) {
 			reports.push({ shareId, reason, at });
+		},
+		async reportCount(shareId) {
+			return reports.filter((r) => r.shareId === shareId).length;
+		},
+		async reportSummaries() {
+			const byShare = new Map<string, ReportSummary>();
+			for (const r of reports) {
+				const summary = byShare.get(r.shareId) ?? {
+					shareId: r.shareId,
+					total: 0,
+					reasons: {},
+					lastAt: 0
+				};
+				summary.total += 1;
+				summary.reasons[r.reason] = (summary.reasons[r.reason] ?? 0) + 1;
+				summary.lastAt = Math.max(summary.lastAt, r.at);
+				byShare.set(r.shareId, summary);
+			}
+			return [...byShare.values()].sort((a, b) => b.lastAt - a.lastAt);
+		},
+		async deleteReports(shareId) {
+			for (let i = reports.length - 1; i >= 0; i--)
+				if (reports[i]!.shareId === shareId) reports.splice(i, 1);
+		},
+		async shareById(id) {
+			return copy(shares.get(id));
+		},
+		async setShareBlocked(id, blocked) {
+			const share = shares.get(id);
+			if (share) share.blocked = blocked;
+		},
+		async deleteShareById(id) {
+			shares.delete(id);
+			for (let i = reports.length - 1; i >= 0; i--)
+				if (reports[i]!.shareId === id) reports.splice(i, 1);
 		},
 		async driveLink(userId) {
 			return copy(drives.get(userId));

@@ -48,6 +48,10 @@ export interface ServerConfig {
 	};
 	/** Unset → in-memory quota (development only: resets on restart). */
 	db?: { host: string; port: number; user: string; password: string; database: string };
+	/** Report notices (REPORT_EMAIL, default support@codiosity.com; "off" = none). Needs SMTP. */
+	reportEmail?: string;
+	/** Site admin (/admin): ADMIN_USERNAME + ADMIN_PASSWORD_HASH (scripts/hash-password.mjs). */
+	admin?: { username: string; passwordHash: string };
 	/** Accounts. Each login method is off until its settings are present. */
 	auth: {
 		/** GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (Google Cloud → OAuth client, type "Web"). */
@@ -137,8 +141,24 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 					database: dbName
 				}
 			: undefined,
-		auth: authConfig(env)
+		auth: authConfig(env),
+		reportEmail: reportEmailConfig(env),
+		admin: adminConfig(env)
 	};
+}
+
+function reportEmailConfig(env: Env): string | undefined {
+	const value = (env.REPORT_EMAIL ?? 'support@codiosity.com').trim();
+	return value && value.toLowerCase() !== 'off' ? value : undefined;
+}
+
+function adminConfig(env: Env): ServerConfig['admin'] {
+	const username = env.ADMIN_USERNAME?.trim();
+	if (!username) return undefined;
+	const passwordHash = required(env, 'ADMIN_PASSWORD_HASH');
+	if (!passwordHash.startsWith('scrypt$'))
+		throw new Error('ADMIN_PASSWORD_HASH must come from scripts/hash-password.mjs');
+	return { username, passwordHash };
 }
 
 function authConfig(env: Env): ServerConfig['auth'] {
