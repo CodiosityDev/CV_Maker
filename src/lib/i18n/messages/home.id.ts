@@ -17,6 +17,12 @@ export const homeId = {
 		thumbnailError: 'Pratinjau belum bisa ditampilkan',
 		hide: 'Sembunyikan dari beranda',
 		hidden: 'CV-mu tidak lagi tampil di beranda perangkat ini.',
-		show: 'Tampilkan lagi'
+		show: 'Tampilkan lagi',
+		delete: 'Hapus {title}',
+		confirm: 'Hapus CV ini dari perangkat ini? Tidak bisa dibatalkan.',
+		confirmDelete: 'Hapus',
+		cancel: 'Batal',
+		deleted: 'CV dihapus.',
+		deleteFailed: 'CV belum bisa dihapus. Coba lagi.'
 	}
 };
