@@ -18,6 +18,15 @@
 		<p>{t('privacy.storageCopy')}</p>
 	</section>
 	<section>
+		<h2>{t('privacy.accountTitle')}</h2>
+		<p>{t('privacy.accountCopy')}</p>
+	</section>
+	<section>
+		<h2>{t('privacy.shareTitle')}</h2>
+		<p>{t('privacy.shareCopy')}</p>
+		<p>{t('privacy.accountDeleteCopy')}</p>
+	</section>
+	<section>
 		<h2>{t('privacy.trackingTitle')}</h2>
 		<p>{t('privacy.trackingCopy')}</p>
 		<p>{t('privacy.visitorsCopy')}</p>

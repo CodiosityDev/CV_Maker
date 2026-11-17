@@ -16,6 +16,10 @@ import { appId } from '../../src/lib/i18n/messages/app.id';
 import { appEn } from '../../src/lib/i18n/messages/app.en';
 import { homeId } from '../../src/lib/i18n/messages/home.id';
 import { homeEn } from '../../src/lib/i18n/messages/home.en';
+import { viewerId } from '../../src/lib/i18n/messages/viewer.id';
+import { viewerEn } from '../../src/lib/i18n/messages/viewer.en';
+import { privacyId } from '../../src/lib/i18n/messages/privacy.id';
+import { privacyEn } from '../../src/lib/i18n/messages/privacy.en';
 import { isLocale } from '../../src/lib/i18n/types';
 
 function leafKeys(node: unknown, prefix = ''): string[] {
@@ -29,7 +33,9 @@ const PARTS = {
 	base: { id, en },
 	site: { id: siteId, en: siteEn },
 	app: { id: appId, en: appEn },
-	home: { id: homeId, en: homeEn }
+	home: { id: homeId, en: homeEn },
+	viewer: { id: viewerId, en: viewerEn },
+	privacy: { id: privacyId, en: privacyEn }
 };
 
 describe('i18n dictionaries', () => {

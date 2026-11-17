@@ -3,11 +3,13 @@
  *
  * Messages are split by LANGUAGE and by NAMESPACE so each page only ships the text it uses:
  *   base  (messages/id.ts, en.ts)          — shared: app, common, nav, footer, ui, locale, validation, a11y
- *   site  (messages/site.id.ts, site.en.ts) — landing, privacy, about     → registered by (site) layout
+ *   site  (messages/site.id.ts, site.en.ts) — landing, FAQ, about, ATS check     → registered by (site) layout
  *   app   (messages/app.id.ts, app.en.ts)   — wizard, preview, editor, …  → registered by (app) layout
  *   ats   (messages/ats.id.ts, ats.en.ts)   — ATS checker messages (core) → registered by (app) layout
  *   home  (messages/home.id.ts, home.en.ts) — home "your CVs" strip → registered by the lazy
  *         ui/home/RecentCvs.svelte itself (then `await ensureMessages()` before showing text)
+ *   privacy (messages/privacy.id.ts, privacy.en.ts) — /privasi only → its +page.ts
+ *   viewer (messages/viewer.id.ts, viewer.en.ts) — shared CV page /u/<slug> → (share) layout
  *
  * Indonesian base is always bundled. A route group registers its Indonesian namespace synchronously
  * (static import → no flash, works in prerender) and English parts are loaded on demand.
@@ -17,6 +19,8 @@ import type { siteId } from './messages/site.id';
 import type { appId } from './messages/app.id';
 import type { atsId } from './messages/ats.id';
 import type { homeId } from './messages/home.id';
+import type { viewerId } from './messages/viewer.id';
+import type { privacyId } from './messages/privacy.id';
 import type { DeepStringRecord, LeafPaths, Locale, MessageParams } from './types';
 
 export type BaseMessages = DeepStringRecord<typeof baseId>;
@@ -24,10 +28,18 @@ export type SiteMessages = DeepStringRecord<typeof siteId>;
 export type AppMessages = DeepStringRecord<typeof appId>;
 export type AtsMessages = DeepStringRecord<typeof atsId>;
 export type HomeMessages = DeepStringRecord<typeof homeId>;
-export type Messages = BaseMessages & SiteMessages & AppMessages & AtsMessages & HomeMessages;
+export type ViewerMessages = DeepStringRecord<typeof viewerId>;
+export type PrivacyMessages = DeepStringRecord<typeof privacyId>;
+export type Messages = BaseMessages &
+	SiteMessages &
+	AppMessages &
+	AtsMessages &
+	HomeMessages &
+	ViewerMessages &
+	PrivacyMessages;
 export type MessageKey = LeafPaths<Messages>;
 
-export type Namespace = 'site' | 'app' | 'ats' | 'home';
+export type Namespace = 'site' | 'app' | 'ats' | 'home' | 'viewer' | 'privacy';
 type Part = 'base' | Namespace;
 type Dict = Record<string, unknown>;
 
@@ -41,7 +53,9 @@ const englishLoaders: Record<Part, () => Promise<Dict>> = {
 	site: () => import('./messages/site.en').then((m) => m.siteEn),
 	app: () => import('./messages/app.en').then((m) => m.appEn),
 	ats: () => import('./messages/ats.en').then((m) => m.atsEn),
-	home: () => import('./messages/home.en').then((m) => m.homeEn)
+	home: () => import('./messages/home.en').then((m) => m.homeEn),
+	viewer: () => import('./messages/viewer.en').then((m) => m.viewerEn),
+	privacy: () => import('./messages/privacy.en').then((m) => m.privacyEn)
 };
 
 /**

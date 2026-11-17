@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
+	import { ACCOUNT_HINT_STORAGE_KEY } from '#lib/core/account/hint.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { initIncognitoUiContext, getIncognitoUiContext } from '#lib/ui/incognito-context.ts';
 	import { resetAiSession, syncAiSession } from '#lib/ui/ai/session.svelte.ts';
@@ -28,6 +29,16 @@
 	});
 	let menuOpen = $state(false);
 	let menu: HTMLDetailsElement | undefined = $state();
+	// "Akun" after a login on this browser, else "Masuk". Re-read on navigation; no request made
+	// (the account module is not loaded into the app shell).
+	const signedIn = $derived.by(() => {
+		void page.url;
+		try {
+			return localStorage.getItem(ACCOUNT_HINT_STORAGE_KEY) === '1';
+		} catch {
+			return false;
+		}
+	});
 	function closeMenu(event: KeyboardEvent) {
 		if (event.key === 'Escape' && menuOpen) {
 			event.preventDefault();
@@ -95,6 +106,17 @@
 				<nav aria-label={t('nav.label')}>
 					<a href={resolve('/(app)/buat')} onclick={() => (menuOpen = false)}>{t('nav.create')}</a>
 					<a href={resolve('/(app)/cv')} onclick={() => (menuOpen = false)}>{t('nav.myCvs')}</a>
+					{#if !incognito.active}
+						<a
+							href={signedIn ? resolve('/(app)/akun') : resolve('/(app)/masuk')}
+							aria-current={page.route.id?.startsWith('/(app)/akun') ||
+							page.route.id?.startsWith('/(app)/masuk')
+								? 'page'
+								: undefined}
+							onclick={() => (menuOpen = false)}
+							>{t(signedIn ? 'account.navAccount' : 'account.navSignIn')}</a
+						>
+					{/if}
 					<a
 						href={resolve('/(app)/surat')}
 						aria-current={page.route.id?.includes('/surat') ? 'page' : undefined}

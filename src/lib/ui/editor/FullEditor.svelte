@@ -17,6 +17,8 @@
 	} from '#lib/core/ats/index.ts';
 	import { createCvStore } from '#lib/core/store/cv-store.svelte.ts';
 	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
+	import { account } from '#lib/core/account/session.svelte.ts';
+	import { shareSync } from '#lib/core/share/publish.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { loadSuggestions, normalize, type SuggestionData } from '#lib/core/suggest/index.ts';
@@ -52,9 +54,10 @@
 	let visualRequest = 0;
 	let visualMode = untrack(() => incognito.active);
 	const visualAllowed = $derived(store.cv.kind === 'creative' && !removed && !expired);
-	let tool = $state<'download' | 'ats' | 'jobs'>();
+	let tool = $state<'download' | 'ats' | 'jobs' | 'share'>();
 	let toolOpen = $state(false);
 	let ExportPanel = $state<typeof import('#lib/ui/ExportPanel.svelte').default>();
+	let SharePanel = $state<typeof import('#lib/ui/share/SharePanel.svelte').default>();
 	let AtsPanel = $state<typeof import('#lib/ui/AtsPanel.svelte').default>();
 	let JobLinks = $state<typeof import('#lib/ui/JobLinks.svelte').default>();
 	let toolLoading = $state(false);
@@ -123,10 +126,24 @@
 		void storage.getMode().then((mode) => {
 			if (mounted) memory = mode === 'memory';
 		});
+		// Links with "Perbarui otomatis" follow the edits. Only browsers that logged in before ask.
+		if (account.hinted() && !incognito.active) {
+			void account.load().then(() => {
+				if (mounted && account.user?.verified) void shareSync.load();
+			});
+		}
 		return () => {
 			beforeStart?.();
 			beforeEnd?.();
 		};
+	});
+	// After each successful save: re-upload the shared copy if its link updates automatically.
+	let syncedAt = untrack(() => savedAt);
+	$effect(() => {
+		const at = savedAt;
+		if (at === syncedAt || incognito.active || removed) return;
+		syncedAt = at;
+		untrack(() => shareSync.cvSaved($state.snapshot(store.cv) as CVDocument));
 	});
 	onDestroy(() => {
 		mounted = false;
@@ -443,7 +460,7 @@
 		const cv = $state.snapshot(store.cv);
 		return JSON.stringify({ ...cv, status: undefined, updatedAt: undefined });
 	}
-	function openTool(next: 'download' | 'ats' | 'jobs') {
+	function openTool(next: 'download' | 'ats' | 'jobs' | 'share') {
 		if (!mounted || removed || expired) return;
 		if (next === 'jobs') requestSuggestions();
 		tool = next;
@@ -463,7 +480,8 @@
 		if (
 			(requested === 'download' && ExportPanel) ||
 			(requested === 'ats' && AtsPanel) ||
-			(requested === 'jobs' && JobLinks)
+			(requested === 'jobs' && JobLinks) ||
+			(requested === 'share' && SharePanel)
 		) {
 			toolLoading = false;
 			return;
@@ -489,6 +507,9 @@
 			} else if (requested === 'ats') {
 				const module = await import('#lib/ui/AtsPanel.svelte');
 				if (current()) AtsPanel = module.default;
+			} else if (requested === 'share') {
+				const module = await import('#lib/ui/share/SharePanel.svelte');
+				if (current()) SharePanel = module.default;
 			} else {
 				const module = await import('#lib/ui/JobLinks.svelte');
 				if (current()) JobLinks = module.default;
@@ -779,7 +800,9 @@
 					onclick={letters}>{t('nav.letter')}</Button
 				><Button variant="secondary" onclick={() => openTool('ats')}
 					>{t('dashboard.checkAts')}</Button
-				><Button variant="ghost" onclick={() => openTool('jobs')}
+				>{#if !incognito.active}<Button variant="secondary" onclick={() => openTool('share')}
+						>{t('share.button')}</Button
+					>{/if}<Button variant="ghost" onclick={() => openTool('jobs')}
 					>{t('jobLinks.dialogTitle')}</Button
 				>
 			</div>
@@ -923,7 +946,9 @@
 				? t('editor.download')
 				: tool === 'ats'
 					? t('atsPanel.title')
-					: t('jobLinks.dialogTitle')}
+					: tool === 'share'
+						? t('share.title')
+						: t('jobLinks.dialogTitle')}
 		>
 			{#if toolOpen}
 				{#if toolLoading}
@@ -939,6 +964,10 @@
 						cv={store.cv}
 						beforeLeave={flushBeforeLeave}
 						returnToEditor
+					/>
+				{:else if tool === 'share' && SharePanel}<SharePanel
+						cv={store.cv}
+						beforeSave={flushBeforeLeave}
 					/>
 				{:else if tool === 'ats' && AtsPanel}<AtsPanel
 						report={atsReport}

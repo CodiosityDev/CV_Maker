@@ -35,6 +35,9 @@
 	let jobsOpen = $state(false);
 	let jobsCv = $state.raw<CVDocument>();
 	let jobsSuggestions = $state.raw<SuggestionData>();
+	let shareOpen = $state(false);
+	let shareCv = $state.raw<CVDocument>();
+	let SharePanel = $state<typeof import('#lib/ui/share/SharePanel.svelte').default>();
 	let jobsRequest = 0;
 	let renameOpen = $state(false);
 	let renameCv = $state<CVMeta>();
@@ -67,7 +70,7 @@
 			memory = mode === 'memory';
 			listError = false;
 			const ids = new Set(list.map((cv) => cv.id));
-			for (const cv of [menuCv, renameCv, deleteCv, exportCv, jobsCv]) {
+			for (const cv of [menuCv, renameCv, deleteCv, exportCv, jobsCv, shareCv]) {
 				if (cv && !ids.has(cv.id)) clearDialogs(cv.id);
 			}
 			if (exportOpen && exportCv) {
@@ -155,6 +158,10 @@
 			jobsCv = undefined;
 			jobsSuggestions = undefined;
 			jobsRequest += 1;
+		}
+		if (id === undefined || shareCv?.id === id) {
+			shareOpen = false;
+			shareCv = undefined;
 		}
 		if (id === undefined) {
 			wipeOpen = false;
@@ -249,6 +256,35 @@
 				jobsSuggestions = data;
 		} catch {
 			// Search links still work when optional related-title suggestions are unavailable.
+		}
+	}
+
+	async function showShare(cv: CVMeta, trigger: EventTarget | null) {
+		if (busy) return;
+		busy = true;
+		menuOpen = false;
+		try {
+			const [doc, module] = await Promise.all([
+				cvRepo.get(cv.id),
+				SharePanel ? undefined : import('#lib/ui/share/SharePanel.svelte')
+			]);
+			if (!active) return;
+			if (module) SharePanel = module.default;
+			if (!doc) {
+				toast.info(t('dashboard.missing'));
+				await refresh();
+				return;
+			}
+			shareCv = doc;
+			busy = false;
+			await tick();
+			if (trigger instanceof HTMLElement && trigger.isConnected)
+				trigger.focus({ preventScroll: true });
+			shareOpen = true;
+		} catch {
+			if (active) toast.error(t('dashboard.actionError'));
+		} finally {
+			if (active) busy = false;
 		}
 	}
 
@@ -400,6 +436,11 @@
 			void goto(resolve('/(app)/cv/[id]/surat', { id: cv.id }));
 		}}>{t('nav.letter')} · {t('letterEditor.count', { count: cv.letterCount })}</button
 	>
+	{#if !incognito.active}
+		<button type="button" disabled={busy} onclick={(event) => showShare(cv, event.currentTarget)}
+			>{t('share.button')}</button
+		>
+	{/if}
 	<button type="button" disabled={busy} onclick={(event) => showJobs(cv, event.currentTarget)}
 		>{t('dashboard.findJobs')}</button
 	>
@@ -559,6 +600,10 @@
 		{/if}
 		<ExportPanel cv={exportCv} />
 	{/if}
+</Dialog>
+
+<Dialog bind:open={shareOpen} title={t('share.title')} presentation="sheet" closeOnBackdrop>
+	{#if shareOpen && shareCv && SharePanel}<SharePanel cv={shareCv} />{/if}
 </Dialog>
 
 <Dialog bind:open={jobsOpen} title={t('jobLinks.dialogTitle')} presentation="sheet" closeOnBackdrop>
