@@ -104,9 +104,11 @@
 				{/each}
 			</nav>
 		</div>
-		<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
-			>{t('nav.create')}</PrimaryLink
-		>
+		<div class="create-action">
+			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+				>{t('nav.create')}</PrimaryLink
+			>
+		</div>
 	</div>
 </header>
 
@@ -205,7 +207,13 @@
 	nav a span[aria-hidden='true'] {
 		font-size: 0.75rem;
 	}
+	.create-action {
+		flex-shrink: 0;
+	}
 	@media (max-width: 479px) {
+		.header-inner {
+			gap: 2px;
+		}
 		.brand-name {
 			position: absolute;
 			width: 1px;
@@ -217,14 +225,18 @@
 			white-space: nowrap;
 			border: 0;
 		}
+		.header-inner :global(.language-switcher) {
+			gap: 0;
+			padding: 0;
+		}
 		.header-inner :global(.header-cta) {
-			padding-inline: 12px;
+			padding-inline: 10px;
 			white-space: nowrap;
 		}
 	}
-	/* Very narrow phones: "Buat CV" stays in the hero and in the menu, the header keeps one row. */
-	@media (max-width: 419px) {
-		.header-inner :global(.header-cta) {
+	/* Narrower than common phones: "Buat CV" stays in the hero and in the menu. */
+	@media (max-width: 359px) {
+		.create-action {
 			display: none;
 		}
 	}

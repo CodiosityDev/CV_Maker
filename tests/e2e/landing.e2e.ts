@@ -8,9 +8,9 @@ test('landing offers the planned CV actions and honest template guidance', async
 	);
 
 	const createLinks = page.getByRole('link', { name: 'Buat CV', exact: true });
-	// Hero + header CTA (the header CTA is hidden below 420px; the menu keeps "Buat CV" there).
+	// Hero + header CTA (the header CTA is hidden below 360px; the menu keeps "Buat CV" there).
 	expect(await createLinks.count()).toBeGreaterThanOrEqual(
-		page.viewportSize()!.width < 420 ? 1 : 2
+		page.viewportSize()!.width < 360 ? 1 : 2
 	);
 	for (const link of await createLinks.all()) {
 		await expect(link).toHaveAttribute('href', '/buat');
