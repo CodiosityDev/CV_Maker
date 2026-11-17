@@ -10,6 +10,7 @@ import { wibDay } from './identity';
 import { memoryQuotaStore, type QuotaStore } from './quota';
 import { mysqlQuotaStore } from './quota-mysql';
 import { createAccountRoutes } from './account/routes';
+import { createAdminRoutes } from './account/admin';
 import { createGoogleClient } from './account/google';
 import { createDriveClient } from './account/drive';
 import { smtpMailer } from './account/mail';
@@ -32,7 +33,8 @@ async function main(): Promise<void> {
 		store = memoryQuotaStore();
 		accounts = memoryAccountStore();
 	}
-	const account = createAccountRoutes({
+	const admin = createAdminRoutes({ config, accounts, quota: store, log });
+	const accountRoutes = createAccountRoutes({
 		config,
 		accounts,
 		quota: store,
@@ -43,6 +45,7 @@ async function main(): Promise<void> {
 				})
 			: undefined,
 		mailer: config.auth.mail ? smtpMailer(config.auth.mail) : undefined,
+		reportEmail: config.reportEmail,
 		// Same Google client and callback as login; the scope is only asked for when connecting Drive.
 		drive: config.auth.google
 			? createDriveClient({
@@ -66,6 +69,11 @@ async function main(): Promise<void> {
 			if (!info.ok) log({ event: 'ai.attempt_failed', lite: true, ...info });
 		}
 	});
+	// Site admin first (/api/admin/*), then accounts and shared links.
+	const account = {
+		handle: async (...args: Parameters<typeof accountRoutes.handle>) =>
+			(await admin.handle(...args)) || accountRoutes.handle(...args)
+	};
 	const handle = createApp({ config, store, provider, liteProvider, log, account });
 	const server = createServer((req, res) => void handle(req, res));
 	server.requestTimeout = 90_000;

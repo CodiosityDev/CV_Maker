@@ -137,3 +137,18 @@ lalu di Google Auth Platform → Data access tambahkan scope `.../auth/drive.fil
 | POST   | `/api/drive/disconnect` | cabut izin + hapus token                                           |
 
 Tabel `cvmaker_backups` (dari rilis sebelumnya, bila ada) tidak dipakai lagi dan boleh dihapus.
+
+## Laporan & halaman admin
+
+- Pengunjung bisa melaporkan CV yang dibagikan. Laporan disimpan di `cvmaker_share_reports`
+  (tanpa identitas pelapor) dan memicu email ke `REPORT_EMAIL` (default `support@codiosity.com`,
+  `off` = tanpa email; butuh SMTP) — maksimal 1 email per link per hari, 50 per hari total.
+- **Halaman admin: `https://cvmaker.codiosity.com/admin`** (tidak ada di menu). Lihat laporan, lihat
+  CV yang dilaporkan, **Blokir / Buka blokir**, **Abaikan laporan**, **Hapus link**.
+- Menyalakan (owner): buat hash kata sandi dengan `node scripts/hash-password.mjs`, lalu isi di file env
+  `ADMIN_USERNAME=…` dan `ADMIN_PASSWORD_HASH=…` (jangan pernah menaruh kata sandinya sendiri), deploy
+  ulang. Tanpa keduanya semua `/api/admin/*` menjawab 404.
+- Sesi admin: cookie `__Host-cvm_admin` (HttpOnly, SameSite=Strict, 8 jam, di memori: restart server =
+  login ulang). Login dibatasi 10 percobaan per IP per hari dan 50 gagal per hari total.
+- Menghapus CV di perangkat (beranda / CV Saya) juga menghapus salinan yang dibagikan di server, dan
+  halaman Akun punya tombol "Hapus dari server" untuk setiap link.

@@ -76,3 +76,38 @@ export function accountEmail(
 	const text = TEXT[kind][locale];
 	return { subject: text.subject, text: text.body(link) };
 }
+
+const REASON_LABELS: Record<string, string> = {
+	spam: 'Spam atau iklan',
+	impersonation: 'Memakai identitas orang lain',
+	offensive: 'Isi kasar atau tidak pantas',
+	'personal-data': 'Data pribadi tanpa izin',
+	other: 'Lainnya'
+};
+
+/** Notice to the site team about a reported shared CV (no reporter data: none is collected). */
+export function reportEmail(input: {
+	slug: string;
+	reason: string;
+	total: number;
+	appOrigin: string;
+}): { subject: string; text: string } {
+	const label = REASON_LABELS[input.reason] ?? input.reason;
+	return {
+		subject: `[CV Maker] Laporan CV dibagikan: /u/${input.slug} (${label})`,
+		text: [
+			'Ada laporan baru untuk CV yang dibagikan.',
+			'',
+			`Link: ${input.appOrigin}/u/${input.slug}`,
+			`Alasan: ${label}`,
+			`Total laporan untuk link ini: ${input.total}`,
+			'',
+			`Tindak lanjuti di halaman admin: ${input.appOrigin}/admin`,
+			'(Blokir, buka blokir, hapus link, atau abaikan laporan.)',
+			'',
+			'Email ini paling banyak dikirim sekali per link per hari. Identitas pelapor tidak disimpan.',
+			'',
+			'CV Maker oleh Codiosity'
+		].join('\n')
+	};
+}

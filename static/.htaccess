@@ -26,7 +26,7 @@
 
 	# App routes rendered in the browser (/buat, /cv, /surat, /masuk, /akun, /u/<slug>, …) → the app shell.
 	RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteRule ^(buat|cv|surat|masuk|akun|u)(/.*)?$ /200.html [L]
+	RewriteRule ^(buat|cv|surat|masuk|akun|admin|u)(/.*)?$ /200.html [L]
 </IfModule>
 
 # Unknown paths: the app shows its own "not found" page (status stays 404).

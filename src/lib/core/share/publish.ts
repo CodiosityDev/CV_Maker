@@ -8,8 +8,9 @@
  * Nothing is uploaded unless the user pressed "Bagikan" for that CV.
  */
 import { shareClient, type Result } from '../account/index';
+import { ACCOUNT_HINT_STORAGE_KEY } from '../account/hint';
 import type { CVDocument } from '../schema/types';
-import { assetRepo } from '../storage/index';
+import { assetRepo, incognito } from '../storage/index';
 import { buildShareSnapshot, type ShareInfo, type ShareSaveRequest } from './index';
 
 export type PublishOptions = Omit<ShareSaveRequest, 'snapshot' | 'photo'>;
@@ -106,3 +107,19 @@ export const shareSync = {
 		);
 	}
 };
+
+/**
+ * After a CV was deleted on this device, delete its shared copy on the server too, so its link
+ * stops working (owner: a deleted CV must not stay reachable). Only browsers that logged in
+ * make the request; deleting a CV that was never shared is a harmless no-op. Never throws.
+ */
+export async function removeSharedCopy(cvId: string): Promise<void> {
+	if (incognito.active) return;
+	try {
+		if (localStorage.getItem(ACCOUNT_HINT_STORAGE_KEY) !== '1') return;
+	} catch {
+		return;
+	}
+	shareSync.forget(cvId);
+	await shareClient.remove(cvId).catch(() => undefined);
+}

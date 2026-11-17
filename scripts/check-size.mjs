@@ -9,7 +9,9 @@ const KB = 1024;
 
 /** page HTML file → budget in KB (gzip) */
 const BUDGETS = {
-	'index.html': 60, // landing
+	// Landing. 60 → 61 KB on 2026-11-17: every app route adds an entry to the client router that
+	// the landing loads (here /admin); features themselves stay lazy. Keep new code off the landing.
+	'index.html': 61,
 	'200.html': 150 // SPA shell for app routes (route chunks are lazy and checked separately later)
 };
 

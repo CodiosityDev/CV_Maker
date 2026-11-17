@@ -30,7 +30,12 @@ export type QuotaScope =
 	| 'mailip'
 	| 'sharepw'
 	| 'report'
-	| 'drive';
+	| 'drive'
+	// Site admin login (per IP) and failed logins (all IPs together), report emails.
+	| 'adminip'
+	| 'adminbad'
+	| 'rptmail'
+	| 'rptall';
 
 /** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */
 export type TotalName = 'visitors';

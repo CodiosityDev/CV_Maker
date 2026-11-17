@@ -56,7 +56,7 @@ import {
 	verifyPassword
 } from './crypto';
 import { pkceChallenge, type GoogleClient } from './google';
-import { accountEmail, type Mailer } from './mail';
+import { accountEmail, reportEmail, type Mailer } from './mail';
 import type { AccountStore, ShareRecord, UserRecord } from './store';
 import { cleanBackupFile } from './backup-file';
 import type { DriveClient } from './drive';
@@ -112,6 +112,8 @@ export interface AccountDeps {
 	mailer?: Mailer;
 	/** Absent = "Simpan ke Google Drive" is off (needs the Google client). */
 	drive?: DriveClient;
+	/** Where report notices go (owner: support@codiosity.com). Absent = no email. */
+	reportEmail?: string;
 	now?: () => number;
 	log?: (entry: Record<string, unknown>) => void;
 }
@@ -598,6 +600,19 @@ export function createAccountRoutes(deps: AccountDeps) {
 		);
 	}
 
+	/** At most one email per link per day and 50 per day in total, so the inbox cannot be flooded. */
+	async function notifyReport(shareId: string, slug: string, reason: string) {
+		if (!mailer || !deps.reportEmail) return;
+		if (!(await take('rptmail', shareId, 1))) return;
+		if (!(await take('rptall', 'all', 50))) return;
+		const total = await accounts.reportCount(shareId);
+		await mailer.send({
+			to: deps.reportEmail,
+			...reportEmail({ slug, reason, total, appOrigin: config.appOrigin })
+		});
+		log({ event: 'share.report_mailed' });
+	}
+
 	async function report(req: IncomingMessage, slug: string, ip: string) {
 		const body = asObject(await readJson(req, { maxBytes: SMALL_BODY }));
 		const reason = asString(body.reason);
@@ -609,6 +624,13 @@ export function createAccountRoutes(deps: AccountDeps) {
 			throw new HttpError(429, 'busy');
 		await accounts.addReport(share.id, reason, now());
 		log({ event: 'share.reported', reason });
+		// Tell the team (never blocks or fails the visitor's report).
+		void notifyReport(share.id, share.slug, reason).catch((error: unknown) =>
+			log({
+				event: 'share.report_mail_failed',
+				message: error instanceof Error ? error.message : 'unknown'
+			})
+		);
 		return { ok: true };
 	}
 

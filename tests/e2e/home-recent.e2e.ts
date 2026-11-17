@@ -98,7 +98,7 @@ test('a CV can be deleted from the home page after confirming', async ({ page },
 	await expect(card).toHaveCount(1);
 	const remove = card.getByRole('button', { name: `Hapus ${cvTitle}`, exact: true });
 	await remove.click();
-	const confirm = card.getByRole('group', { name: /Hapus CV ini dari perangkat ini/ });
+	const confirm = card.getByRole('group', { name: /Hapus CV ini\? Link yang pernah dibagikan/ });
 	await expect(confirm).toBeVisible();
 	await page.screenshot({ path: testInfo.outputPath('home-delete-confirm.png') });
 	// Cancel keeps the CV and returns focus to the delete button.

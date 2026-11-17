@@ -19,7 +19,7 @@ export const homeId = {
 		hidden: 'CV-mu tidak lagi tampil di beranda perangkat ini.',
 		show: 'Tampilkan lagi',
 		delete: 'Hapus {title}',
-		confirm: 'Hapus CV ini dari perangkat ini? Tidak bisa dibatalkan.',
+		confirm: 'Hapus CV ini? Link yang pernah dibagikan juga ikut dihapus. Tidak bisa dibatalkan.',
 		confirmDelete: 'Hapus',
 		cancel: 'Batal',
 		deleted: 'CV dihapus.',
