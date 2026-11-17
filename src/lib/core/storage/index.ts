@@ -34,6 +34,7 @@ export const backupRepo = createBackupRepository(getBackend);
 
 export {
 	createRepositories,
+	CvLimitError,
 	LOCAL_STORAGE_KEYS,
 	LOCAL_STORAGE_PREFIXES,
 	ORPHAN_MIN_AGE_MS

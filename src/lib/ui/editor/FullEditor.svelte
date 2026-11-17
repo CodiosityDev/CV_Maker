@@ -19,6 +19,7 @@
 	import { assetRepo, incognito, storage } from '#lib/core/storage/index.ts';
 	import { account } from '#lib/core/account/session.svelte.ts';
 	import { shareSync } from '#lib/core/share/publish.ts';
+	import { autoBackup } from '#lib/core/backup/cloud.ts';
 	import { toRenderModel } from '#lib/core/render/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { loadSuggestions, normalize, type SuggestionData } from '#lib/core/suggest/index.ts';
@@ -143,7 +144,10 @@
 		const at = savedAt;
 		if (at === syncedAt || incognito.active || removed) return;
 		syncedAt = at;
-		untrack(() => shareSync.cvSaved($state.snapshot(store.cv) as CVDocument));
+		untrack(() => {
+			shareSync.cvSaved($state.snapshot(store.cv) as CVDocument);
+			autoBackup.changed();
+		});
 	});
 	onDestroy(() => {
 		mounted = false;

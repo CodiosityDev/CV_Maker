@@ -945,6 +945,9 @@ export const appEn: AppMessages = {
 			unauthenticated: 'Your session ended. Sign in again.',
 			password: 'Wrong password.',
 			taken: 'That address is taken. Choose another one.',
+			limit: 'You can keep at most 3 CVs. Delete one first.',
+			full: 'Backup storage is full. Try again later.',
+			reconnect: 'The Google Drive connection ended. Connect it again.',
 			notFound: 'Not found.',
 			expired: 'This link is invalid or was already used.',
 			busy: 'Too many attempts. Try again later.',
@@ -1011,5 +1014,45 @@ export const appEn: AppMessages = {
 		privacyNote:
 			'Only a copy of this CV (without cover letters) is sent to the server, as chosen above.',
 		openLink: 'Open link'
+	},
+	cvLimit: {
+		title: 'You already have 3 CVs',
+		body: 'You can keep at most 3 CVs. Delete one you no longer need to create a new one.',
+		paid: 'A paid plan with more CVs is coming soon.',
+		manage: 'Manage My CVs',
+		count: '{count} of {max} CVs',
+		restoreLimited: '{count} CVs were not restored because this device already has 3 CVs.'
+	},
+	backup: {
+		title: 'Backup',
+		intro:
+			'Your CVs stay on this device. A backup keeps a copy so you can restore them on another device.',
+		auto: 'Back up automatically',
+		autoHint:
+			'After a CV changes, the latest copy is saved to your account (at most every 30 minutes).',
+		now: 'Back up now',
+		saved: 'CVs backed up.',
+		usage: '{used} of {limit} used',
+		empty: 'No backups yet.',
+		item: '{date} · {count} CVs · {size}',
+		restore: 'Restore',
+		restored: '{count} CVs restored to this device.',
+		restoredNone: 'No CVs were restored.',
+		delete: 'Delete',
+		deleted: 'Backup deleted.',
+		lastAuto: 'Last automatic backup: {date}',
+		driveTitle: 'Google Drive (free)',
+		driveIntro:
+			'Save a backup file to your own Google Drive. CV Maker can only see the files it creates, never the rest of your Drive.',
+		driveConnect: 'Connect Google Drive',
+		driveConnected: 'Google Drive connected.',
+		driveFailed: 'Google Drive was not connected. Try again.',
+		driveSave: 'Save to Drive',
+		driveSaved: 'Backup saved to Google Drive.',
+		driveRestore: 'Restore from Drive',
+		driveLast: 'Last saved: {date}',
+		driveDisconnect: 'Disconnect Drive',
+		driveDisconnected: 'Google Drive disconnected.',
+		driveUnavailable: 'Google Drive is not available yet.'
 	}
 };
