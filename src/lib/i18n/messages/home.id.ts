@@ -24,5 +24,9 @@ export const homeId = {
 		cancel: 'Batal',
 		deleted: 'CV dihapus.',
 		deleteFailed: 'CV belum bisa dihapus. Coba lagi.'
+	},
+	/** Title of the banner frame (ui/ad-banner.ts; FAQ/About load this namespace through it). */
+	adFrame: {
+		title: 'Iklan'
 	}
 };

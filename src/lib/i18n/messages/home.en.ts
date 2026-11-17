@@ -23,5 +23,9 @@ export const homeEn: HomeMessages = {
 		cancel: 'Cancel',
 		deleted: 'CV deleted.',
 		deleteFailed: 'The CV could not be deleted. Try again.'
+	},
+	/** Title of the banner frame (ui/ad-banner.ts; FAQ/About load this namespace through it). */
+	adFrame: {
+		title: 'Advertisement'
 	}
 };

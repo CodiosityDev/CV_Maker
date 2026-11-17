@@ -36,6 +36,8 @@ export default defineConfig({
 					'connect-src': ['self'],
 					'worker-src': ['self'],
 					'manifest-src': ['self'],
+					// Only the banner page of the separate ad origin (ui/ad-banner.ts); never ad scripts here.
+					'frame-src': ['https://iklan.codiosity.com'],
 					'object-src': ['none'],
 					'base-uri': ['self'],
 					'form-action': ['self']

@@ -37,7 +37,7 @@ export const privacyEn: PrivacyMessages = {
 			'AI assistance is optional and only runs after you click its button and agree. Your target role, education and grades, experience, organisations, projects, skills, certifications, summary, and CV language go through the CV Maker server to a third-party AI provider. Your name, email, phone, city, links, and photo are not sent. CV content is not stored on the server. Anonymous usage counters are kept for 7 days.',
 		adsTitle: 'Advertising',
 		adsCopy:
-			'An ad only opens in a separate tab at iklan.codiosity.com when you choose to watch one for an extra AI use. Google Ad Manager supplies non-personalised ads. The ad page cannot see your CV content. CV Maker pages do not load ad scripts.',
+			'Small banner ads appear only at the bottom of the home page and on the FAQ and About pages. They load from iklan.codiosity.com inside a separate frame, so ad scripts cannot read CV Maker pages. The editor, Create CV, ATS Check, print pages and shared CVs never show ads. Ads for extra AI uses only open in a separate tab if you choose to watch one. Ads are supplied by Google Ad Manager and are not personalised.',
 		visitorsCopy:
 			'To count visitors, your browser stores a random ID without your name or CV data and without cookies. The server counter stores only hashes of the ID and IP address, never the original ID or IP address. The browser ID is removed when you choose Delete all data. In Incognito Mode, the ID stays only in tab memory and is not saved in browser storage.',
 		photoTitle: 'Photos and location metadata',

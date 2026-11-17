@@ -1,5 +1,6 @@
 ﻿<script lang="ts">
-	import { t } from '#lib/i18n/index.svelte.ts';
+	import { onMount } from 'svelte';
+	import { i18n, t } from '#lib/i18n/index.svelte.ts';
 	import Accordion from '#lib/ui/Accordion.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	const questions = [
@@ -16,6 +17,19 @@
 		'ai',
 		'aiQuota'
 	] as const;
+	// Small banner at the end of the page (owner); a cross-origin frame, loaded lazily.
+	let adSlot = $state<HTMLDivElement>();
+	onMount(() => {
+		let stop = () => {};
+		let active = true;
+		void import('#lib/ui/ad-banner.ts').then((m) => {
+			if (active && adSlot) stop = m.mountBanner(adSlot, i18n.locale);
+		});
+		return () => {
+			active = false;
+			stop();
+		};
+	});
 </script>
 
 <svelte:head>
@@ -41,6 +55,7 @@
 			>
 		</Accordion>
 	</section>
+	<div class="ad-slot" bind:this={adSlot}></div>
 	<div class="back-link"><Button href="/" variant="ghost">{t('faq.back')}</Button></div>
 </main>
 

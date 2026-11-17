@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="id">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<meta name="referrer" content="strict-origin-when-cross-origin" />
+		<title>Iklan — CV Maker</title>
+		<!--
+			Small banner shown INSIDE a cross-origin iframe on a few CV Maker pages (home page bottom,
+			FAQ, About). Being on this separate origin, the ad script cannot read the CV Maker page.
+			It reports to the parent (postMessage) whether an ad was shown and how tall it is; with no
+			ad the parent keeps the frame collapsed, so visitors never see an empty box.
+		-->
+		<style>
+			html,
+			body {
+				margin: 0;
+				background: transparent;
+			}
+			body {
+				display: grid;
+				justify-items: center;
+				gap: 2px;
+				font:
+					11px/1.4 system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					sans-serif;
+				color: #8a879c;
+			}
+			#label {
+				letter-spacing: 0.02em;
+			}
+			#label[hidden] {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<span id="label" hidden>Iklan</span>
+		<div id="banner-slot"></div>
+		<script src="config.js"></script>
+		<script src="banner.js"></script>
+	</body>
+</html>
