@@ -4,12 +4,16 @@
  *   pnpm build:server
  */
 import { fileURLToPath } from 'node:url';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 export default defineConfig({
 	root,
+	// Shared core modules may use runes (e.g. storage/incognito.svelte.ts via backupRepo): compile
+	// them for the server too, otherwise `$state` is undefined at start-up (scripts/check-server.mjs).
+	plugins: [svelte({ configFile: false })],
 	publicDir: false,
 	logLevel: 'warn',
 	build: {

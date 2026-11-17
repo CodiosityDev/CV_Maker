@@ -880,6 +880,9 @@ export const appEn: AppMessages = {
 		wipeDone: 'All CV data on this device was deleted.'
 	},
 	account: {
+		nameLabel: 'Name',
+		nameHint: 'Used automatically as "Full name" when you create a new CV.',
+		nameSaved: 'Name saved.',
 		navSignIn: 'Sign in',
 		navAccount: 'Account',
 		signInTitle: 'Sign in to CV Maker',
@@ -1023,6 +1026,7 @@ export const appEn: AppMessages = {
 		driveTitle: 'Backup in Google Drive (free)',
 		driveIntro:
 			'Your CVs stay on this device. Save a backup file to your own Google Drive to restore them on another device. CV Maker can only see the files it creates, never the rest of your Drive.',
+		driveOpen: 'View in Google Drive',
 		driveConnect: 'Connect Google Drive',
 		driveConnected: 'Google Drive connected.',
 		driveFailed: 'Google Drive was not connected. Try again.',

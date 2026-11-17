@@ -85,21 +85,18 @@ test('wizard progress uses a full mobile row and retains its accessible value at
 	).toHaveValue('Universitas Contoh');
 });
 
-test('desktop site header shares one row from 1024px and keeps a logical focus sequence', async ({
+test('site header shares one row from 480px and keeps a logical focus sequence', async ({
 	page
 }) => {
 	await page.goto('/');
-	// 1024–1279px: the eight links sit behind the menu button; from 1280px they are inline.
-	for (const [width, links] of [
-		[1024, 'header .menu-toggle'],
-		[1280, 'header nav']
-	] as const) {
+	// Every width: logo, language, theme, the dropdown menu button and the CTA (owner: one dropdown).
+	for (const width of [480, 1024, 1280]) {
 		await page.setViewportSize({ width, height: 900 });
 		await page.evaluate(async () => {
 			await document.fonts.ready;
 		});
 		const centers = await page
-			.locator(`header .brand, ${links}, header .language-switcher, header .header-cta`)
+			.locator('header .brand, header .menu-toggle, header .language-switcher, header .header-cta')
 			.evaluateAll((elements) =>
 				elements.map((element) => {
 					const rect = element.getBoundingClientRect();
@@ -109,21 +106,19 @@ test('desktop site header shares one row from 1024px and keeps a logical focus s
 		expect(centers).toHaveLength(4);
 		expect(
 			Math.max(...centers) - Math.min(...centers),
-			`${width}px: logo, navigation, language and CTA share one row`
+			`${width}px: logo, menu, language and CTA share one row`
 		).toBeLessThanOrEqual(1);
 	}
 	const logo = page.locator('header .brand');
 	await logo.focus();
-	for (const link of await page.locator('header nav a').all()) {
-		await page.keyboard.press('Tab');
-		await expect(link).toBeFocused();
-	}
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('button', { name: 'Bahasa Indonesia', exact: true })).toBeFocused();
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('button', { name: 'English', exact: true })).toBeFocused();
 	await page.keyboard.press('Tab');
 	await expect(page.getByTestId('theme-toggle')).toBeFocused();
+	await page.keyboard.press('Tab');
+	await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
 	await page.keyboard.press('Tab');
 	await expect(page.locator('header .header-cta')).toBeFocused();
 });

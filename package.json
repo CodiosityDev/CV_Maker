@@ -23,7 +23,8 @@
 		"test:watch": "vitest",
 		"test:e2e": "playwright test",
 		"size": "node scripts/check-size.mjs",
-		"verify": "pnpm check && pnpm lint && pnpm test && pnpm build && pnpm build:server && pnpm size"
+		"check:server": "node scripts/check-server.mjs",
+		"verify": "pnpm check && pnpm lint && pnpm test && pnpm build && pnpm build:server && pnpm check:server && pnpm size"
 	},
 	"engines": {
 		"node": ">=22"

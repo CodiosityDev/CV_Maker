@@ -163,7 +163,8 @@ for (const theme of ['light', 'dark'] as const) {
 						.getByRole('link')
 						.evaluateAll((links) => links.map((link) => link.getAttribute('href')));
 					expect(hrefs.indexOf(toolsUrl)).toBe(hrefs.indexOf('https://codiosity.com') - 1);
-					await fitsAndReceivesPointer(header, true);
+					// The open dropdown overlays the page below the header: check viewport + pointer only.
+					await fitsAndReceivesPointer(header);
 					if (locale === 'id' && width === initial.width)
 						await header.screenshot({
 							path: test.info().outputPath(`tools-header-${width}-${theme}.png`),

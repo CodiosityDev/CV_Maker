@@ -380,6 +380,21 @@ export function createAccountRoutes(deps: AccountDeps) {
 		send(res, 200, { user: publicUser(user) }, { 'Set-Cookie': await startSession(user.id) });
 	}
 
+	/** Changes the display name (also used to prefill "Nama lengkap" in new CVs). */
+	async function updateProfile(req: IncomingMessage) {
+		const user = await requireUser(req);
+		const body = asObject(await readJson(req, { maxBytes: SMALL_BODY }));
+		if (typeof body.name !== 'string') throw new HttpError(400, 'invalid');
+		// Same cleaning as CV text: no control characters, trimmed, length-limited.
+		const name = [...body.name]
+			.filter((char) => char.charCodeAt(0) >= 32)
+			.join('')
+			.trim()
+			.slice(0, ACCOUNT_LIMITS.nameMax);
+		await accounts.updateUser(user.id, { name });
+		return { user: publicUser({ ...user, name }) };
+	}
+
 	async function deleteAccount(req: IncomingMessage, res: ServerResponse) {
 		const user = await requireUser(req);
 		const body = asObject(await readJson(req, { maxBytes: SMALL_BODY }));
@@ -752,7 +767,11 @@ export function createAccountRoutes(deps: AccountDeps) {
 		return {
 			available: Boolean(drive),
 			connected: Boolean(link),
-			lastBackupAt: link?.lastBackupAt ? new Date(link.lastBackupAt).toISOString() : null
+			lastBackupAt: link?.lastBackupAt ? new Date(link.lastBackupAt).toISOString() : null,
+			/** Opens the backup file in the user's own Drive (only they can open it). */
+			fileUrl: link?.fileId
+				? `https://drive.google.com/file/d/${encodeURIComponent(link.fileId)}/view`
+				: null
 		};
 	}
 
@@ -839,6 +858,9 @@ export function createAccountRoutes(deps: AccountDeps) {
 						return true;
 					case 'POST /api/auth/delete':
 						await deleteAccount(req, res);
+						return true;
+					case 'POST /api/auth/profile':
+						send(res, 200, await updateProfile(req));
 						return true;
 				}
 				throw new HttpError(404, 'notFound');

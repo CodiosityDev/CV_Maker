@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { cvRepo, incognito, storage } from '#lib/core/storage/index.ts';
+	import { account } from '#lib/core/account/session.svelte.ts';
 	import type { CVKind, CVMeta } from '#lib/core/schema/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { i18n, t } from '#lib/i18n/index.svelte.ts';
@@ -71,12 +72,26 @@
 		};
 	});
 
+	/**
+	 * The account name for "Nama lengkap" (logged-in users only, never in incognito). Waits at most
+	 * 1.5 s for the server so creating a CV is never held up.
+	 */
+	async function accountName(): Promise<string> {
+		if (incognito.active || !account.hinted()) return '';
+		await Promise.race([account.load(), new Promise((done) => setTimeout(done, 1500))]);
+		return account.user?.name.trim() ?? '';
+	}
+
 	async function choose(kind: CVKind) {
 		if (creating) return;
 		creating = kind;
 		createError = false;
 		try {
-			const cv = await cvRepo.create({ kind, locale: i18n.locale });
+			const [cv, name] = await Promise.all([
+				cvRepo.create({ kind, locale: i18n.locale }),
+				accountName()
+			]);
+			if (name) await cvRepo.save({ ...cv, personal: { ...cv.personal, fullName: name } });
 			await goto(resolve('/(app)/buat/[id]', { id: cv.id }));
 		} catch {
 			createError = true;
