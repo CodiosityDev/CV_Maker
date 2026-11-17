@@ -19,7 +19,6 @@ const SESSIONS = 'cvmaker_sessions';
 const TOKENS = 'cvmaker_tokens';
 const SHARES = 'cvmaker_shares';
 const REPORTS = 'cvmaker_share_reports';
-const BACKUPS = 'cvmaker_backups';
 const DRIVE = 'cvmaker_drive';
 
 export const ACCOUNT_TABLES = [
@@ -74,15 +73,6 @@ export const ACCOUNT_TABLES = [
 		reason VARCHAR(16) NOT NULL,
 		created_at BIGINT NOT NULL,
 		KEY share_idx (share_id)
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
-	`CREATE TABLE IF NOT EXISTS ${BACKUPS} (
-		id CHAR(22) NOT NULL PRIMARY KEY,
-		user_id CHAR(22) NOT NULL,
-		created_at BIGINT NOT NULL,
-		bytes INT UNSIGNED NOT NULL,
-		cv_count SMALLINT UNSIGNED NOT NULL,
-		data LONGTEXT NOT NULL,
-		KEY user_created_idx (user_id, created_at)
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 	`CREATE TABLE IF NOT EXISTS ${DRIVE} (
 		user_id CHAR(22) NOT NULL PRIMARY KEY,
@@ -226,7 +216,6 @@ export async function mysqlAccountStore(
 			await pool.execute(`DELETE FROM ${SHARES} WHERE user_id = ?`, [id]);
 			await pool.execute(`DELETE FROM ${SESSIONS} WHERE user_id = ?`, [id]);
 			await pool.execute(`DELETE FROM ${TOKENS} WHERE user_id = ?`, [id]);
-			await pool.execute(`DELETE FROM ${BACKUPS} WHERE user_id = ?`, [id]);
 			await pool.execute(`DELETE FROM ${DRIVE} WHERE user_id = ?`, [id]);
 			await pool.execute(`DELETE FROM ${USERS} WHERE id = ?`, [id]);
 		},
@@ -362,39 +351,6 @@ export async function mysqlAccountStore(
 				reason,
 				at
 			]);
-		},
-		async backupsOf(userId) {
-			const [rows] = await pool.execute<Row[]>(
-				`SELECT id, created_at, bytes, cv_count FROM ${BACKUPS} WHERE user_id = ?
-				 ORDER BY created_at DESC, id DESC`,
-				[userId]
-			);
-			return rows.map((row) => ({
-				id: String(row.id),
-				createdAt: Number(row.created_at),
-				bytes: Number(row.bytes),
-				cvCount: Number(row.cv_count)
-			}));
-		},
-		async backup(userId, id) {
-			const row = await one(`SELECT data FROM ${BACKUPS} WHERE id = ? AND user_id = ?`, [
-				id,
-				userId
-			]);
-			return row ? String(row.data) : null;
-		},
-		async addBackup(userId, meta, json) {
-			await pool.execute(
-				`INSERT INTO ${BACKUPS} (id, user_id, created_at, bytes, cv_count, data) VALUES (?, ?, ?, ?, ?, ?)`,
-				[meta.id, userId, meta.createdAt, meta.bytes, meta.cvCount, json]
-			);
-		},
-		async deleteBackup(userId, id) {
-			await pool.execute(`DELETE FROM ${BACKUPS} WHERE id = ? AND user_id = ?`, [id, userId]);
-		},
-		async totalBackupBytes() {
-			const row = await one(`SELECT COALESCE(SUM(bytes), 0) AS total FROM ${BACKUPS}`, []);
-			return Number(row?.total ?? 0);
 		},
 		async driveLink(userId) {
 			const row = await one(`SELECT * FROM ${DRIVE} WHERE user_id = ?`, [userId]);

@@ -13,18 +13,10 @@
 	import type { ShareInfo } from '#lib/core/share/index.ts';
 	import { shareSync } from '#lib/core/share/publish.ts';
 	import { cvRepo, incognito, type ImportResult } from '#lib/core/storage/index.ts';
-	import {
-		backupClient,
-		driveClient,
-		driveConnectUrl,
-		type BackupInfo,
-		type BackupUsage,
-		type Result
-	} from '#lib/core/account/index.ts';
+	import { driveClient, driveConnectUrl, type Result } from '#lib/core/account/index.ts';
 	import {
 		autoBackup,
 		autoBackupEnabled,
-		backupNow,
 		backupToDrive,
 		restoreFrom,
 		setAutoBackupEnabled
@@ -35,8 +27,6 @@
 	import Toggle from '#lib/ui/Toggle.svelte';
 	import { toast } from '#lib/ui/toast.svelte.ts';
 
-	let backups = $state.raw<BackupInfo[]>([]);
-	let usage = $state.raw<BackupUsage>();
 	let autoOn = $state(autoBackupEnabled());
 	let drive = $state.raw<{ available: boolean; connected: boolean; lastBackupAt: string | null }>();
 	let working = $state<string>();
@@ -48,23 +38,8 @@
 			timeStyle: 'short'
 		})
 	);
-	function size(bytes: number): string {
-		const units = ['B', 'KB', 'MB', 'GB'];
-		let value = bytes;
-		let unit = 0;
-		while (value >= 1024 && unit < units.length - 1) {
-			value /= 1024;
-			unit += 1;
-		}
-		return `${new Intl.NumberFormat(i18n.locale === 'id' ? 'id-ID' : 'en-GB', { maximumFractionDigits: 1 }).format(value)} ${units[unit]}`;
-	}
-
 	async function loadBackups() {
-		const [list, status] = await Promise.all([backupClient.list(), driveClient.status()]);
-		if (list.ok) {
-			backups = list.data.backups;
-			usage = list.data.usage;
-		}
+		const status = await driveClient.status();
 		if (status.ok) drive = status.data;
 	}
 
@@ -88,7 +63,6 @@
 	function restored(result: ImportResult) {
 		if (result.imported) toast.success(t('backup.restored', { count: result.imported }));
 		else toast.info(t('backup.restoredNone'));
-		if (result.limited) toast.info(t('cvLimit.restoreLimited', { count: result.limited }));
 		void cvRepo.list().then((list) => (cvs = list));
 	}
 
@@ -233,73 +207,6 @@
 		</section>
 
 		{#if !incognito.active}
-			<section class="card" aria-labelledby="backup-title" data-testid="backup-section">
-				<h2 id="backup-title">{t('backup.title')}</h2>
-				<p class="muted">{t('backup.intro')}</p>
-				<Toggle label={t('backup.auto')} hint={t('backup.autoHint')} bind:checked={autoOn} />
-				<div class="row">
-					<Button
-						loading={working === 'now'}
-						disabled={Boolean(working)}
-						onclick={() =>
-							act('now', backupNow, (data) => {
-								toast.success(t('backup.saved'));
-								usage = data.usage;
-								backups = [data.backup, ...backups.filter((b) => b.id !== data.backup.id)];
-							})}>{t('backup.now')}</Button
-					>
-				</div>
-				{#if usage}<p class="muted">
-						{t('backup.usage', { used: size(usage.used), limit: size(usage.limit) })}
-					</p>{/if}
-				{#if !backups.length}
-					<p class="muted">{t('backup.empty')}</p>
-				{:else}
-					<ul class="shares">
-						{#each backups as item (item.id)}
-							<li>
-								<span
-									>{t('backup.item', {
-										date: dateTime.format(new Date(item.createdAt)),
-										count: item.cvCount,
-										size: size(item.bytes)
-									})}</span
-								>
-								<div class="row">
-									<Button
-										variant="secondary"
-										size="sm"
-										disabled={Boolean(working)}
-										loading={working === `restore-${item.id}`}
-										onclick={() =>
-											act(
-												`restore-${item.id}`,
-												async () => restoreFrom(await backupClient.get(item.id)),
-												restored
-											)}>{t('backup.restore')}</Button
-									>
-									<Button
-										variant="ghost"
-										size="sm"
-										disabled={Boolean(working)}
-										onclick={() =>
-											act(
-												`delete-${item.id}`,
-												() => backupClient.remove(item.id),
-												(next) => {
-													usage = next;
-													backups = backups.filter((b) => b.id !== item.id);
-													toast.success(t('backup.deleted'));
-												}
-											)}>{t('backup.delete')}</Button
-									>
-								</div>
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</section>
-
 			<section class="card" aria-labelledby="drive-title" data-testid="drive-section">
 				<h2 id="drive-title">{t('backup.driveTitle')}</h2>
 				<p class="muted">{t('backup.driveIntro')}</p>
@@ -314,6 +221,7 @@
 						>
 					</div>
 				{:else}
+					<Toggle label={t('backup.auto')} hint={t('backup.autoHint')} bind:checked={autoOn} />
 					{#if drive.lastBackupAt}<p class="muted">
 							{t('backup.driveLast', { date: dateTime.format(new Date(drive.lastBackupAt)) })}
 						</p>{/if}

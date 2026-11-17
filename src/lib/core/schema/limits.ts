@@ -2,13 +2,6 @@
  * Length/count limits (PROJECT_SPEC §5.1). Use these for `maxlength` and counters in the UI;
  * the schema truncates anything longer when data is loaded or imported.
  */
-/**
- * CVs per browser (owner decision 2026-11-17), logged in or not, incognito included. More need
- * deleting one (a paid plan is planned). Browsers that already hold more keep them all; only NEW
- * CVs are refused. Enforced by cvRepo (create, duplicate, save of a new id) and backup import.
- */
-export const MAX_CVS = 3;
-
 export const LIMITS = {
 	fullName: 100,
 	headline: 120,

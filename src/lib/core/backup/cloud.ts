@@ -1,21 +1,21 @@
 /**
- * Cloud backup for logged-in users (owner: on by default when logged in; Google Drive is a free
- * extra). Guests are never affected: their CVs stay only in this browser. Never runs in incognito.
+ * Backups for logged-in users go ONLY to the user's own Google Drive (owner decision
+ * 2026-11-17): the VPS stores shared CVs only. Guests are never affected — their CVs stay in this
+ * browser — and nothing runs in incognito.
  *
- *   await backupNow();                         // "Cadangkan sekarang"
- *   const result = await restoreFrom(file);    // file from backupClient.get / driveClient.restore
- *   autoBackup.changed();                      // after each editor save (cheap when not logged in)
+ *   await backupToDrive();                     // "Simpan ke Drive"
+ *   const result = await restoreFrom(await driveClient.restore());
+ *   autoBackup.changed();                      // after each editor save (no-op unless logged in)
  *
- * A backup is the same file format as backupRepo.export() and holds at most MAX_CVS CVs (the
- * newest ones); the server cleans it again before storing it.
+ * A backup is the backupRepo.export() file of all CVs; the server cleans it again before it is
+ * sent to Drive.
  */
-import { backupClient, driveClient, type Result } from '../account/index';
+import { driveClient, type Result } from '../account/index';
 import {
 	ACCOUNT_HINT_STORAGE_KEY,
 	AUTO_BACKUP_STORAGE_KEY,
 	LAST_BACKUP_STORAGE_KEY
 } from '../account/hint';
-import { MAX_CVS } from '../schema/limits';
 import { backupRepo, cvRepo, incognito, type ImportResult } from '../storage/index';
 
 /** Automatic backups: at most this often (and only after a change). */
@@ -39,7 +39,7 @@ function write(key: string, value: string | null): void {
 	}
 }
 
-/** Default ON for logged-in users. */
+/** Default ON once Google Drive is connected. */
 export function autoBackupEnabled(): boolean {
 	return read(AUTO_BACKUP_STORAGE_KEY) !== '0';
 }
@@ -48,30 +48,19 @@ export function setAutoBackupEnabled(enabled: boolean): void {
 	write(AUTO_BACKUP_STORAGE_KEY, enabled ? null : '0');
 }
 
-/** When the last automatic/manual backup from this browser ran (ISO), if any. */
-export function lastBackupAt(): string | null {
-	try {
-		const data = JSON.parse(read(LAST_BACKUP_STORAGE_KEY) ?? 'null') as { at?: unknown } | null;
-		return typeof data?.at === 'string' ? data.at : null;
-	} catch {
-		return null;
-	}
-}
-
-/** The backup file of the newest MAX_CVS CVs (parsed), plus the newest change time. */
+/** The backup file of all CVs on this device (parsed), plus the newest change time. */
 async function backupFile(): Promise<{ file: unknown; latest: string } | null> {
 	const list = await cvRepo.list();
 	if (!list.length) return null;
-	const newest = list.slice(0, MAX_CVS);
-	const blob = await backupRepo.export(newest.map((cv) => cv.id));
-	return { file: JSON.parse(await blob.text()) as unknown, latest: newest[0]!.updatedAt };
+	const blob = await backupRepo.export();
+	return { file: JSON.parse(await blob.text()) as unknown, latest: list[0]!.updatedAt };
 }
 
-/** Uploads a backup to the user's account on this server. */
-export async function backupNow() {
+/** Saves the backup file to the user's Google Drive (must be connected). */
+export async function backupToDrive() {
 	const data = await backupFile();
 	if (!data) return { ok: false, error: 'invalid' } as const;
-	const result = await backupClient.create(data.file);
+	const result = await driveClient.save(data.file);
 	if (result.ok)
 		write(
 			LAST_BACKUP_STORAGE_KEY,
@@ -80,14 +69,7 @@ export async function backupNow() {
 	return result;
 }
 
-/** Saves the backup file to the user's Google Drive (must be connected). */
-export async function backupToDrive() {
-	const data = await backupFile();
-	if (!data) return { ok: false, error: 'invalid' } as const;
-	return driveClient.save(data.file);
-}
-
-/** Restores a backup file into this browser (respects MAX_CVS; existing ids become copies). */
+/** Restores a backup file into this browser (existing ids are added as copies). */
 export async function restoreFrom(file: Result<unknown>): Promise<Result<ImportResult>> {
 	if (!file.ok) return file;
 	try {
@@ -103,7 +85,7 @@ export async function restoreFrom(file: Result<unknown>): Promise<Result<ImportR
 let timer: ReturnType<typeof setTimeout> | undefined;
 let running = false;
 
-/** Automatic backups while logged in (decided without contacting the server for guests). */
+/** Automatic Drive backups while logged in (no request at all for guests). */
 export const autoBackup = {
 	/** Call after an editor save: backs up a couple of minutes later if due. */
 	changed(): void {
@@ -118,7 +100,10 @@ export const autoBackup = {
 	possible(): boolean {
 		return !incognito.active && read(ACCOUNT_HINT_STORAGE_KEY) === '1' && autoBackupEnabled();
 	},
-	/** Backs up now when something changed since the last backup and the interval has passed. */
+	/**
+	 * Saves to Drive when something changed since the last backup, the interval has passed and
+	 * Drive is connected. Returns true when a backup was made.
+	 */
 	async check(now: number = Date.now()): Promise<boolean> {
 		if (running || !this.possible()) return false;
 		running = true;
@@ -131,11 +116,12 @@ export const autoBackup = {
 			} catch {
 				last = {};
 			}
-			const latest = list[0]!.updatedAt;
 			const lastAt = last.at ? Date.parse(last.at) : 0;
-			if (last.latest === latest || now - lastAt < AUTO_BACKUP_INTERVAL_MS) return false;
-			const result = await backupNow();
-			return result.ok;
+			if (last.latest === list[0]!.updatedAt || now - lastAt < AUTO_BACKUP_INTERVAL_MS)
+				return false;
+			const status = await driveClient.status();
+			if (!status.ok || !status.data.connected) return false;
+			return (await backupToDrive()).ok;
 		} finally {
 			running = false;
 		}

@@ -3,11 +3,11 @@ import type { PrivacyMessages } from '../translate';
 
 export const privacyEn: PrivacyMessages = {
 	privacy: {
-		backupTitle: 'Backups (accounts only)',
+		backupTitle: 'Backups in Google Drive (accounts only)',
 		backupCopy:
-			'If you are signed in, a copy of your newest 3 CVs at most (including cover letters and photos) is backed up automatically to the CV Maker server after changes; you can turn this off on the Account page. The last few versions are kept and older ones are deleted automatically. Without an account, nothing is backed up.',
+			'The CV Maker server only stores the CVs you share (at most 3). Other CVs are never backed up to the server. If you sign in and connect Google Drive, a backup file of all your CVs (including cover letters and photos) is saved in your own Drive, automatically after changes unless you turn that off.',
 		driveCopy:
-			'If you connect Google Drive, the backup file is saved in your own Drive. CV Maker only asks for access to files it creates and cannot read anything else in your Drive. The access token is stored encrypted, the backup file only passes through the server on its way, and you can disconnect at any time.',
+			'CV Maker only asks for access to files it creates and cannot read anything else in your Drive. The access token is stored encrypted, the backup file only passes through the server on its way, and you can disconnect at any time.',
 		accountTitle: 'Account (optional)',
 		accountCopy:
 			'You only need an account to share a CV by link. The server stores your email, your name (if given), a password hash (never the password) or your Google account ID, and login sessions as hashes. Google sign-in only asks for your name and email. Your email is only used to confirm it and to reset your password. Sessions use one essential HttpOnly cookie that is only sent to this site.',

@@ -7,7 +7,6 @@
  * - CV id already on this device → imported as a copy with a new id (never overwrites)
  */
 import { newId } from '../schema/ids';
-import { MAX_CVS } from '../schema/limits';
 import { loadCvDocument } from '../schema/migrations';
 import { sniffImageType } from '../security/image-type';
 import { processPhoto } from '../security/photo';
@@ -62,8 +61,6 @@ export interface ImportResult {
 	copied: number;
 	/** Ids of the CVs as stored on this device (for "open" links). */
 	ids: string[];
-	/** Readable CVs NOT restored because this device already holds MAX_CVS (delete some first). */
-	limited: number;
 }
 
 export interface BackupRepository {
@@ -221,20 +218,13 @@ export function createBackupRepository(
 			}
 			const storedAssets = new Map<string, string>();
 
-			const result: ImportResult = { imported: 0, skipped: 0, copied: 0, ids: [], limited: 0 };
-			// Free slots under MAX_CVS (owner: 3 CVs per browser); the rest is reported, not stored.
-			let slots = Math.max(0, MAX_CVS - existing.size);
+			const result: ImportResult = { imported: 0, skipped: 0, copied: 0, ids: [] };
 			for (const raw of parsed.cvs.slice(0, BACKUP_LIMITS.maxCvs)) {
 				const loaded = loadCvDocument(raw);
 				if (!loaded.ok) {
 					result.skipped += 1;
 					continue;
 				}
-				if (slots <= 0) {
-					result.limited += 1;
-					continue;
-				}
-				slots -= 1;
 				const cv = loaded.cv;
 				if (existing.has(cv.id)) {
 					cv.id = newId();

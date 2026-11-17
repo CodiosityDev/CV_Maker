@@ -9,7 +9,7 @@ import {
 } from '../account/hint';
 import { createEmptyCv } from '../schema/defaults';
 import { newId } from '../schema/ids';
-import { LIMITS, MAX_CVS } from '../schema/limits';
+import { LIMITS } from '../schema/limits';
 import { loadCvDocument } from '../schema/migrations';
 import { toCvMeta } from '../schema/meta';
 import { cleanText } from '../schema/schema';
@@ -22,30 +22,14 @@ import { broadcast } from './sync';
  * The ONLY way UI code reads/writes CVs (PROJECT_SPEC §6).
  * Phase 2 (cloud sync) will provide another implementation of this interface.
  */
-/** Thrown when a NEW CV would exceed MAX_CVS on this device. Show `cvLimit.*` messages. */
-export class CvLimitError extends Error {
-	readonly code = 'limit';
-	constructor() {
-		super('cv limit reached');
-		this.name = 'CvLimitError';
-	}
-}
-
 export interface CvRepository {
 	/** All CVs on this device, most recently updated first. */
 	list(): Promise<CVMeta[]>;
-	/** How many more CVs can be created here (0 = limit reached; MAX_CVS). */
-	remaining(): Promise<number>;
 	/** `null` if not found or unreadable. Old schema versions are migrated (and re-saved) transparently. */
 	get(id: string): Promise<CVDocument | null>;
-	/** Throws CvLimitError when MAX_CVS CVs already exist. */
 	create(init: { kind: CVKind; locale: Locale; title?: string }): Promise<CVDocument>;
-	/**
-	 * Pass a PLAIN object (`$state.snapshot(cv)`), not a reactive proxy. Does not touch `updatedAt`.
-	 * Saving a NEW id throws CvLimitError when MAX_CVS CVs already exist; existing CVs always save.
-	 */
+	/** Pass a PLAIN object (`$state.snapshot(cv)`), not a reactive proxy. Does not touch `updatedAt`. */
 	save(doc: CVDocument): Promise<void>;
-	/** Throws CvLimitError when MAX_CVS CVs already exist. */
 	duplicate(id: string): Promise<CVDocument | null>;
 	rename(id: string, title: string): Promise<void>;
 	/** Deletes the CV and its photo (unless another CV still uses that photo). */
@@ -168,12 +152,6 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 	}
 
 	async function put(backend: StorageBackend, doc: CVDocument): Promise<void> {
-		if (
-			(await backend.getCv(doc.id)) === undefined &&
-			(await backend.getAllCvs()).length >= MAX_CVS
-		) {
-			throw new CvLimitError();
-		}
 		await backend.putCv(doc);
 		broadcast({ type: 'cv-saved', id: doc.id, updatedAt: doc.updatedAt });
 	}
@@ -182,10 +160,6 @@ export function createRepositories(getBackend: () => Promise<StorageBackend>): {
 		async list() {
 			const docs = await loadAll(await getBackend());
 			return docs.map(toCvMeta).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-		},
-
-		async remaining() {
-			return Math.max(0, MAX_CVS - (await (await getBackend()).getAllCvs()).length);
 		},
 
 		async get(id) {

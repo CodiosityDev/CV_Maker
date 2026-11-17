@@ -4,14 +4,7 @@
 	import { resolve } from '$app/paths';
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
-	import {
-		CvLimitError,
-		cvRepo,
-		incognito,
-		storage,
-		onExternalChange
-	} from '#lib/core/storage/index.ts';
-	import { MAX_CVS } from '#lib/core/schema/limits.ts';
+	import { cvRepo, incognito, storage, onExternalChange } from '#lib/core/storage/index.ts';
 	import { ACCOUNT_HINT_STORAGE_KEY } from '#lib/core/account/hint.ts';
 	import { homeRecentEnabled, setHomeRecentEnabled } from '#lib/core/home/index.ts';
 	import { loadSuggestions, type SuggestionData } from '#lib/core/suggest/index.ts';
@@ -350,10 +343,8 @@
 			if (!active) return;
 			toast[copy ? 'success' : 'info'](t(copy ? 'dashboard.duplicated' : 'dashboard.missing'));
 			await refresh();
-		} catch (error) {
-			if (!active) return;
-			if (error instanceof CvLimitError) toast.info(t('cvLimit.body'));
-			else toast.error(t('dashboard.actionError'));
+		} catch {
+			if (active) toast.error(t('dashboard.actionError'));
 		} finally {
 			if (active) busy = false;
 		}
@@ -485,12 +476,6 @@
 		<Button href="/buat">{t('dashboard.create')}</Button>
 	</div>
 	{#if !incognito.active}<p class="local-note">{t('dashboard.localNote')}</p>{/if}
-	{#if !loading && cvs.length}
-		<p class="cv-count" class:full={cvs.length >= MAX_CVS} data-testid="cv-count">
-			{t('cvLimit.count', { count: cvs.length, max: MAX_CVS })}{#if cvs.length >= MAX_CVS}
-				· {t('cvLimit.paid')}{/if}
-		</p>
-	{/if}
 	{#if memory}<p class="memory-warning" role="status">{t('dashboard.memoryWarning')}</p>{/if}
 	{#if incognito.active && incognito.expiredAt}
 		<p class="session-notice" role="status">{t('incognito.expiredMessage')}</p>
@@ -750,15 +735,6 @@
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 		line-height: 1.7;
-	}
-	.cv-count {
-		margin-top: 12px;
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
-	}
-	.cv-count.full {
-		color: var(--color-brand-ink);
-		font-weight: 600;
 	}
 	.session-label {
 		margin-top: 4px;
