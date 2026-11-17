@@ -829,6 +829,8 @@ export const appEn: AppMessages = {
 		checkAts: 'Check ATS',
 		pageTitle: 'My CVs — CV Maker',
 		title: 'My CVs',
+		homeRecent: 'Show my CVs on the home page',
+		homeRecentHint: 'Turn this off if other people use this computer.',
 		localNote:
 			'Your CVs are stored only in this browser. Clearing browser data also deletes your CVs — download PDF/Word files for your records.',
 		memoryWarning:

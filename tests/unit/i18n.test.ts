@@ -14,6 +14,8 @@ import { siteId } from '../../src/lib/i18n/messages/site.id';
 import { siteEn } from '../../src/lib/i18n/messages/site.en';
 import { appId } from '../../src/lib/i18n/messages/app.id';
 import { appEn } from '../../src/lib/i18n/messages/app.en';
+import { homeId } from '../../src/lib/i18n/messages/home.id';
+import { homeEn } from '../../src/lib/i18n/messages/home.en';
 import { isLocale } from '../../src/lib/i18n/types';
 
 function leafKeys(node: unknown, prefix = ''): string[] {
@@ -26,7 +28,8 @@ function leafKeys(node: unknown, prefix = ''): string[] {
 const PARTS = {
 	base: { id, en },
 	site: { id: siteId, en: siteEn },
-	app: { id: appId, en: appEn }
+	app: { id: appId, en: appEn },
+	home: { id: homeId, en: homeEn }
 };
 
 describe('i18n dictionaries', () => {

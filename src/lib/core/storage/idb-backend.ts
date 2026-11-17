@@ -1,8 +1,9 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { CVDocument } from '../schema/types';
 import type { StorageBackend, StoredAsset } from './backend';
+import { DB_NAME } from './db-name';
 
-export const DB_NAME = 'cvmaker';
+export { DB_NAME };
 const DB_VERSION = 1;
 
 interface CvMakerDB extends DBSchema {

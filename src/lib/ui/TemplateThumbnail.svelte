@@ -5,7 +5,18 @@
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import { preventPreviewNavigation } from './prevent-preview-navigation.ts';
 
-	let { meta, model }: { meta: TemplateMeta; model: RenderModel } = $props();
+	let {
+		meta,
+		model,
+		loadingLabel,
+		errorLabel
+	}: {
+		meta: TemplateMeta;
+		model: RenderModel;
+		/** Override for pages without the `app` i18n namespace (e.g. the home page). */
+		loadingLabel?: string;
+		errorLabel?: string;
+	} = $props();
 	let frame = $state<HTMLDivElement>();
 	let visible = $state(false);
 	let scale = $state(0);
@@ -71,7 +82,9 @@
 			<Template model={thumbnailModel} />
 		</div>
 	{:else}<span
-			>{t(failed ? 'templatePicker.thumbnailError' : 'templatePicker.thumbnailLoading')}</span
+			>{failed
+				? (errorLabel ?? t('templatePicker.thumbnailError'))
+				: (loadingLabel ?? t('templatePicker.thumbnailLoading'))}</span
 		>{/if}
 </div>
 
