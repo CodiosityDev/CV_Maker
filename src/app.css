@@ -340,3 +340,23 @@ main:focus {
 		scroll-behavior: auto !important;
 	}
 }
+
+/* Banner ad slot (ui/ad-banner.ts): 0 px and invisible until the ad page reports a real banner. */
+.ad-slot {
+	display: flex;
+	justify-content: center;
+	height: 0;
+	overflow: hidden;
+	padding-inline: 16px;
+}
+.ad-slot.filled {
+	height: auto;
+	margin-block: 24px;
+}
+.ad-slot iframe {
+	display: block;
+	width: 100%;
+	max-width: 728px;
+	border: 0;
+	color-scheme: normal;
+}

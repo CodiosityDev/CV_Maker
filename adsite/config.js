@@ -4,6 +4,9 @@
 // Empty → the page says "no ad available right now" (safe default until Ad Manager is ready).
 window.CVMAKER_AD = {
 	adUnitPath: '',
+	// Small banner (Ad Manager display unit) on the CV Maker home page bottom, FAQ and About,
+	// shown in an iframe (banner.html). Empty → no banner (the frame stays closed).
+	bannerUnitPath: '',
 	apiOrigin: 'https://cvmaker.codiosity.com',
 	appUrl: 'https://cvmaker.codiosity.com/cv',
 	// Must match AI_REWARD_MIN_SECONDS on the server.

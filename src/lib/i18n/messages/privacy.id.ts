@@ -35,7 +35,7 @@ export const privacyId = {
 			'Bantuan AI bersifat opsional, hanya dipanggil setelah tombol diklik dan kamu memberi persetujuan. Posisi tujuan, pendidikan dan nilai, pengalaman, organisasi, proyek, skill, sertifikasi, ringkasan, serta bahasa CV dikirim melalui server CV Maker ke penyedia AI pihak ketiga. Nama, email, telepon, kota, link, dan foto tidak dikirim. Isi CV tidak disimpan di server. Penghitung jatah anonim disimpan selama 7 hari.',
 		adsTitle: 'Iklan',
 		adsCopy:
-			'Iklan hanya dibuka di tab terpisah pada iklan.codiosity.com jika kamu memilih menonton iklan untuk tambahan jatah AI. Iklan disediakan Google Ad Manager dan tidak dipersonalisasi. Halaman iklan tidak dapat melihat isi CV-mu. Halaman CV Maker sendiri tidak memuat script iklan.',
+			'Banner iklan kecil hanya tampil di bagian bawah beranda serta di halaman FAQ dan Tentang. Banner dimuat dari iklan.codiosity.com di dalam bingkai terpisah, sehingga script iklan tidak bisa membaca halaman CV Maker. Editor, Buat CV, Cek ATS, halaman cetak, dan CV yang dibagikan tidak memuat iklan. Iklan untuk tambahan jatah AI hanya dibuka di tab terpisah jika kamu memilih menontonnya. Iklan disediakan Google Ad Manager dan tidak dipersonalisasi.',
 		visitorsCopy:
 			'Untuk menghitung pengunjung, browser menyimpan ID acak tanpa nama atau data CV dan tanpa cookie. Penghitung di server hanya menyimpan hash dari ID dan alamat IP, bukan ID atau IP aslinya. ID di browser ikut dihapus saat kamu memilih Hapus semua data. Dalam Mode Incognito, ID hanya ada di memori tab dan tidak disimpan di browser.',
 		photoTitle: 'Foto dan metadata lokasi',
