@@ -90,3 +90,27 @@ test('the strip follows the UI language', async ({ page }) => {
 	await page.reload();
 	await expect(page.getByRole('heading', { name: 'Continue your CV', level: 2 })).toBeVisible();
 });
+
+test('a CV can be deleted from the home page after confirming', async ({ page }, testInfo) => {
+	await createCv(page);
+	await page.goto('/');
+	const card = page.getByTestId('home-recent-card');
+	await expect(card).toHaveCount(1);
+	const remove = card.getByRole('button', { name: `Hapus ${cvTitle}`, exact: true });
+	await remove.click();
+	const confirm = card.getByRole('group', { name: /Hapus CV ini dari perangkat ini/ });
+	await expect(confirm).toBeVisible();
+	await page.screenshot({ path: testInfo.outputPath('home-delete-confirm.png') });
+	// Cancel keeps the CV and returns focus to the delete button.
+	await confirm.getByRole('button', { name: 'Batal', exact: true }).click();
+	await expect(confirm).toHaveCount(0);
+	await expect(remove).toBeFocused();
+	await remove.click();
+	await card.getByRole('button', { name: 'Hapus', exact: true }).click();
+	await expect(page.getByText('CV dihapus.')).toBeVisible();
+	// It was the only CV: the strip disappears and the landing page stays.
+	await expect(page.getByTestId('home-recent')).toHaveCount(0);
+	await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+	await page.goto('/cv');
+	await expect(page.getByTestId('dashboard-empty')).toBeVisible();
+});

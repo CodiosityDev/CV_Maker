@@ -12,7 +12,8 @@
 	import { formatEdited, setHomeRecentEnabled } from '#lib/core/home/index.ts';
 	import { loadRecentCvs, type RecentCv, type RecentCvList } from '#lib/core/home/recent.ts';
 	import type { CVMeta } from '#lib/core/schema/types.ts';
-	import { onExternalChange } from '#lib/core/storage/index.ts';
+	import { cvRepo, onExternalChange } from '#lib/core/storage/index.ts';
+	import { toast } from '#lib/ui/toast.svelte.ts';
 	import { i18n, t } from '#lib/i18n/index.svelte.ts';
 	import { resolveTemplate } from '#lib/templates/registry.ts';
 	import TemplateThumbnail from '#lib/ui/TemplateThumbnail.svelte';
@@ -22,6 +23,10 @@
 	let hidden = $state(false);
 	let now = $state(Date.now());
 	let showButton = $state<HTMLButtonElement>();
+	let heading = $state<HTMLHeadingElement>();
+	/** Card asking "Hapus CV ini?" (its CV id). */
+	let confirming = $state<string>();
+	let deleting = $state(false);
 	let current: RecentCvList | undefined;
 	let request = 0;
 	let active = true;
@@ -73,6 +78,36 @@
 		return t('homeRecent.edited', { time: formatEdited(updatedAt, i18n.locale, now) });
 	}
 
+	async function askDelete(id: string) {
+		confirming = id;
+		await tick();
+		document.getElementById(`cancel-${id}`)?.focus();
+	}
+
+	async function cancelDelete(id: string) {
+		confirming = undefined;
+		await tick();
+		document.getElementById(`delete-${id}`)?.focus();
+	}
+
+	async function remove(id: string) {
+		if (deleting) return;
+		deleting = true;
+		try {
+			await cvRepo.remove(id);
+			confirming = undefined;
+			items = items.filter((item) => item.meta.id !== id);
+			toast.success(t('homeRecent.deleted'));
+			await refresh();
+			await tick();
+			heading?.focus();
+		} catch {
+			toast.error(t('homeRecent.deleteFailed'));
+		} finally {
+			deleting = false;
+		}
+	}
+
 	async function hide() {
 		setHomeRecentEnabled(false);
 		hidden = true;
@@ -97,7 +132,7 @@
 	<section class="recent" aria-labelledby="recent-title" data-testid="home-recent">
 		<div class="site-container">
 			<div class="recent-heading">
-				<h2 id="recent-title">{t('homeRecent.title')}</h2>
+				<h2 id="recent-title" tabindex="-1" bind:this={heading}>{t('homeRecent.title')}</h2>
 				<a class="view-all" href={resolve('/(app)/cv')}>{t('homeRecent.viewAll')}</a>
 			</div>
 			<ul class="grid">
@@ -124,6 +159,45 @@
 						</p>
 						{#if !meta.wizardCompleted}
 							<p class="unfinished">{t('homeRecent.unfinished')}</p>
+						{/if}
+						<button
+							type="button"
+							class="delete-button"
+							id="delete-{meta.id}"
+							aria-label={t('homeRecent.delete', { title: meta.title || t('homeRecent.untitled') })}
+							title={t('homeRecent.delete', { title: meta.title || t('homeRecent.untitled') })}
+							onclick={() => askDelete(meta.id)}
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.75"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+								><path
+									d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"
+								/></svg
+							>
+						</button>
+						{#if confirming === meta.id}
+							<div class="confirm" role="group" aria-label={t('homeRecent.confirm')}>
+								<p>{t('homeRecent.confirm')}</p>
+								<button
+									type="button"
+									class="confirm-delete"
+									disabled={deleting}
+									onclick={() => remove(meta.id)}>{t('homeRecent.confirmDelete')}</button
+								>
+								<button
+									type="button"
+									class="confirm-cancel"
+									id="cancel-{meta.id}"
+									disabled={deleting}
+									onclick={() => cancelDelete(meta.id)}>{t('homeRecent.cancel')}</button
+								>
+							</div>
 						{/if}
 					</li>
 				{/each}
@@ -234,6 +308,83 @@
 	}
 	.card:hover .card-link {
 		text-decoration: underline;
+	}
+	h2:focus {
+		outline: none;
+	}
+	h2:focus-visible {
+		outline: 3px solid var(--color-focus);
+		outline-offset: 4px;
+	}
+	/* Above the card's stretched link. */
+	.delete-button {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		z-index: 2;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		color: var(--color-text-muted);
+		cursor: pointer;
+		box-shadow: var(--shadow-card);
+	}
+	.delete-button:hover,
+	.delete-button:focus-visible {
+		border-color: var(--color-danger);
+		color: var(--color-danger);
+	}
+	.delete-button svg {
+		width: 20px;
+		height: 20px;
+	}
+	.confirm {
+		position: absolute;
+		inset: 0 0 auto;
+		z-index: 3;
+		display: grid;
+		gap: 8px;
+		aspect-ratio: 210 / 297;
+		align-content: center;
+		padding: 16px;
+		border: 1px solid var(--color-danger);
+		border-radius: 6px;
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
+	}
+	.confirm p {
+		color: var(--color-text);
+		font-size: 0.875rem;
+		font-weight: 600;
+		line-height: 1.5;
+	}
+	.confirm button {
+		min-height: 44px;
+		border-radius: var(--radius-md);
+		font: inherit;
+		font-size: 0.875rem;
+		font-weight: 650;
+		cursor: pointer;
+	}
+	/* Same colours as the app's danger button (readable in both themes). */
+	.confirm-delete {
+		border: 0;
+		background: var(--color-coral);
+		color: var(--color-on-brand);
+	}
+	.confirm-cancel {
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		color: var(--color-text);
+	}
+	.confirm button:disabled {
+		opacity: 0.6;
+		cursor: wait;
 	}
 	.card-meta,
 	.unfinished {
