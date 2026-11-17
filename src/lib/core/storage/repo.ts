@@ -2,6 +2,7 @@ import { UI_LOCALE_STORAGE_KEY } from '../../i18n/types';
 import { AI_DEVICE_STORAGE_KEY } from '../ai/types';
 import { VISITOR_STORAGE_KEY } from '../stats/types';
 import { HOME_RECENT_STORAGE_KEY } from '../home/index';
+import { ACCOUNT_HINT_STORAGE_KEY } from '../account/hint';
 import { createEmptyCv } from '../schema/defaults';
 import { newId } from '../schema/ids';
 import { LIMITS } from '../schema/limits';
@@ -81,7 +82,8 @@ export const LOCAL_STORAGE_KEYS = [
 	UI_LOCALE_STORAGE_KEY,
 	AI_DEVICE_STORAGE_KEY,
 	VISITOR_STORAGE_KEY,
-	HOME_RECENT_STORAGE_KEY
+	HOME_RECENT_STORAGE_KEY,
+	ACCOUNT_HINT_STORAGE_KEY
 ] as const;
 
 /** `personal.photoAssetId` of an untrusted stored record, if it is a string. */

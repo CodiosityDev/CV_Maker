@@ -21,7 +21,15 @@ export type QuotaScope =
 	| 'visitip'
 	| 'lite'
 	| 'liteip'
-	| 'liteall';
+	| 'liteall'
+	// Accounts (scope column is VARCHAR(8)).
+	| 'login'
+	| 'loginbad'
+	| 'register'
+	| 'mail'
+	| 'mailip'
+	| 'sharepw'
+	| 'report';
 
 /** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */
 export type TotalName = 'visitors';

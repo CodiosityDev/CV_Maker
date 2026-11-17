@@ -27,6 +27,7 @@
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ChatProvider } from './ai';
+import { assertSameOrigin, clientIp, HttpError, readJson, send } from './http';
 import type { ServerConfig } from './config';
 import {
 	ipSubject,
@@ -51,9 +52,8 @@ import {
 import { createJobStore } from './jobs';
 import { createPresence } from './presence';
 import { parseAiLiteRequest, parseAiRequest } from '../../src/lib/core/ai/schema';
-import type { AiErrorCode, AiQuota, AiRequest, AiResult } from '../../src/lib/core/ai/types';
+import type { AiQuota, AiRequest, AiResult } from '../../src/lib/core/ai/types';
 
-const MAX_BODY_BYTES = 32 * 1024;
 /** A ticket older than this cannot be claimed (the ad tab was left open too long). */
 const TICKET_MAX_AGE_MS = 30 * 60 * 1000;
 /** Short-term burst limit per IP (in memory): requests per minute. */
@@ -76,64 +76,10 @@ export interface AppDeps {
 	liteProvider?: ChatProvider;
 	now?: () => number;
 	log?: (entry: Record<string, unknown>) => void;
-}
-
-class HttpError extends Error {
-	constructor(
-		readonly status: number,
-		readonly code: AiErrorCode,
-		readonly quota?: AiQuota
-	) {
-		super(code);
-	}
-}
-
-function send(
-	res: ServerResponse,
-	status: number,
-	body: unknown,
-	headers: Record<string, string> = {}
-): void {
-	const json = JSON.stringify(body);
-	res.writeHead(status, {
-		'Content-Type': 'application/json; charset=utf-8',
-		'Content-Length': Buffer.byteLength(json),
-		'Cache-Control': 'no-store',
-		'X-Content-Type-Options': 'nosniff',
-		...headers
-	});
-	res.end(json);
-}
-
-/** Client IP: nginx sets X-Real-IP (Cloudflare's CF-Connecting-IP after real_ip). */
-function clientIp(req: IncomingMessage): string {
-	const header = req.headers['x-real-ip'];
-	const value = Array.isArray(header) ? header[0] : header;
-	return value?.trim() || req.socket.remoteAddress || 'unknown';
-}
-
-/**
- * `allowText`: the ad page posts `text/plain` (a CORS "simple" request: no preflight, no cookies).
- */
-async function readJson(req: IncomingMessage, allowText = false): Promise<unknown> {
-	const type = (req.headers['content-type'] ?? '').toLowerCase();
-	const accepted =
-		type.startsWith('application/json') || (allowText && type.startsWith('text/plain'));
-	if (!accepted) throw new HttpError(400, 'invalid');
-	const length = Number(req.headers['content-length'] ?? 0);
-	if (length > MAX_BODY_BYTES) throw new HttpError(413, 'invalid');
-	const chunks: Buffer[] = [];
-	let size = 0;
-	for await (const chunk of req) {
-		size += (chunk as Buffer).length;
-		if (size > MAX_BODY_BYTES) throw new HttpError(413, 'invalid');
-		chunks.push(chunk as Buffer);
-	}
-	try {
-		return JSON.parse(Buffer.concat(chunks).toString('utf8'));
-	} catch {
-		throw new HttpError(400, 'invalid');
-	}
+	/** Accounts + shared links (/api/auth/*, /api/shares*, /api/s/*). Absent = those paths 404. */
+	account?: {
+		handle(req: IncomingMessage, res: ServerResponse, path: string, ip: string): Promise<boolean>;
+	};
 }
 
 export function createApp(deps: AppDeps) {
@@ -168,10 +114,7 @@ export function createApp(deps: AppDeps) {
 
 	/** Browsers send Origin/Sec-Fetch-Site on POST: block other websites from spending quotas. */
 	function sameOrigin(req: IncomingMessage): void {
-		const origin = req.headers.origin;
-		const site = req.headers['sec-fetch-site'];
-		if (origin && origin !== config.appOrigin) throw new HttpError(403, 'invalid');
-		if (site && site !== 'same-origin' && site !== 'none') throw new HttpError(403, 'invalid');
+		assertSameOrigin(req, config.appOrigin);
 	}
 
 	async function quotaFor(device: string | undefined): Promise<AiQuota> {
@@ -364,7 +307,7 @@ export function createApp(deps: AppDeps) {
 		if (origin && origin !== config.ads.origin) throw new HttpError(403, 'invalid');
 		burst(ip, 'other');
 		if (!config.ads.enabled) throw new HttpError(503, 'unavailable');
-		const body = (await readJson(req, true)) as { ticket?: unknown } | null;
+		const body = (await readJson(req, { allowText: true })) as { ticket?: unknown } | null;
 		const ticket = verifyRewardTicket(config.appSecret, body?.ticket);
 		if (!ticket) throw new HttpError(400, 'invalid');
 		const age = now() - ticket.issuedAt;
@@ -486,6 +429,7 @@ export function createApp(deps: AppDeps) {
 			if (req.method === 'POST' && path === CLAIM_PATH) {
 				return send(res, 200, await rewardClaim(req, ip), cors);
 			}
+			if (deps.account && (await deps.account.handle(req, res, path, ip))) return;
 			return send(res, 404, { error: 'invalid' });
 		} catch (error) {
 			if (error instanceof HttpError) {

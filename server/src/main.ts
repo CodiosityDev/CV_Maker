@@ -9,6 +9,11 @@ import { loadConfig } from './config';
 import { wibDay } from './identity';
 import { memoryQuotaStore, type QuotaStore } from './quota';
 import { mysqlQuotaStore } from './quota-mysql';
+import { createAccountRoutes } from './account/routes';
+import { createGoogleClient } from './account/google';
+import { smtpMailer } from './account/mail';
+import { memoryAccountStore, type AccountStore } from './account/store';
+import { mysqlAccountStore } from './account/store-mysql';
 
 const log = (entry: Record<string, unknown>) =>
 	console.log(JSON.stringify({ time: new Date().toISOString(), ...entry }));
@@ -16,12 +21,29 @@ const log = (entry: Record<string, unknown>) =>
 async function main(): Promise<void> {
 	const config = loadConfig();
 	let store: QuotaStore;
+	let accounts: AccountStore;
 	if (config.db) {
 		store = await mysqlQuotaStore(config.db);
+		// Creates the account tables on first start (cvmaker_users, _sessions, _tokens, _shares, …).
+		accounts = await mysqlAccountStore(config.db);
 	} else {
 		log({ event: 'warning', message: 'DB_NAME not set: quotas kept in memory (development only)' });
 		store = memoryQuotaStore();
+		accounts = memoryAccountStore();
 	}
+	const account = createAccountRoutes({
+		config,
+		accounts,
+		quota: store,
+		google: config.auth.google
+			? createGoogleClient({
+					...config.auth.google,
+					redirectUri: `${config.appOrigin}/api/auth/google/callback`
+				})
+			: undefined,
+		mailer: config.auth.mail ? smtpMailer(config.auth.mail) : undefined,
+		log
+	});
 
 	const provider = openAiCompatibleProvider({
 		...config.ai,
@@ -36,17 +58,18 @@ async function main(): Promise<void> {
 			if (!info.ok) log({ event: 'ai.attempt_failed', lite: true, ...info });
 		}
 	});
-	const handle = createApp({ config, store, provider, liteProvider, log });
+	const handle = createApp({ config, store, provider, liteProvider, log, account });
 	const server = createServer((req, res) => void handle(req, res));
 	server.requestTimeout = 90_000;
 	server.headersTimeout = 15_000;
 
 	const prune = () =>
-		store
-			.prune(wibDay(Date.now() - 7 * 24 * 60 * 60 * 1000))
-			.catch((error: unknown) =>
-				log({ event: 'error', message: `prune: ${error instanceof Error ? error.message : error}` })
-			);
+		Promise.all([
+			store.prune(wibDay(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+			accounts.prune(Date.now())
+		]).catch((error: unknown) =>
+			log({ event: 'error', message: `prune: ${error instanceof Error ? error.message : error}` })
+		);
 	await prune();
 	const pruneTimer = setInterval(prune, 6 * 60 * 60 * 1000);
 	pruneTimer.unref();
@@ -57,14 +80,16 @@ async function main(): Promise<void> {
 			port: config.port,
 			models: config.ai.models,
 			liteModels: config.ai.liteModels,
-			db: Boolean(config.db)
+			db: Boolean(config.db),
+			google: Boolean(config.auth.google),
+			mail: Boolean(config.auth.mail)
 		})
 	);
 
 	const shutdown = (signal: string) => {
 		log({ event: 'stopping', signal });
 		server.close(() => {
-			void store.close().finally(() => process.exit(0));
+			void Promise.allSettled([store.close(), accounts.close()]).finally(() => process.exit(0));
 		});
 		setTimeout(() => process.exit(0), 10_000).unref();
 	};

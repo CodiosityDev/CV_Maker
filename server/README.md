@@ -68,3 +68,47 @@ Menyalakan (owner):
    folder `public_html`-nya.
 3. `ads.txt` di `codiosity.com` (baris dari AdSense/Ad Manager).
 4. File env: `ADS_ENABLED=true`, lalu deploy ulang.
+
+## Akun & Bagikan CV (Fase 2)
+
+Login **opsional** — hanya dibutuhkan untuk membagikan CV lewat link (`/u/<slug>`). Kode:
+`src/account/` (routes, store MySQL, Google OAuth, email). Tabel dibuat otomatis saat start:
+`cvmaker_users`, `cvmaker_sessions`, `cvmaker_tokens`, `cvmaker_shares`, `cvmaker_share_reports`.
+
+Yang disimpan: email, nama (opsional), hash scrypt kata sandi atau ID akun Google, **hash** token
+sesi/email, dan — hanya untuk CV yang dibagikan — salinan CV yang sudah dibuang field
+tersembunyinya (dicek ulang di server) serta foto. Log tidak berisi email, nama, atau isi CV.
+
+Menyalakan (owner), lalu deploy ulang:
+
+1. **Google** — Google Cloud → Google Auth Platform: Branding (CV Maker, domain `codiosity.com`),
+   Audience External + _Publish app_, scope `openid email profile`. Clients → Web application,
+   redirect URI `https://cvmaker.codiosity.com/api/auth/google/callback`. Isi `GOOGLE_CLIENT_ID`
+   dan `GOOGLE_CLIENT_SECRET` di file env.
+2. **Email** (daftar dengan email + reset kata sandi) — Hestia → Mail → akun `noreply@codiosity.com`.
+   Isi `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`. Pasang SPF/DKIM/DMARC di
+   DNS agar tidak masuk spam.
+
+Tanpa pengaturan itu server tetap jalan; `GET /api/auth/me` melaporkan `providers` yang mati dan UI
+menampilkan "Login belum tersedia".
+
+| Method | Path                        | Isi                                                                       |
+| ------ | --------------------------- | ------------------------------------------------------------------------- |
+| GET    | `/api/auth/me`              | `{ user \| null, providers: { google, password } }`                       |
+| GET    | `/api/auth/google?next=/cv` | 302 ke Google (PKCE + state cookie bertanda tangan)                       |
+| POST   | `/api/auth/register`        | `{ email, password, name, locale }` → `{ user }`                          |
+| POST   | `/api/auth/login`           | `{ email, password }` → `{ user }`                                        |
+| POST   | `/api/auth/logout`          | `{ ok }`                                                                  |
+| POST   | `/api/auth/verify`          | `{ token }` dari link email (fragmen `#token=`)                           |
+| POST   | `/api/auth/reset`           | `{ email, locale }` → selalu `{ ok }`                                     |
+| POST   | `/api/auth/reset/confirm`   | `{ token, password }` → `{ user }` (sesi lain berakhir)                   |
+| POST   | `/api/auth/delete`          | `{ confirm: true }` → akun + semua link dihapus permanen                  |
+| GET    | `/api/shares`               | `{ shares }` milik user                                                   |
+| PUT    | `/api/shares/:cvId`         | simpan/bagikan (perlu email terkonfirmasi)                                |
+| POST   | `/api/shares/:cvId/rotate`  | link baru, link lama mati                                                 |
+| DELETE | `/api/shares/:cvId`         | hapus salinan dari server                                                 |
+| GET    | `/api/s/:slug`              | CV untuk pengunjung; 401 `password`; 404 untuk semua kasus tidak tersedia |
+| POST   | `/api/s/:slug/report`       | `{ reason }`                                                              |
+
+Pengelola situs bisa mematikan link yang dilaporkan: `UPDATE cvmaker_shares SET blocked = 1 WHERE slug = '…'`
+(laporan ada di `cvmaker_share_reports`).

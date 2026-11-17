@@ -48,6 +48,20 @@ export interface ServerConfig {
 	};
 	/** Unset → in-memory quota (development only: resets on restart). */
 	db?: { host: string; port: number; user: string; password: string; database: string };
+	/** Accounts. Each login method is off until its settings are present. */
+	auth: {
+		/** GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (Google Cloud → OAuth client, type "Web"). */
+		google?: { clientId: string; clientSecret: string };
+		/** SMTP_* (verification + reset emails). Email + password login needs it. */
+		mail?: {
+			host: string;
+			port: number;
+			secure: boolean;
+			user: string;
+			password: string;
+			from: string;
+		};
+	};
 }
 
 type Env = Record<string, string | undefined>;
@@ -122,6 +136,30 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 					password: required(env, 'DB_PASSWORD'),
 					database: dbName
 				}
-			: undefined
+			: undefined,
+		auth: authConfig(env)
+	};
+}
+
+function authConfig(env: Env): ServerConfig['auth'] {
+	const clientId = env.GOOGLE_CLIENT_ID?.trim();
+	const smtpHost = env.SMTP_HOST?.trim();
+	let mail: ServerConfig['auth']['mail'];
+	if (smtpHost) {
+		const port = int(env, 'SMTP_PORT', 587, 1);
+		mail = {
+			host: smtpHost,
+			port,
+			secure: (env.SMTP_SECURE?.trim() || (port === 465 ? 'true' : 'false')) === 'true',
+			user: required(env, 'SMTP_USER'),
+			password: required(env, 'SMTP_PASSWORD'),
+			from: required(env, 'MAIL_FROM')
+		};
+	}
+	return {
+		google: clientId
+			? { clientId, clientSecret: required(env, 'GOOGLE_CLIENT_SECRET') }
+			: undefined,
+		mail
 	};
 }
