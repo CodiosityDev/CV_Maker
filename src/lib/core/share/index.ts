@@ -39,6 +39,12 @@ export const DEFAULT_SHARE_SETTINGS: Readonly<ShareSettings> = Object.freeze({
 	autoUpdate: false
 });
 
+/**
+ * Shared (published) CVs per account (owner decision 2026-11-17). Enforced by the server, so it
+ * cannot be bypassed from the browser. Creating CVs locally is NOT limited.
+ */
+export const MAX_SHARED_CVS = 3;
+
 export const SHARE_LIMITS = {
 	slugMin: 3,
 	slugMax: 40,

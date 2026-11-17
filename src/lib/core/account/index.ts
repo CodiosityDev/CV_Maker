@@ -33,7 +33,6 @@ export const ACCOUNT_ERROR_CODES = [
 	'password',
 	'taken',
 	'limit',
-	'full',
 	'reconnect',
 	'notFound',
 	'expired',
@@ -259,25 +258,6 @@ export function createAccountClients(fetcher: Fetch = (...args) => globalThis.fe
 			call(fetcher, 'POST', `/s/${encodeURIComponent(slug)}/report`, { reason }, ok)
 	};
 
-	const backupClient = {
-		list: () => call(fetcher, 'GET', '/backups', undefined, (raw) => parseBackupList(raw)),
-		/** `file` = a parsed backup file (backupRepo.export()). The server cleans and stores it. */
-		create: (file: unknown) =>
-			call(fetcher, 'POST', '/backups', file, (raw) => {
-				const data = raw as { backup?: unknown; usage?: unknown } | null;
-				const backup = parseBackupMeta(data?.backup);
-				const usage = parseUsage(data?.usage);
-				return backup && usage ? { backup, usage } : null;
-			}),
-		/** The backup file (parsed JSON) — restore it with backupRepo.import(). */
-		get: (id: string) =>
-			call(fetcher, 'GET', `/backups/${encodeURIComponent(id)}`, undefined, (raw) => raw ?? null),
-		remove: (id: string) =>
-			call(fetcher, 'DELETE', `/backups/${encodeURIComponent(id)}`, undefined, (raw) =>
-				parseUsage((raw as { usage?: unknown } | null)?.usage)
-			)
-	};
-
 	const driveClient = {
 		status: () =>
 			call(fetcher, 'GET', '/drive', undefined, (raw) => {
@@ -303,54 +283,12 @@ export function createAccountClients(fetcher: Fetch = (...args) => globalThis.fe
 		disconnect: () => call(fetcher, 'POST', '/drive/disconnect', {}, ok)
 	};
 
-	return { accountClient, shareClient, backupClient, driveClient };
+	return { accountClient, shareClient, driveClient };
 }
 
-export const { accountClient, shareClient, backupClient, driveClient } = createAccountClients();
+export const { accountClient, shareClient, driveClient } = createAccountClients();
 
 /** Where connecting Google Drive starts (a full-page navigation). */
 export function driveConnectUrl(next = '/akun'): string {
 	return `${API}/drive/connect?next=${encodeURIComponent(safeNext(next))}`;
-}
-
-export interface BackupInfo {
-	id: string;
-	createdAt: string;
-	bytes: number;
-	cvCount: number;
-}
-
-export interface BackupUsage {
-	used: number;
-	limit: number;
-}
-
-function parseBackupMeta(raw: unknown): BackupInfo | null {
-	if (typeof raw !== 'object' || raw === null) return null;
-	const b = raw as Record<string, unknown>;
-	if (typeof b.id !== 'string' || typeof b.createdAt !== 'string') return null;
-	return {
-		id: b.id,
-		createdAt: b.createdAt,
-		bytes: typeof b.bytes === 'number' ? b.bytes : 0,
-		cvCount: typeof b.cvCount === 'number' ? b.cvCount : 0
-	};
-}
-
-function parseUsage(raw: unknown): BackupUsage | null {
-	if (typeof raw !== 'object' || raw === null) return null;
-	const u = raw as Record<string, unknown>;
-	return typeof u.used === 'number' && typeof u.limit === 'number'
-		? { used: u.used, limit: u.limit }
-		: null;
-}
-
-function parseBackupList(raw: unknown): { backups: BackupInfo[]; usage: BackupUsage } | null {
-	const data = raw as { backups?: unknown; usage?: unknown } | null;
-	const usage = parseUsage(data?.usage);
-	if (!Array.isArray(data?.backups) || !usage) return null;
-	return {
-		backups: data.backups.map(parseBackupMeta).filter((b): b is BackupInfo => b !== null),
-		usage
-	};
 }

@@ -113,31 +113,27 @@ menampilkan "Login belum tersedia".
 Pengelola situs bisa mematikan link yang dilaporkan: `UPDATE cvmaker_shares SET blocked = 1 WHERE slug = '…'`
 (laporan ada di `cvmaker_share_reports`).
 
-## Batas 3 CV, cadangan, dan Google Drive
+## Batas, penyimpanan, dan Google Drive
 
-- **Maksimal 3 CV** per browser untuk semua orang (`MAX_CVS` di `src/lib/core/schema/limits.ts`),
-  login atau tidak. Di server batas yang sama tidak bisa diakali: maksimal 3 link Bagikan per akun,
-  dan setiap file cadangan dibersihkan menjadi maksimal 3 CV.
-- **Cadangan otomatis** (user login, default aktif, bisa dimatikan di `/akun`): file cadangan yang
-  sama dengan `backupRepo.export()`, dibersihkan ulang di server (`src/account/backup-file.ts`),
-  disimpan sebagai versi di tabel `cvmaker_backups`. Jatah `BACKUP_USER_MB` per user (default 5 MB);
-  versi tertua dihapus saat penuh. `BACKUP_TOTAL_GB` (default 20) membatasi semua user bersama.
-- **Google Drive (gratis)**: user menghubungkan Drive-nya sendiri dengan izin `drive.file` (hanya
-  file buatan CV Maker). Memakai OAuth client & redirect URI yang sama dengan login Google.
-  Refresh token disimpan **terenkripsi** AES-256-GCM (kunci dari `APP_SECRET`) di tabel
-  `cvmaker_drive`. File cadangan hanya melewati server.
+- **Membuat CV tidak dibatasi** dan selalu tersimpan lokal di browser (login atau tidak).
+- **VPS hanya menyimpan CV yang dibagikan**: maksimal **3 per akun** (`MAX_SHARED_CVS` di
+  `src/lib/core/share/index.ts`), dicek di server sehingga tidak bisa diakali dari browser.
+- **Cadangan hanya ke Google Drive milik user** (gratis), tidak ke VPS. User login yang menghubungkan
+  Drive mendapat cadangan otomatis (default aktif, bisa dimatikan di `/akun`), paling sering 30
+  menit sekali setelah ada perubahan. Izin `drive.file` (hanya file buatan CV Maker); OAuth client &
+  redirect URI sama dengan login Google. Refresh token disimpan **terenkripsi** AES-256-GCM (kunci dari
+  `APP_SECRET`) di tabel `cvmaker_drive`. File cadangan (format `backupRepo.export()`) dibersihkan
+  ulang di server (`src/account/backup-file.ts`) dan hanya melewati server.
 
 Menyalakan Drive (owner): Google Cloud → **APIs & Services → Library → Google Drive API → Enable**,
 lalu di Google Auth Platform → Data access tambahkan scope `.../auth/drive.file`.
 
 | Method | Path                    | Isi                                                                |
 | ------ | ----------------------- | ------------------------------------------------------------------ |
-| GET    | `/api/backups`          | `{ backups, usage: { used, limit } }`                              |
-| POST   | `/api/backups`          | file cadangan → `{ backup, usage }`; 507 `full` bila server penuh  |
-| GET    | `/api/backups/:id`      | file cadangan (JSON)                                               |
-| DELETE | `/api/backups/:id`      | `{ usage }`                                                        |
 | GET    | `/api/drive`            | `{ available, connected, lastBackupAt }`                           |
 | GET    | `/api/drive/connect`    | 302 ke izin Google Drive                                           |
 | POST   | `/api/drive/backup`     | file cadangan → simpan ke Drive; 409 `reconnect` bila izin dicabut |
 | GET    | `/api/drive/backup`     | file cadangan dari Drive (dibersihkan)                             |
 | POST   | `/api/drive/disconnect` | cabut izin + hapus token                                           |
+
+Tabel `cvmaker_backups` (dari rilis sebelumnya, bila ada) tidak dipakai lagi dan boleh dihapus.

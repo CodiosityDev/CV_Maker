@@ -39,6 +39,7 @@ import type { QuotaScope, QuotaStore } from '../quota';
 import { ACCOUNT_LIMITS, isEmailShaped, safeNext } from '../../../src/lib/core/account/index';
 import {
 	isSlugShaped,
+	MAX_SHARED_CVS,
 	parseShareSaveRequest,
 	REPORT_REASONS,
 	SHARE_LIMITS,
@@ -56,12 +57,11 @@ import {
 } from './crypto';
 import { pkceChallenge, type GoogleClient } from './google';
 import { accountEmail, type Mailer } from './mail';
-import type { AccountStore, BackupMeta, ShareRecord, UserRecord } from './store';
+import type { AccountStore, ShareRecord, UserRecord } from './store';
 import { cleanBackupFile } from './backup-file';
 import type { DriveClient } from './drive';
 import { open as openSecret, seal } from './secret-box';
 import { BACKUP_LIMITS } from '../../../src/lib/core/storage/backup';
-import { MAX_CVS } from '../../../src/lib/core/schema/limits';
 
 export const SESSION_COOKIE = '__Host-cvm_session';
 export const OAUTH_COOKIE = '__Host-cvm_oauth';
@@ -70,8 +70,8 @@ const OAUTH_MS = 10 * 60 * 1000;
 const VERIFY_MS = 24 * 60 * 60 * 1000;
 const RESET_MS = 60 * 60 * 1000;
 const SMALL_BODY = 8 * 1024;
-/** Owner: 3 CVs per user, also on the server (cannot be bypassed from the browser). */
-const MAX_SHARES_PER_USER = MAX_CVS;
+/** Owner: at most 3 shared CVs per account (checked here, so it cannot be bypassed). */
+const MAX_SHARES_PER_USER = MAX_SHARED_CVS;
 const CV_ID_PATTERN = /^[\w-]{1,64}$/;
 const PHOTO_MAX_BYTES = 320 * 1024;
 /** Per day. */
@@ -83,7 +83,7 @@ const LIMITS = {
 	mailsPerIp: 20,
 	sharePasswordPerIp: 20,
 	reportsPerIp: 10,
-	/** Cloud and Drive backups each. */
+	/** Drive backups per user per day. */
 	backupsPerUser: 50
 } as const;
 /** Per minute, in memory. */
@@ -112,8 +112,6 @@ export interface AccountDeps {
 	mailer?: Mailer;
 	/** Absent = "Simpan ke Google Drive" is off (needs the Google client). */
 	drive?: DriveClient;
-	/** Cloud backups on this server (per-user + server-wide caps; a backup holds at most 3 CVs). */
-	backup?: { userBytes: number; totalBytes: number };
 	now?: () => number;
 	log?: (entry: Record<string, unknown>) => void;
 }
@@ -599,25 +597,10 @@ export function createAccountRoutes(deps: AccountDeps) {
 		return { ok: true };
 	}
 
-	// --- cloud backups (this server) ----------------------------------------------------------
+	// --- Google Drive -----------------------------------------------------------------------
+	// Backups go ONLY to the user's own Drive (owner); this server stores shared CVs only.
 
-	const backupLimits = deps.backup ?? { userBytes: 5 * 1024 * 1024, totalBytes: 20 * 1024 ** 3 };
 	const BACKUP_BODY = BACKUP_LIMITS.maxFileBytes + 64 * 1024;
-
-	async function usage(userId: string) {
-		const list = await accounts.backupsOf(userId);
-		return {
-			list,
-			usage: { used: list.reduce((sum, b) => sum + b.bytes, 0), limit: backupLimits.userBytes }
-		};
-	}
-
-	const backupView = (b: BackupMeta) => ({
-		id: b.id,
-		createdAt: new Date(b.createdAt).toISOString(),
-		bytes: b.bytes,
-		cvCount: b.cvCount
-	});
 
 	async function readBackupBody(req: IncomingMessage) {
 		const clean = await cleanBackupFile(
@@ -627,36 +610,7 @@ export function createAccountRoutes(deps: AccountDeps) {
 		return clean;
 	}
 
-	async function saveBackup(req: IncomingMessage) {
-		const user = await requireUser(req);
-		if (!(await take('backup', user.id, LIMITS.backupsPerUser))) throw new HttpError(429, 'busy');
-		const clean = await readBackupBody(req);
-		if (clean.bytes > backupLimits.userBytes) throw new HttpError(413, 'full');
-		if ((await accounts.totalBackupBytes()) + clean.bytes > backupLimits.totalBytes) {
-			log({ event: 'backup.server_full' });
-			throw new HttpError(507, 'full');
-		}
-		// Oldest versions make room (owner: 3 CVs, 5 MB per user by default).
-		let { list, usage: used } = await usage(user.id);
-		while (list.length && used.used + clean.bytes > backupLimits.userBytes) {
-			const oldest = list[list.length - 1]!;
-			await accounts.deleteBackup(user.id, oldest.id);
-			used = { ...used, used: used.used - oldest.bytes };
-			list = list.slice(0, -1);
-		}
-		const meta: BackupMeta = {
-			id: randomToken(16),
-			createdAt: now(),
-			bytes: clean.bytes,
-			cvCount: clean.cvCount
-		};
-		await accounts.addBackup(user.id, meta, clean.json);
-		log({ event: 'backup.saved', cvs: clean.cvCount });
-		const after = await usage(user.id);
-		return { backup: backupView(meta), usage: after.usage };
-	}
-
-	/** Answers with the stored JSON as is (it was cleaned before saving). */
+	/** Answers with JSON text as is (it was cleaned first). */
 	function sendJsonText(res: ServerResponse, json: string) {
 		res.writeHead(200, {
 			'Content-Type': 'application/json; charset=utf-8',
@@ -666,8 +620,6 @@ export function createAccountRoutes(deps: AccountDeps) {
 		});
 		res.end(json);
 	}
-
-	// --- Google Drive -----------------------------------------------------------------------
 
 	const accessTokens = new Map<string, { token: string; until: number }>();
 
@@ -818,41 +770,12 @@ export function createAccountRoutes(deps: AccountDeps) {
 			const isAuth = path.startsWith('/api/auth/');
 			const shareMatch = /^\/api\/shares(?:\/([^/]+)(\/rotate)?)?$/.exec(path);
 			const publicMatch = /^\/api\/s\/([^/]+)(\/report)?$/.exec(path);
-			const backupMatch = /^\/api\/backups(?:\/([\w-]{22}))?$/.exec(path);
 			const isDrive = path === '/api/drive' || path.startsWith('/api/drive/');
-			if (!isAuth && !shareMatch && !publicMatch && !backupMatch && !isDrive) return false;
+			if (!isAuth && !shareMatch && !publicMatch && !isDrive) return false;
 
 			burst(ip);
 			// GETs change nothing (Google's callback is a top-level navigation from accounts.google.com).
 			if (method !== 'GET') assertSameOrigin(req, config.appOrigin);
-
-			if (backupMatch) {
-				const id = backupMatch[1];
-				if (!id && method === 'GET') {
-					const user = await requireUser(req);
-					const { list, usage: used } = await usage(user.id);
-					send(res, 200, { backups: list.map(backupView), usage: used });
-					return true;
-				}
-				if (!id && method === 'POST') {
-					send(res, 200, await saveBackup(req));
-					return true;
-				}
-				if (id && method === 'GET') {
-					const user = await requireUser(req);
-					const json = await accounts.backup(user.id, id);
-					if (!json) throw new HttpError(404, 'notFound');
-					sendJsonText(res, json);
-					return true;
-				}
-				if (id && method === 'DELETE') {
-					const user = await requireUser(req);
-					await accounts.deleteBackup(user.id, id);
-					send(res, 200, await usage(user.id).then(({ usage: used }) => ({ usage: used })));
-					return true;
-				}
-				throw new HttpError(404, 'notFound');
-			}
 
 			if (isDrive) {
 				switch (`${method} ${path}`) {

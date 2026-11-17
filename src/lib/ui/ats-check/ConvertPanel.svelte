@@ -409,12 +409,9 @@
 					changeStage('saved');
 				}
 			}
-		} catch (error) {
+		} catch {
 			if (fresh(guard)) {
-				errorKey =
-					error instanceof Error && error.name === 'CvLimitError'
-						? 'cvLimit.body'
-						: 'convertAts.saveFailed';
+				errorKey = 'convertAts.saveFailed';
 				changeStage('review');
 			}
 		} finally {

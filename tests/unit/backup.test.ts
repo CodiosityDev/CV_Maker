@@ -1,5 +1,4 @@
 import 'fake-indexeddb/auto';
-import { MAX_CVS } from '../../src/lib/core/schema/limits';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openIdbBackend } from '../../src/lib/core/storage/idb-backend';
@@ -163,9 +162,7 @@ describe('backup & restore', () => {
 			id: `cv-${i}`
 		}));
 		const result = await backup.import(jsonFile({ format: 'cvmaker-backup', version: 1, cvs }));
-		// Owner: at most MAX_CVS CVs per browser; the others are reported as "limited".
-		expect(result.imported).toBe(MAX_CVS);
-		expect(result.limited).toBe(BACKUP_LIMITS.maxCvs - MAX_CVS);
+		expect(result.imported).toBe(BACKUP_LIMITS.maxCvs);
 		expect(result.skipped).toBe(3);
 	});
 });

@@ -945,8 +945,8 @@ export const appEn: AppMessages = {
 			unauthenticated: 'Your session ended. Sign in again.',
 			password: 'Wrong password.',
 			taken: 'That address is taken. Choose another one.',
-			limit: 'You can keep at most 3 CVs. Delete one first.',
-			full: 'Backup storage is full. Try again later.',
+			limit:
+				'You can share at most 3 CVs. Delete one from the server first (Share → Delete from server).',
 			reconnect: 'The Google Drive connection ended. Connect it again.',
 			notFound: 'Not found.',
 			expired: 'This link is invalid or was already used.',
@@ -1015,35 +1015,14 @@ export const appEn: AppMessages = {
 			'Only a copy of this CV (without cover letters) is sent to the server, as chosen above.',
 		openLink: 'Open link'
 	},
-	cvLimit: {
-		title: 'You already have 3 CVs',
-		body: 'You can keep at most 3 CVs. Delete one you no longer need to create a new one.',
-		paid: 'A paid plan with more CVs is coming soon.',
-		manage: 'Manage My CVs',
-		count: '{count} of {max} CVs',
-		restoreLimited: '{count} CVs were not restored because this device already has 3 CVs.'
-	},
 	backup: {
-		title: 'Backup',
-		intro:
-			'Your CVs stay on this device. A backup keeps a copy so you can restore them on another device.',
-		auto: 'Back up automatically',
-		autoHint:
-			'After a CV changes, the latest copy is saved to your account (at most every 30 minutes).',
-		now: 'Back up now',
-		saved: 'CVs backed up.',
-		usage: '{used} of {limit} used',
-		empty: 'No backups yet.',
-		item: '{date} · {count} CVs · {size}',
-		restore: 'Restore',
+		auto: 'Back up to Drive automatically',
+		autoHint: 'After a CV changes, the backup file in Drive is updated (at most every 30 minutes).',
 		restored: '{count} CVs restored to this device.',
 		restoredNone: 'No CVs were restored.',
-		delete: 'Delete',
-		deleted: 'Backup deleted.',
-		lastAuto: 'Last automatic backup: {date}',
-		driveTitle: 'Google Drive (free)',
+		driveTitle: 'Backup in Google Drive (free)',
 		driveIntro:
-			'Save a backup file to your own Google Drive. CV Maker can only see the files it creates, never the rest of your Drive.',
+			'Your CVs stay on this device. Save a backup file to your own Google Drive to restore them on another device. CV Maker can only see the files it creates, never the rest of your Drive.',
 		driveConnect: 'Connect Google Drive',
 		driveConnected: 'Google Drive connected.',
 		driveFailed: 'Google Drive was not connected. Try again.',

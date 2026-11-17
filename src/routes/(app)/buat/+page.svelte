@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { CvLimitError, cvRepo, incognito, storage } from '#lib/core/storage/index.ts';
+	import { cvRepo, incognito, storage } from '#lib/core/storage/index.ts';
 	import type { CVKind, CVMeta } from '#lib/core/schema/index.ts';
 	import { loadGuidance, type Guidance } from '#lib/core/content/index.ts';
 	import { i18n, t } from '#lib/i18n/index.svelte.ts';
@@ -16,8 +16,6 @@
 	let guidanceError = $state(false);
 	let listError = $state(false);
 	let createError = $state(false);
-	/** MAX_CVS reached on this device (owner: 3 CVs; delete one to create another). */
-	let full = $state(false);
 	let creating = $state<CVKind | null>(null);
 	let guidanceAttempt = $state(0);
 	let application = $state('');
@@ -58,12 +56,11 @@
 		unfinished = [];
 		listError = false;
 		let active = true;
-		void Promise.all([cvRepo.list(), storage.getMode(), cvRepo.remaining()]).then(
-			([cvs, mode, remaining]) => {
+		void Promise.all([cvRepo.list(), storage.getMode()]).then(
+			([cvs, mode]) => {
 				if (!active) return;
 				unfinished = cvs.filter((cv) => !cv.wizardCompleted);
 				memory = mode === 'memory';
-				full = remaining === 0;
 			},
 			() => {
 				if (active) listError = true;
@@ -81,9 +78,8 @@
 		try {
 			const cv = await cvRepo.create({ kind, locale: i18n.locale });
 			await goto(resolve('/(app)/buat/[id]', { id: cv.id }));
-		} catch (error) {
-			if (error instanceof CvLimitError) full = true;
-			else createError = true;
+		} catch {
+			createError = true;
 		} finally {
 			creating = null;
 		}
@@ -107,14 +103,6 @@
 	{#if memory}<p class="notice warning" role="status">{t('wizard.memoryWarning')}</p>{/if}
 	{#if listError}<p class="notice warning" role="status">{t('wizard.loadError')}</p>{/if}
 	{#if createError}<p class="notice error" role="alert">{t('wizard.createError')}</p>{/if}
-	{#if full}
-		<div class="notice limit" role="status" data-testid="cv-limit">
-			<h2>{t('cvLimit.title')}</h2>
-			<p>{t('cvLimit.body')}</p>
-			<p class="paid">{t('cvLimit.paid')}</p>
-			<Button href="/cv" variant="secondary">{t('cvLimit.manage')}</Button>
-		</div>
-	{/if}
 	{#if incognito.active && incognito.expiredAt}<p class="notice" role="status">
 			{t('incognito.expiredMessage')}
 		</p>{/if}
@@ -189,7 +177,7 @@
 						class="choose-button"
 						variant={kind === 'ats' ? 'primary' : 'secondary'}
 						loading={creating === kind}
-						disabled={creating !== null || full}
+						disabled={creating !== null}
 						onclick={() => choose(kind)}
 					>
 						{t(kind === 'ats' ? 'wizard.chooseAts' : 'wizard.chooseCreative')}<Icon size={18} />
@@ -336,19 +324,6 @@
 		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
-	}
-	.limit {
-		display: grid;
-		justify-items: start;
-		gap: 8px;
-	}
-	.limit h2 {
-		font-size: 1.125rem;
-		font-weight: 650;
-	}
-	.limit .paid {
-		color: var(--color-text-muted);
-		font-size: 0.875rem;
 	}
 	.type-cards {
 		display: grid;

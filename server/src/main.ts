@@ -50,7 +50,6 @@ async function main(): Promise<void> {
 					redirectUri: `${config.appOrigin}/api/auth/google/callback`
 				})
 			: undefined,
-		backup: config.backup,
 		log
 	});
 

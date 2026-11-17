@@ -30,7 +30,6 @@ export type QuotaScope =
 	| 'mailip'
 	| 'sharepw'
 	| 'report'
-	| 'backup'
 	| 'drive';
 
 /** All-time counters. visitors: sum of daily unique visitors since launch (starts at 0). */

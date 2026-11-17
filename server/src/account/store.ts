@@ -41,14 +41,6 @@ export interface ShareRecord {
 
 export type TokenPurpose = 'verify' | 'reset';
 
-/** One saved version of a user's backup file (cleaned, see backup-file.ts). */
-export interface BackupMeta {
-	id: string;
-	createdAt: number;
-	bytes: number;
-	cvCount: number;
-}
-
 export interface DriveLink {
 	/** Refresh token, sealed with secret-box.ts. */
 	token: string;
@@ -64,7 +56,7 @@ export interface AccountStore {
 	/** false when the email or Google account is already used. */
 	createUser(user: UserRecord): Promise<boolean>;
 	updateUser(id: string, patch: UserPatch): Promise<void>;
-	/** Also deletes the user's sessions, email tokens, shared links, backups and Drive link. */
+	/** Also deletes the user's sessions, email tokens, shared links and Drive link. */
 	deleteUser(id: string): Promise<void>;
 
 	createSession(hash: string, userId: string, expiresAt: number): Promise<void>;
@@ -92,14 +84,6 @@ export interface AccountStore {
 	countView(shareId: string): Promise<void>;
 	addReport(shareId: string, reason: string, at: number): Promise<void>;
 
-	/** Newest first. */
-	backupsOf(userId: string): Promise<BackupMeta[]>;
-	backup(userId: string, id: string): Promise<string | null>;
-	addBackup(userId: string, meta: BackupMeta, json: string): Promise<void>;
-	deleteBackup(userId: string, id: string): Promise<void>;
-	/** Bytes used by all users' backups together (the server-wide cap). */
-	totalBackupBytes(): Promise<number>;
-
 	driveLink(userId: string): Promise<DriveLink | null>;
 	saveDriveLink(userId: string, link: DriveLink): Promise<void>;
 	deleteDriveLink(userId: string): Promise<void>;
@@ -115,7 +99,6 @@ export function memoryAccountStore(): AccountStore {
 	const tokens = new Map<string, { userId: string; purpose: TokenPurpose; expiresAt: number }>();
 	const shares = new Map<string, ShareRecord>();
 	const reports: { shareId: string; reason: string; at: number }[] = [];
-	const backups = new Map<string, { userId: string; meta: BackupMeta; json: string }>();
 	const drives = new Map<string, DriveLink>();
 	const copy = <T>(value: T | undefined): T | null => (value ? structuredClone(value) : null);
 	const find = <T>(map: Map<string, T>, test: (value: T) => boolean) =>
@@ -151,7 +134,6 @@ export function memoryAccountStore(): AccountStore {
 			for (const [key, s] of sessions) if (s.userId === id) sessions.delete(key);
 			for (const [key, t] of tokens) if (t.userId === id) tokens.delete(key);
 			for (const [key, s] of shares) if (s.userId === id) shares.delete(key);
-			for (const [key, b] of backups) if (b.userId === id) backups.delete(key);
 			drives.delete(id);
 		},
 		async createSession(hash, userId, expiresAt) {
@@ -207,25 +189,6 @@ export function memoryAccountStore(): AccountStore {
 		},
 		async addReport(shareId, reason, at) {
 			reports.push({ shareId, reason, at });
-		},
-		async backupsOf(userId) {
-			return [...backups.values()]
-				.filter((b) => b.userId === userId)
-				.map((b) => ({ ...b.meta }))
-				.sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
-		},
-		async backup(userId, id) {
-			const entry = backups.get(id);
-			return entry && entry.userId === userId ? entry.json : null;
-		},
-		async addBackup(userId, meta, json) {
-			backups.set(meta.id, { userId, meta: { ...meta }, json });
-		},
-		async deleteBackup(userId, id) {
-			if (backups.get(id)?.userId === userId) backups.delete(id);
-		},
-		async totalBackupBytes() {
-			return [...backups.values()].reduce((sum, b) => sum + b.meta.bytes, 0);
 		},
 		async driveLink(userId) {
 			return copy(drives.get(userId));

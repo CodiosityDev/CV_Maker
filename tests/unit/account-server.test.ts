@@ -30,7 +30,6 @@ async function start(
 		mail?: boolean;
 		google?: GoogleClient;
 		drive?: DriveClient;
-		backup?: { userBytes: number; totalBytes: number };
 	} = {}
 ): Promise<Harness> {
 	const accounts = memoryAccountStore();
@@ -44,7 +43,6 @@ async function start(
 		mailer: options.mail === false ? undefined : mailer,
 		google: options.google,
 		drive: options.drive,
-		backup: options.backup,
 		now: () => now.value
 	});
 	server = createServer(async (req, res) => {
@@ -569,7 +567,7 @@ const backupFile = (count = 1) => ({
 	assets: []
 });
 
-describe('3 CVs per user on the server', () => {
+describe('3 shared CVs per account', () => {
 	it('refuses a 4th shared CV', async () => {
 		const h = await start();
 		const owner = await verifiedUser(h);
@@ -581,52 +579,6 @@ describe('3 CVs per user on the server', () => {
 		expect(fourth.json.error).toBe('limit');
 		// Updating an existing link still works.
 		expect((await owner.request('PUT', '/api/shares/cv-0', shareBody())).status).toBe(200);
-	});
-});
-
-describe('cloud backups', () => {
-	it('stores cleaned versions (max 3 CVs each) that only the owner can read', async () => {
-		const h = await start();
-		const owner = await verifiedUser(h);
-		expect((await client(h.base).request('POST', '/api/backups', backupFile())).status).toBe(401);
-
-		const saved = await owner.request('POST', '/api/backups', backupFile(5));
-		expect(saved.status).toBe(200);
-		const backup = saved.json.backup as { id: string; cvCount: number };
-		expect(backup.cvCount).toBe(3);
-		expect(saved.json.usage).toMatchObject({ limit: 5 * 1024 * 1024 });
-
-		const list = await owner.request('GET', '/api/backups');
-		expect((list.json.backups as unknown[]).length).toBe(1);
-		const file = await owner.request('GET', `/api/backups/${backup.id}`);
-		expect(file.json.format).toBe('cvmaker-backup');
-		expect((file.json.cvs as unknown[]).length).toBe(3);
-
-		const other = await verifiedUser(h, 'budi@example.com');
-		expect((await other.request('GET', `/api/backups/${backup.id}`)).status).toBe(404);
-		expect((await owner.request('POST', '/api/backups', { format: 'nope' })).status).toBe(400);
-
-		await owner.request('DELETE', `/api/backups/${backup.id}`);
-		expect(((await owner.request('GET', '/api/backups')).json.backups as unknown[]).length).toBe(0);
-	});
-
-	it('drops the oldest versions when the user quota is full, and refuses when the server is full', async () => {
-		const probe = await start();
-		const first = await (await verifiedUser(probe)).request('POST', '/api/backups', backupFile());
-		const size = (first.json.backup as { bytes: number }).bytes;
-		await new Promise<void>((resolve) => server!.close(() => resolve()));
-
-		const h = await start({ backup: { userBytes: Math.floor(size * 2.5), totalBytes: size * 3 } });
-		const owner = await verifiedUser(h);
-		for (let i = 0; i < 3; i++) {
-			expect((await owner.request('POST', '/api/backups', backupFile())).status).toBe(200);
-		}
-		expect(((await owner.request('GET', '/api/backups')).json.backups as unknown[]).length).toBe(2);
-		const other = await verifiedUser(h, 'budi@example.com');
-		expect((await other.request('POST', '/api/backups', backupFile())).status).toBe(200);
-		const full = await other.request('POST', '/api/backups', backupFile());
-		expect(full.status).toBe(507);
-		expect(full.json.error).toBe('full');
 	});
 });
 
@@ -691,9 +643,9 @@ describe('Google Drive backups', () => {
 
 		const saved = await owner.request('POST', '/api/drive/backup', backupFile(4));
 		expect(saved.status).toBe(200);
-		expect(JSON.parse(state.files.get('file-1')!).cvs).toHaveLength(3);
+		expect(JSON.parse(state.files.get('file-1')!).cvs).toHaveLength(4);
 		const restored = await owner.request('GET', '/api/drive/backup');
-		expect((restored.json.cvs as unknown[]).length).toBe(3);
+		expect((restored.json.cvs as unknown[]).length).toBe(4);
 
 		await owner.request('POST', '/api/drive/disconnect', {});
 		expect(state.revoked).toEqual(['refresh-token']);
