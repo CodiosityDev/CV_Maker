@@ -236,6 +236,11 @@ export function createAccountClients(fetcher: Fetch = (...args) => globalThis.fe
 			call(fetcher, 'POST', '/auth/reset/confirm', { token, password }, (raw) =>
 				parseUser((raw as { user?: unknown } | null)?.user)
 			),
+		/** Changes the display name (prefills "Nama lengkap" in new CVs). */
+		updateProfile: (name: string) =>
+			call(fetcher, 'POST', '/auth/profile', { name }, (raw) =>
+				parseUser((raw as { user?: unknown } | null)?.user)
+			),
 		/** Permanently deletes the account and every shared link (UU PDP right to erasure). */
 		deleteAccount: () => call(fetcher, 'POST', '/auth/delete', { confirm: true }, ok)
 	};
@@ -265,12 +270,18 @@ export function createAccountClients(fetcher: Fetch = (...args) => globalThis.fe
 					available?: unknown;
 					connected?: unknown;
 					lastBackupAt?: unknown;
+					fileUrl?: unknown;
 				} | null;
 				if (!data) return null;
 				return {
 					available: data.available === true,
 					connected: data.connected === true,
-					lastBackupAt: typeof data.lastBackupAt === 'string' ? data.lastBackupAt : null
+					lastBackupAt: typeof data.lastBackupAt === 'string' ? data.lastBackupAt : null,
+					// Only Google Drive links are shown as "Lihat di Google Drive".
+					fileUrl:
+						typeof data.fileUrl === 'string' && data.fileUrl.startsWith('https://drive.google.com/')
+							? data.fileUrl
+							: null
 				};
 			}),
 		save: (file: unknown) =>

@@ -8,11 +8,16 @@ test('landing offers the planned CV actions and honest template guidance', async
 	);
 
 	const createLinks = page.getByRole('link', { name: 'Buat CV', exact: true });
-	expect(await createLinks.count()).toBeGreaterThanOrEqual(2);
+	// Hero + header CTA (the header CTA is hidden below 420px; the menu keeps "Buat CV" there).
+	expect(await createLinks.count()).toBeGreaterThanOrEqual(
+		page.viewportSize()!.width < 420 ? 1 : 2
+	);
 	for (const link of await createLinks.all()) {
 		await expect(link).toHaveAttribute('href', '/buat');
 	}
-	await expect(page.locator('a[href="/cv"]')).toHaveCount(0);
+	// "CV Saya" and "Masuk" live in the header dropdown (closed until the menu button is pressed).
+	await expect(page.locator('header nav a[href="/cv"]')).toBeHidden();
+	await expect(page.locator('header nav a[href="/masuk"]')).toBeHidden();
 	await expect(page.getByRole('button', { name: 'Apa itu ATS?', exact: true })).toHaveCount(0);
 	await expect(page.locator('main a[href="/faq"]')).toBeVisible();
 	await expect(page.getByText(/kurang cocok untuk portal ATS/i)).toBeVisible();

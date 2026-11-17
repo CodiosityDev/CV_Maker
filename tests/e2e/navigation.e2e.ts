@@ -12,21 +12,25 @@ test('phone menu opens, closes with Escape, and closes after navigation', async 
 	await menu.click();
 	await expect(menu).toHaveAttribute('aria-expanded', 'true');
 	await expect(navigation).toBeVisible();
-	await expect(navigation.getByRole('link')).toHaveCount(8);
+	// One dropdown for every width (owner): the same items as the app menu, plus sign-in.
+	await expect(navigation.getByRole('link')).toHaveCount(10);
 	expect(
 		await navigation
 			.getByRole('link')
 			.evaluateAll((links) => links.map((link) => link.getAttribute('href')))
 	).toEqual([
-		'/',
 		'/buat',
+		'/cv',
+		'/masuk',
 		'/surat',
 		'/cek-ats',
+		'/',
 		'/faq',
 		'/tentang',
 		'https://respawnsociety.web.id',
 		'https://codiosity.com'
 	]);
+	await expect(navigation.getByRole('link', { name: 'Masuk', exact: true })).toBeVisible();
 	await expect(
 		navigation.getByRole('link', { name: 'Surat Lamaran', exact: true })
 	).toHaveAttribute('href', '/surat');
@@ -51,7 +55,6 @@ test('site navigation marks only the current page and links to existing routes',
 		const active = page.locator('header nav a[aria-current="page"]');
 		await expect(active).toHaveCount(1);
 		await expect(active).toHaveAttribute('href', path);
-		await expect(page.locator('a[href="/cv"]')).toHaveCount(0);
 	}
 	await page.goto('/buat');
 	await page.locator('.app-menu > summary').click();

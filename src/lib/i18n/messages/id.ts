@@ -41,7 +41,9 @@ export const id = {
 		codiosity: 'Codiosity',
 		home: 'Beranda',
 		about: 'Tentang',
-		privacy: 'Privasi'
+		privacy: 'Privasi',
+		signIn: 'Masuk',
+		account: 'Akun'
 	},
 	footer: {
 		madeBy: 'Dibuat oleh',

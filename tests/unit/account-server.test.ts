@@ -304,6 +304,25 @@ describe('email + password accounts', () => {
 	});
 });
 
+describe('profile', () => {
+	it('changes the name (cleaned, limited) and needs a session', async () => {
+		const h = await start();
+		expect((await client(h.base).request('POST', '/api/auth/profile', { name: 'X' })).status).toBe(
+			401
+		);
+		const browser = await verifiedUser(h);
+		const saved = await browser.request('POST', '/api/auth/profile', {
+			name: '  Nadia Putri  ' + 'x'.repeat(100)
+		});
+		expect(saved.status).toBe(200);
+		const name = (saved.json.user as { name: string }).name;
+		expect(name.startsWith('Nadia Putri')).toBe(true);
+		expect(name.length).toBe(80);
+		expect((await browser.request('GET', '/api/auth/me')).json.user).toMatchObject({ name });
+		expect((await browser.request('POST', '/api/auth/profile', { name: 5 })).status).toBe(400);
+	});
+});
+
 describe('shared links', () => {
 	let h: Harness;
 	beforeEach(async () => {
@@ -632,7 +651,8 @@ describe('Google Drive backups', () => {
 		expect((await owner.request('GET', '/api/drive')).json).toEqual({
 			available: true,
 			connected: false,
-			lastBackupAt: null
+			lastBackupAt: null,
+			fileUrl: null
 		});
 		const done = await connect(owner);
 		expect(done.headers.get('location')).toBe('/akun?drive=connected');
@@ -644,6 +664,9 @@ describe('Google Drive backups', () => {
 		const saved = await owner.request('POST', '/api/drive/backup', backupFile(4));
 		expect(saved.status).toBe(200);
 		expect(JSON.parse(state.files.get('file-1')!).cvs).toHaveLength(4);
+		expect((await owner.request('GET', '/api/drive')).json.fileUrl).toBe(
+			'https://drive.google.com/file/d/file-1/view'
+		);
 		const restored = await owner.request('GET', '/api/drive/backup');
 		expect((restored.json.cvs as unknown[]).length).toBe(4);
 

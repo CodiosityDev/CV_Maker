@@ -878,6 +878,9 @@ export const appId = {
 		wipeDone: 'Semua data CV di perangkat ini dihapus.'
 	},
 	account: {
+		nameLabel: 'Nama',
+		nameHint: 'Otomatis dipakai sebagai "Nama lengkap" saat kamu membuat CV baru.',
+		nameSaved: 'Nama disimpan.',
 		navSignIn: 'Masuk',
 		navAccount: 'Akun',
 		signInTitle: 'Masuk ke CV Maker',
@@ -1021,6 +1024,7 @@ export const appId = {
 		driveTitle: 'Cadangan di Google Drive (gratis)',
 		driveIntro:
 			'CV tetap tersimpan di perangkat ini. Simpan file cadangan ke Google Drive-mu sendiri agar bisa dipulihkan di perangkat lain. CV Maker hanya bisa melihat file yang ia buat, tidak bisa membaca file lain di Drive-mu.',
+		driveOpen: 'Lihat di Google Drive',
 		driveConnect: 'Hubungkan Google Drive',
 		driveConnected: 'Google Drive terhubung.',
 		driveFailed: 'Google Drive belum terhubung. Coba lagi.',

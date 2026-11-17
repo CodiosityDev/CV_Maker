@@ -36,7 +36,9 @@ export const en: BaseMessages = {
 		codiosity: 'Codiosity',
 		home: 'Home',
 		about: 'About',
-		privacy: 'Privacy'
+		privacy: 'Privacy',
+		signIn: 'Sign in',
+		account: 'Account'
 	},
 	footer: {
 		madeBy: 'Made by',

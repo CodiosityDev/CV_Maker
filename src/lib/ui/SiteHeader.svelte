@@ -1,95 +1,112 @@
 ﻿<script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { ACCOUNT_HINT_STORAGE_KEY } from '#lib/core/account/hint.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
 	import PrimaryLink from '#lib/ui/PrimaryLink.svelte';
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
 
+	/** Site header: logo, language, theme, "Buat CV" and ONE dropdown menu (same as the app header). */
 	const menuId = $props.id();
 	let menuOpen = $state(false);
 	let menuButton = $state<HTMLButtonElement>();
+	let menu = $state<HTMLDivElement>();
+	// "Akun" after a login on this browser, else "Masuk" — read locally, no request, no account code.
+	let signedIn = $state(false);
+	$effect(() => {
+		void page.url;
+		try {
+			signedIn = localStorage.getItem(ACCOUNT_HINT_STORAGE_KEY) === '1';
+		} catch {
+			signedIn = false;
+		}
+	});
+
 	const links = $derived([
-		{ href: resolve('/(site)'), label: t('nav.home') },
 		{ href: resolve('/(app)/buat'), label: t('nav.create') },
+		{ href: resolve('/(app)/cv'), label: t('nav.myCvs') },
+		signedIn
+			? { href: resolve('/(app)/akun'), label: t('nav.account') }
+			: { href: resolve('/(app)/masuk'), label: t('nav.signIn') },
 		{ href: resolve('/(app)/surat'), label: t('nav.letter') },
 		{ href: resolve('/(site)/cek-ats'), label: t('nav.atsCheck') },
+		{ href: resolve('/(site)'), label: t('nav.home') },
 		{ href: resolve('/(site)/faq'), label: t('nav.faq') },
 		{ href: resolve('/(site)/tentang'), label: t('nav.about') }
 	]);
+	const external = $derived([
+		{ href: 'https://respawnsociety.web.id', label: t('nav.tools') },
+		{ href: 'https://codiosity.com', label: t('nav.codiosity') }
+	]);
 
+	function current(href: string): boolean {
+		const path = page.url.pathname;
+		return path === href || (href !== '/' && path.startsWith(`${href}/`));
+	}
 	function closeMenu() {
 		menuOpen = false;
 	}
-	function escapeMenu(event: KeyboardEvent) {
+	function onKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Escape' || !menuOpen) return;
 		menuOpen = false;
 		menuButton?.focus();
 	}
+	function onWindowClick(event: MouseEvent) {
+		if (menuOpen && event.target instanceof Node && !menu?.contains(event.target)) menuOpen = false;
+	}
 </script>
 
-<svelte:window onkeydown={escapeMenu} />
+<svelte:window onkeydown={onKeydown} onclick={onWindowClick} />
 
 <header class="site-header" data-sveltekit-preload-code="viewport">
 	<div class="site-container header-inner">
 		<a class="brand" href={resolve('/(site)')} aria-label={t('nav.home')} onclick={closeMenu}
-			><Logo size={28} /><span>{t('app.name')}</span></a
+			><Logo size={28} /><span class="brand-name">{t('app.name')}</span></a
 		>
-		<button
-			type="button"
-			class="menu-toggle"
-			bind:this={menuButton}
-			aria-expanded={menuOpen}
-			aria-controls={menuId}
-			onclick={() => {
-				menuOpen = !menuOpen;
-			}}>{t('nav.menu')}</button
-		>
-		<nav id={menuId} class:open={menuOpen} aria-label={t('nav.label')}>
-			<ul>
-				{#each links as link (link.href)}
-					<li>
-						<a
-							href={link.href}
-							aria-current={page.url.pathname === link.href ||
-							(link.href.endsWith('/surat') && /\/surat(?:\/|$)/.test(page.url.pathname))
-								? 'page'
-								: undefined}
-							onclick={closeMenu}>{link.label}</a
-						>
-					</li>
-				{/each}
-				<li>
-					<a
-						href="https://respawnsociety.web.id"
-						target="_blank"
-						rel="noopener noreferrer"
-						onclick={closeMenu}
-						>{t('nav.tools')}<span aria-hidden="true">↗</span><span class="sr-only">
-							{t('a11y.opensNewTab')}</span
-						></a
-					>
-				</li>
-				<li>
-					<a
-						href="https://codiosity.com"
-						target="_blank"
-						rel="noopener noreferrer"
-						onclick={closeMenu}
-						>{t('nav.codiosity')}<span aria-hidden="true">↗</span><span class="sr-only">
-							{t('a11y.opensNewTab')}</span
-						></a
-					>
-				</li>
-			</ul>
-		</nav>
-		<div class="language-control"><LanguageSwitcher /><ThemeToggle /></div>
-		<div class="create-action">
-			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
-				>{t('nav.create')}</PrimaryLink
+		<LanguageSwitcher />
+		<ThemeToggle />
+		<div class="menu" bind:this={menu}>
+			<button
+				type="button"
+				class="menu-toggle"
+				bind:this={menuButton}
+				aria-label={t('nav.menu')}
+				aria-expanded={menuOpen}
+				aria-controls={menuId}
+				onclick={() => (menuOpen = !menuOpen)}
 			>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.75"
+					aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg
+				>
+			</button>
+			<nav id={menuId} hidden={!menuOpen} aria-label={t('nav.label')}>
+				{#each links as link (link.href)}
+					<a
+						href={link.href}
+						aria-current={current(link.href) ? 'page' : undefined}
+						onclick={closeMenu}>{link.label}</a
+					>
+				{/each}
+				{#each external as link (link.href)}
+					<!-- External sites (fixed list above), not app routes. -->
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+					<a href={link.href} target="_blank" rel="noopener noreferrer" onclick={closeMenu}
+						>{link.label}<span aria-hidden="true">↗</span><span class="sr-only">
+							{t('a11y.opensNewTab')}</span
+						></a
+					>
+				{/each}
+			</nav>
 		</div>
+		<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
+			>{t('nav.create')}</PrimaryLink
+		>
 	</div>
 </header>
 
@@ -103,20 +120,19 @@
 		border-bottom: 1px solid var(--color-border);
 	}
 	.header-inner {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		grid-template-areas: 'brand language' 'menu create';
+		display: flex;
 		align-items: center;
-		gap: 0.75rem 1.5rem;
-		padding-block: 0.75rem;
+		gap: 6px;
+		min-height: 66px;
+		padding-block: 7px;
 	}
 	.brand {
-		grid-area: brand;
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
+		min-width: 44px;
 		min-height: 44px;
-		width: fit-content;
+		margin-right: auto;
 		color: var(--color-text);
 		font-size: 1.25rem;
 		font-weight: 700;
@@ -124,127 +140,92 @@
 		text-decoration: none;
 		white-space: nowrap;
 	}
-	.language-control {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		grid-area: language;
-		justify-self: end;
-	}
-	.create-action {
-		grid-area: create;
-		justify-self: end;
+	.menu {
+		position: relative;
+		flex-shrink: 0;
 	}
 	.menu-toggle {
-		grid-area: menu;
-		justify-self: start;
-		min-width: 44px;
-		min-height: 44px;
-		width: fit-content;
-		padding: 0.5rem 1rem;
-		border: 1px solid transparent;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 0;
 		border-radius: var(--radius-md);
 		background: var(--color-brand-50);
 		color: var(--color-brand-ink);
-		font: inherit;
-		font-size: 0.875rem;
-		font-weight: 650;
 		cursor: pointer;
-		transition:
-			background-color var(--motion-duration) var(--motion-ease),
-			transform var(--motion-duration) var(--motion-ease);
 	}
-	.menu-toggle:hover {
+	.menu-toggle:hover,
+	.menu-toggle[aria-expanded='true'] {
 		background: var(--color-brand-100);
 	}
-	.menu-toggle:active {
-		transform: translateY(1px);
+	.menu-toggle svg {
+		width: 20px;
+		height: 20px;
 	}
 	nav {
-		grid-column: 1 / -1;
-		display: none;
-		min-width: 0;
-		width: 100%;
-	}
-	nav.open {
-		display: block;
-	}
-	ul {
+		position: absolute;
+		z-index: 40;
+		top: calc(100% + 8px);
+		right: 0;
 		display: grid;
-		gap: 0.25rem;
-		list-style: none;
-		padding: 0.75rem 0 0;
-		margin: 0;
-		border-top: 1px solid var(--color-border);
+		min-width: 190px;
+		padding: 8px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+		box-shadow: var(--shadow-card);
 	}
-	li {
-		min-width: 0;
+	nav[hidden] {
+		display: none;
 	}
 	nav a {
 		display: flex;
 		align-items: center;
-		gap: 0.375rem;
-		width: fit-content;
-		min-width: 44px;
+		justify-content: space-between;
+		gap: 0.5rem;
 		min-height: 44px;
-		padding: 0.5rem 0.75rem;
+		padding-inline: 12px;
 		border-radius: var(--radius-md);
-		color: var(--color-text-muted);
+		color: var(--color-brand-ink);
 		font-size: 0.875rem;
 		font-weight: 600;
 		text-decoration: none;
-		white-space: nowrap;
-		transition:
-			background-color var(--motion-duration) var(--motion-ease),
-			color var(--motion-duration) var(--motion-ease);
 	}
 	nav a:hover {
-		background: var(--color-mint-50);
-		color: var(--color-brand-ink);
+		text-decoration: underline;
 	}
-	/* The current page must stand out in both themes, and not by colour alone: a brand bar under
-	   the label plus a stronger background and text. */
+	/* Current page: not by colour alone — a brand bar plus a stronger background (as in the app). */
 	nav a[aria-current='page'] {
 		background: var(--color-brand-100);
 		color: var(--color-text);
 		box-shadow: inset 0 -3px 0 var(--color-brand);
 	}
-	@media (min-width: 480px) {
-		.header-inner {
-			grid-template-columns: minmax(0, 1fr) auto auto auto;
-			grid-template-areas: 'brand language menu create';
-			column-gap: 1rem;
-		}
+	nav a span[aria-hidden='true'] {
+		font-size: 0.75rem;
 	}
-	@media (min-width: 1280px) {
-		.menu-toggle {
-			display: none;
-		}
-		nav {
-			grid-area: nav;
-			display: block;
-		}
-		.header-inner {
-			grid-template-columns: auto minmax(0, 1fr) auto auto;
-			grid-template-areas: 'brand nav language create';
-			gap: 0.75rem;
-		}
-		ul {
-			display: flex;
-			flex-wrap: nowrap;
-			justify-content: end;
-			gap: 0.25rem;
+	@media (max-width: 479px) {
+		.brand-name {
+			position: absolute;
+			width: 1px;
+			height: 1px;
 			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
 			border: 0;
 		}
-		nav a {
-			padding-inline: 0.5rem;
+		.header-inner :global(.header-cta) {
+			padding-inline: 12px;
+			white-space: nowrap;
 		}
 	}
-	@media (prefers-reduced-motion: reduce) {
-		.menu-toggle,
-		nav a {
-			transition: none;
+	/* Very narrow phones: "Buat CV" stays in the hero and in the menu, the header keeps one row. */
+	@media (max-width: 419px) {
+		.header-inner :global(.header-cta) {
+			display: none;
 		}
 	}
 </style>
