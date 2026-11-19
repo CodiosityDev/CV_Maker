@@ -173,8 +173,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       docx:
-        specifier: ^9.15.3
-        version: 9.15.3
+        specifier: ^9.15.4
+        version: 9.15.4
       fflate:
         specifier: 0.8.3
         version: 0.8.3
@@ -185,8 +185,8 @@ importers:
         specifier: ^3.24.6
         version: 3.24.6(@types/node@24.19.2)
       nodemailer:
-        specifier: 10.2.1
-        version: 10.2.1
+        specifier: 10.6.0
+        version: 10.6.0
       pdfjs-dist:
         specifier: 6.5.438
         version: 6.5.438
@@ -865,8 +865,8 @@ packages:
   devalue@5.9.4:
     resolution: {integrity: sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg==}
 
-  docx@9.15.3:
-    resolution: {integrity: sha512-3FnU6K5cuvGXEAn24yhvP3mfrZ1G8k9+hH8pSVDYsMR+mGmfK/t0NR5AwoMQodnaaxiRt2e+SvckffcJe/NvTQ==}
+  docx@9.15.4:
+    resolution: {integrity: sha512-5UUTdR+eE7KVeNroYYt6K0Ixi9yez18BBKnypz3XyQSR8FsVYTiZ4vqKZr83JHjYPAgO+Tw7T/+13KyITpkgFw==}
     engines: {node: '>=16'}
 
   enhanced-resolve@5.26.1:
@@ -1231,8 +1231,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  nodemailer@10.2.1:
-    resolution: {integrity: sha512-ZrDNsPFoDMwefNs7sJwrYiEJ/CG4ClJWDZv05iNJsEBWa8GRDry1QJHTJxsuTAY9eDDKjX4k+q3SxslXJOao7w==}
+  nodemailer@10.6.0:
+    resolution: {integrity: sha512-jWanL7D9GD3jvUDYKmoC5rWTiG8MnBgnN2yV68bgMKip1zUJhiSTyz7Eg+18y8sk5OvdVDzws5nZK5arSI4f5Q==}
     engines: {node: '>=20.0.0'}
 
   obug@2.2.1:
@@ -2137,7 +2137,7 @@ snapshots:
 
   devalue@5.9.4: {}
 
-  docx@9.15.3:
+  docx@9.15.4:
     dependencies:
       '@types/node': 26.6.6
       fflate: 0.8.3
@@ -2467,7 +2467,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  nodemailer@10.2.1: {}
+  nodemailer@10.6.0: {}
 
   obug@2.2.1: {}
 
