@@ -43,10 +43,10 @@
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
 			<PrimaryLink href="/buat" size="lg">{t('nav.create')}</PrimaryLink>
+			{#if PdfUpload}<PdfUpload variant="link" />{:else}<div class="upload-slot"></div>{/if}
 			<a class="ats-link" href={resolve('/(site)/cek-ats')} data-sveltekit-preload-code="viewport"
 				>{t('landing.atsCheck')}</a
 			>
-			{#if PdfUpload}<PdfUpload variant="link" />{:else}<div class="upload-slot"></div>{/if}
 			<VisitorCounter />
 		</div>
 		<CvMockup />

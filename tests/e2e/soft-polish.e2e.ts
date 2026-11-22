@@ -120,5 +120,7 @@ test('site header shares one row from 480px and keeps a logical focus sequence',
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('button', { name: 'Menu', exact: true })).toBeFocused();
 	await page.keyboard.press('Tab');
+	await expect(page.getByRole('link', { name: 'Masuk', exact: true })).toBeFocused();
+	await page.keyboard.press('Tab');
 	await expect(page.locator('header .header-cta')).toBeFocused();
 });

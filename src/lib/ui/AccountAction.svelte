@@ -110,8 +110,8 @@
 	.account-action[aria-current='page'] {
 		background: var(--color-brand-100);
 	}
-	/* Phones: the button would crowd the header; "Masuk"/"Akun"/"Keluar" stay in the menu. */
-	@media (max-width: 419px) {
+	/* Narrow screens: the button would crowd the header; "Masuk"/"Akun" stay in the menu. */
+	@media (max-width: 599px) {
 		.account-action {
 			display: none;
 		}

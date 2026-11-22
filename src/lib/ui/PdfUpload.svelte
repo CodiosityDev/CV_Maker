@@ -134,6 +134,9 @@
 		cursor: progress;
 		opacity: 0.75;
 	}
+	.link {
+		margin-top: 0.5rem;
+	}
 	.link .upload-button {
 		min-height: 44px;
 		padding: 0;
