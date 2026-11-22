@@ -762,7 +762,8 @@ export const appId = {
 		title: 'Unduh CV',
 		simpleLayout: 'Word dan teks memakai tata letak sederhana agar mudah dibaca portal kerja.',
 		pdf: 'PDF untuk melamar',
-		pdfHint: 'Buka halaman cetak, lalu pilih Simpan sebagai PDF.',
+		pdfHint:
+			'Langsung tersimpan sebagai file PDF. PDF ini bisa diunggah lagi di CV Saya untuk diedit.',
 		pdfAtsHint: 'PDF ini berisi teks asli sehingga terbaca ATS.',
 		docx: 'Word (.docx)',
 		docxHint: 'Untuk portal kerja yang meminta file Word.',
@@ -784,7 +785,14 @@ export const appId = {
 		title: 'Simpan CV sebagai PDF',
 		incognitoTitle: 'CV',
 		back: 'Kembali ke CV Saya',
-		savePdf: 'Simpan sebagai PDF',
+		savePdf: 'Simpan PDF',
+		saving: 'Menyiapkan PDF…',
+		saved: 'PDF tersimpan.',
+		pdfError: 'PDF belum bisa dibuat. Coba lagi.',
+		editableNote:
+			'PDF langsung disimpan ke folder pilihanmu (tanpa menu cetak). Teksnya tetap terbaca ATS, dan file ini bisa diunggah lagi di CV Saya untuk diedit.',
+		printFallback:
+			'CV ini memakai huruf di luar alfabet Latin, jadi PDF dibuat lewat menu cetak browser agar semua huruf tampil. PDF dari menu cetak tidak bisa diunggah ulang untuk diedit.',
 		guideTitle: 'Cara menyimpan sebagai PDF',
 		android: 'Android · Chrome',
 		androidGuide:
@@ -795,9 +803,9 @@ export const appId = {
 		desktop: 'Komputer',
 		desktopGuide:
 			'Pilih tujuan “Simpan sebagai PDF” dan kertas A4. Matikan “Header dan footer” agar alamat halaman tidak ikut tercetak. Gunakan margin Default atau Tidak ada.',
-		loading: 'Menyiapkan halaman cetak…',
-		loadError: 'Halaman cetak belum bisa dimuat. Coba lagi.',
-		retry: 'Muat ulang halaman cetak',
+		loading: 'Menyiapkan CV…',
+		loadError: 'Halaman belum bisa dimuat. Coba lagi.',
+		retry: 'Muat ulang',
 		printError: 'Menu cetak belum bisa dibuka. Coba lagi dari browser ini.',
 		notFound: 'CV tidak ditemukan',
 		notFoundDescription:
@@ -1034,7 +1042,11 @@ export const appId = {
 		driveLast: 'Terakhir disimpan: {date}',
 		driveDisconnect: 'Putuskan Drive',
 		driveDisconnected: 'Google Drive diputus.',
-		driveUnavailable: 'Google Drive belum tersedia.'
+		driveUnavailable: 'Google Drive belum tersedia.',
+		drivePromptTitle: 'Hubungkan Google Drive-mu',
+		drivePromptBody:
+			'Dengan Google Drive terhubung, CV-mu dicadangkan otomatis dan langsung muncul lagi saat kamu masuk di perangkat lain. CV Maker hanya bisa melihat file yang ia buat sendiri.',
+		driveSyncRestored: '{count} CV dari Google Drive ditambahkan ke perangkat ini.'
 	},
 	adminPanel: {
 		pageTitle: 'Admin — CV Maker',

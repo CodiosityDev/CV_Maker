@@ -10,6 +10,7 @@
 	import Card from '#lib/ui/Card.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
+	import PdfUpload from '#lib/ui/PdfUpload.svelte';
 
 	let guidance = $state.raw<Guidance | null>(null);
 	let unfinished = $state<CVMeta[]>([]);
@@ -113,6 +114,7 @@
 		<p>{t('wizard.steps.type.description')}</p>
 		<p class="local-note">{t('wizard.localNote')}</p>
 		<a class="all-cvs" href={resolve('/(app)/cv')}>{t('wizard.allCvs')}</a>
+		<PdfUpload variant="link" />
 	</div>
 
 	{#if memory}<p class="notice warning" role="status">{t('wizard.memoryWarning')}</p>{/if}

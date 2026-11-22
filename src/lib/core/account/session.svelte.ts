@@ -7,7 +7,7 @@
  *
  * Other tabs learn about login/logout through BroadcastChannel and refresh themselves.
  */
-import { ACCOUNT_HINT_STORAGE_KEY } from './hint';
+import { ACCOUNT_HINT_STORAGE_KEY, DRIVE_SYNCED_STORAGE_KEY } from './hint';
 import { accountClient, type AccountUser, type AuthProviders } from './index';
 
 /**
@@ -20,7 +20,11 @@ export { ACCOUNT_HINT_STORAGE_KEY };
 function setHint(on: boolean): void {
 	try {
 		if (on) localStorage.setItem(ACCOUNT_HINT_STORAGE_KEY, '1');
-		else localStorage.removeItem(ACCOUNT_HINT_STORAGE_KEY);
+		else {
+			localStorage.removeItem(ACCOUNT_HINT_STORAGE_KEY);
+			// The next login (maybe another account) merges its Drive backup in again.
+			localStorage.removeItem(DRIVE_SYNCED_STORAGE_KEY);
+		}
 	} catch {
 		// localStorage unavailable: background sync simply stays off.
 	}

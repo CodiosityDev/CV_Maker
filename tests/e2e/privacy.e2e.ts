@@ -190,44 +190,32 @@ for (const incognito of [true, false]) {
 		await cards(page).getByRole('button', { name: 'Unduh', exact: true }).click();
 		await page.getByRole('link', { name: 'PDF untuk melamar', exact: true }).click();
 		await expect(page.getByTestId('print-paper')).toContainText(secretName);
-		const print = page
+		const save = page
 			.getByTestId('print-toolbar')
-			.getByRole('button', { name: 'Simpan sebagai PDF', exact: true });
-		await expect(print).toBeEnabled();
+			.getByRole('button', { name: 'Simpan PDF', exact: true });
+		await expect(save).toBeEnabled();
 		const originalTitle = await page.title();
 		await page.clock.pauseAt(new Date('2026-11-09T00:01:00Z'));
-		await page.evaluate(() => {
-			window.print = () => {
-				document.documentElement.dataset.printTitle = document.title;
-			};
-		});
+		// Printing from the browser menu (Ctrl+P) still suggests the file name, then restores it.
 		const expectedTitle = incognito ? 'CV' : 'CV_Rahasia_Warnet_Staf_Administrasi';
 		await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
 		await expect(page).toHaveTitle(expectedTitle);
 		await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
 		await expect(page).toHaveTitle(originalTitle);
-		await print.click();
-		expect(await page.evaluate(() => document.documentElement.dataset.printTitle)).toBe(
-			expectedTitle
-		);
-		await expect(page).toHaveTitle(expectedTitle);
-		await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
-		await expect(page).toHaveTitle(originalTitle);
-		await print.click();
+		await page.evaluate(() => window.dispatchEvent(new Event('beforeprint')));
 		await page.clock.runFor(999);
 		await expect(page).toHaveTitle(expectedTitle);
 		await page.clock.runFor(1);
 		await expect(page).toHaveTitle(originalTitle);
-		await page.evaluate(() => {
-			window.print = () => {
-				throw new Error('Print unavailable');
-			};
-		});
-		await print.click();
-		await expect(page).toHaveTitle(originalTitle);
-		await expect(page.locator('.notification[data-kind="error"]')).toContainText(
-			'Menu cetak belum bisa dibuka'
+
+		// "Simpan PDF" saves the file directly; in incognito its name gives nothing away.
+		await page.evaluate(() =>
+			Object.defineProperty(window, 'showSaveFilePicker', { value: undefined })
 		);
+		const download = page.waitForEvent('download');
+		await save.click();
+		expect((await download).suggestedFilename()).toBe(`${expectedTitle}.pdf`);
+		await expect(page).toHaveTitle(originalTitle);
 	});
 }
 

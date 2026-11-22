@@ -27,5 +27,17 @@ export const homeEn: HomeMessages = {
 	/** Title of the banner frame (ui/ad-banner.ts; FAQ/About load this namespace through it). */
 	adFrame: {
 		title: 'Advertisement'
+	},
+	/** "Unggah PDF untuk diedit" (ui/PdfUpload.svelte: home page, Buat CV, CV Saya). */
+	pdfUpload: {
+		button: 'Upload PDF to edit',
+		hint: 'Only PDFs downloaded from CV Maker can be edited again.',
+		busy: 'Reading the PDF…',
+		done: 'The CV from your PDF was added. You can edit it now.',
+		notOurs:
+			'This PDF was not downloaded from CV Maker, so it cannot be edited here. For other CVs, use ATS Check → Convert to an ATS CV.',
+		tooLarge: 'The PDF file is too large (20 MB at most).',
+		failed: 'The PDF could not be read. Please try again.',
+		cta: 'Have a PDF from CV Maker? Upload it to edit'
 	}
 };

@@ -477,9 +477,16 @@ export function createAccountRoutes(deps: AccountDeps) {
 		if (!profile || !isEmailShaped(email)) return fail();
 		const user = await googleUser(profile.sub, email, profile.name);
 		log({ event: 'account.login', method: 'google' });
-		redirect(res, safeNext(typeof saved.n === 'string' ? saved.n : null), {
-			'Set-Cookie': [clear, await startSession(user.id)]
-		});
+		const next = safeNext(typeof saved.n === 'string' ? saved.n : null);
+		const session = await startSession(user.id);
+		// Logged in with Google: connect their Google Drive straight away (automatic backups, CVs on
+		// other devices). Only while not connected yet, so Google asks for it once, not every login.
+		if (drive && !(await accounts.driveLink(user.id))) {
+			const consent = driveConsent(user, next);
+			redirect(res, consent.url, { 'Set-Cookie': [session, consent.cookie] });
+			return;
+		}
+		redirect(res, next, { 'Set-Cookie': [clear, session] });
 	}
 
 	// --- shares (owner) ---------------------------------------------------------------------
@@ -661,10 +668,16 @@ export function createAccountRoutes(deps: AccountDeps) {
 	const accessTokens = new Map<string, { token: string; until: number }>();
 
 	function driveStart(req: IncomingMessage, res: ServerResponse, user: UserRecord) {
-		if (!drive) throw new HttpError(404, 'notFound');
 		const next = safeNext(
 			new URL(req.url ?? '/', 'http://local').searchParams.get('next') ?? '/akun'
 		);
+		const start = driveConsent(user, next);
+		redirect(res, start.url, { 'Set-Cookie': start.cookie });
+	}
+
+	/** Google's Drive consent page for `user` (+ the signed state cookie); back to `next?drive=…`. */
+	function driveConsent(user: UserRecord, next: string): { url: string; cookie: string } {
+		if (!drive) throw new HttpError(404, 'notFound');
 		const state = randomToken(16);
 		const verifier = randomToken(32);
 		const value = Buffer.from(
@@ -677,9 +690,10 @@ export function createAccountRoutes(deps: AccountDeps) {
 				u: user.id
 			})
 		).toString('base64url');
-		redirect(res, drive.connectUrl(state, pkceChallenge(verifier), user.email), {
-			'Set-Cookie': cookie(OAUTH_COOKIE, sign(config.appSecret, value), OAUTH_MS / 1000)
-		});
+		return {
+			url: drive.connectUrl(state, pkceChallenge(verifier), user.email),
+			cookie: cookie(OAUTH_COOKIE, sign(config.appSecret, value), OAUTH_MS / 1000)
+		};
 	}
 
 	async function driveCallback(

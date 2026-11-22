@@ -28,5 +28,17 @@ export const homeId = {
 	/** Title of the banner frame (ui/ad-banner.ts; FAQ/About load this namespace through it). */
 	adFrame: {
 		title: 'Iklan'
+	},
+	/** "Unggah PDF untuk diedit" (ui/PdfUpload.svelte: home page, Buat CV, CV Saya). */
+	pdfUpload: {
+		button: 'Unggah PDF untuk diedit',
+		hint: 'Hanya PDF yang diunduh dari CV Maker yang bisa diedit lagi.',
+		busy: 'Membaca PDF…',
+		done: 'CV dari PDF ditambahkan. Silakan edit.',
+		notOurs:
+			'PDF ini bukan hasil unduhan CV Maker, jadi tidak bisa diedit di sini. Untuk CV lain, pakai Cek ATS → Ubah jadi CV ATS.',
+		tooLarge: 'File PDF terlalu besar (maksimal 20 MB).',
+		failed: 'PDF belum bisa dibaca. Coba lagi.',
+		cta: 'Sudah punya PDF dari CV Maker? Unggah untuk diedit'
 	}
 };

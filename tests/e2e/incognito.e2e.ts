@@ -277,16 +277,14 @@ test('idle expiry removes the CV and PDF action from an already open print page'
 	const paper = page.getByTestId('print-paper');
 	await expect(paper.getByRole('heading', { name: secretName, exact: true })).toBeVisible();
 	await expect(paper.locator('[data-template]')).toHaveCount(1);
-	await expect(page.getByRole('button', { name: 'Simpan sebagai PDF', exact: true })).toBeEnabled();
+	await expect(page.getByRole('button', { name: 'Simpan PDF', exact: true })).toBeEnabled();
 	await page.clock.fastForward('03:02:00');
 	await expect(page.getByRole('alert').filter({ hasText: expiredMessage })).toBeVisible();
 	await expect(page.getByRole('link', { name: 'Buat CV baru', exact: true })).toBeVisible();
 	await expect(paper.locator('[data-template]')).toHaveCount(0);
 	await expect(page.getByTestId('removed-cv')).toBeVisible();
 	await expectSecretErased(page);
-	await expect(page.getByRole('button', { name: 'Simpan sebagai PDF', exact: true })).toHaveCount(
-		0
-	);
+	await expect(page.getByRole('button', { name: 'Simpan PDF', exact: true })).toHaveCount(0);
 	await expect(banner(page)).toBeVisible();
 });
 

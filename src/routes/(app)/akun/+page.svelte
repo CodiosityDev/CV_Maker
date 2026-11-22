@@ -18,6 +18,7 @@
 		autoBackup,
 		autoBackupEnabled,
 		backupToDrive,
+		driveStartup,
 		restoreFrom,
 		setAutoBackupEnabled
 	} from '#lib/core/backup/cloud.ts';
@@ -136,6 +137,14 @@
 			const driveResult = page.url.searchParams.get('drive');
 			if (driveResult === 'connected') toast.success(t('backup.driveConnected'));
 			else if (driveResult === 'failed') toast.error(t('backup.driveFailed'));
+			if (drive?.connected) {
+				// New device: the CVs from the Drive backup come in once (no duplicates).
+				const startup = await driveStartup();
+				if (startup.restored) {
+					toast.success(t('backup.driveSyncRestored', { count: startup.restored }));
+					cvs = await cvRepo.list().catch(() => cvs);
+				}
+			}
 		})();
 	});
 
