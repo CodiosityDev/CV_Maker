@@ -9,8 +9,16 @@
 	// Returning visitors: their CVs as paper previews above the hero (like the Google Docs home).
 	// Loaded after hydration; on failure (offline, blocked storage) the landing stays as it is.
 	let RecentCvs = $state<Component>();
+	// "Unggah PDF untuk diedit" link: also after hydration (keeps the landing's first JS small).
+	let PdfUpload = $state<typeof import('#lib/ui/PdfUpload.svelte').default>();
 	onMount(() => {
 		let active = true;
+		import('#lib/ui/PdfUpload.svelte').then(
+			(module) => {
+				if (active) PdfUpload = module.default;
+			},
+			() => {}
+		);
 		import('#lib/ui/home/load.ts')
 			.then((m) => m.loadHomeRecent())
 			.then(
@@ -35,6 +43,7 @@
 			<h1 id="hero-title">{t('landing.headline')}</h1>
 			<p class="hero-intro">{t('landing.intro')}</p>
 			<PrimaryLink href="/buat" size="lg">{t('nav.create')}</PrimaryLink>
+			{#if PdfUpload}<PdfUpload variant="link" />{:else}<div class="upload-slot"></div>{/if}
 			<a class="ats-link" href={resolve('/(site)/cek-ats')} data-sveltekit-preload-code="viewport"
 				>{t('landing.atsCheck')}</a
 			>
@@ -102,6 +111,10 @@
 	}
 	.hero-copy {
 		min-width: 0;
+	}
+	/* Holds the place of the upload link until it loads (no layout shift). */
+	.upload-slot {
+		min-height: 48px;
 	}
 	.ats-link {
 		display: flex;

@@ -90,7 +90,12 @@ test('dashboard has no data backup actions and typed wipe permanently removes CV
 	const removedActions = /backup|back up|pulihkan|restore/i;
 	await expect(page.getByRole('button', { name: removedActions })).toHaveCount(0);
 	await expect(page.getByRole('link', { name: removedActions })).toHaveCount(0);
-	await expect(page.locator('input[type="file"]')).toHaveCount(0);
+	// The only file input is "Unggah PDF untuk diedit" (PDFs from CV Maker), not a backup import.
+	await expect(page.locator('input[type="file"]')).toHaveCount(1);
+	await expect(page.locator('input[type="file"]')).toHaveAttribute(
+		'accept',
+		'application/pdf,.pdf'
+	);
 	const more = cards(page)
 		.first()
 		.getByRole('button', { name: /^Aksi lain untuk / });

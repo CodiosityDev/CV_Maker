@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { exportFileName } from '#lib/core/export/index.ts';
+	import { exportFileName, toPlainText } from '#lib/core/export/index.ts';
+	import { isWinAnsiText } from '#lib/core/pdf/winansi.ts';
 	import { toRenderModel, type RenderModel } from '#lib/core/render/index.ts';
 	import { assetRepo, incognito, onExternalChange } from '#lib/core/storage/index.ts';
 	import { t } from '#lib/i18n/index.svelte.ts';
@@ -25,6 +26,10 @@
 	let paper = $state<HTMLDivElement>();
 	let scale = $state(0);
 	let height = $state(0);
+	/** A4 width (210 mm) in CSS px. */
+	const PAGE_WIDTH_PX = (210 * 96) / 25.4;
+	/** Sharp text: CSS `zoom` where supported (see CvPreview), else `transform: scale()`. */
+	const useZoom = typeof CSS !== 'undefined' && CSS.supports('zoom', '0.5');
 	let originalTitle: string | undefined;
 	let titleTimer: ReturnType<typeof setTimeout> | undefined;
 	let removedId = $state<string>();
@@ -108,10 +113,10 @@
 		let request: number | undefined;
 		function measure() {
 			request = undefined;
-			if (!frame || !sheet || !sheet.offsetWidth) return;
-			const nextScale = Math.min(1, frame.clientWidth / sheet.offsetWidth);
+			if (!frame || !sheet || !frame.clientWidth) return;
+			const nextScale = Math.min(1, frame.clientWidth / PAGE_WIDTH_PX);
 			scale = nextScale;
-			height = sheet.offsetHeight * nextScale;
+			if (!useZoom) height = sheet.offsetHeight * nextScale;
 		}
 		function schedule() {
 			if (request !== undefined) cancelAnimationFrame(request);
@@ -119,8 +124,8 @@
 		}
 		const observer = new ResizeObserver(schedule);
 		observer.observe(frame);
-		observer.observe(sheet);
-		schedule();
+		if (!useZoom) observer.observe(sheet);
+		measure();
 		return () => {
 			observer.disconnect();
 			if (request !== undefined) cancelAnimationFrame(request);
@@ -139,6 +144,46 @@
 				).replace(/\.pdf$/, '');
 		clearTimeout(titleTimer);
 		titleTimer = setTimeout(restoreTitle, 1000);
+	}
+
+	let saving = $state(false);
+	/** The PDF fonts cover Latin script only: other scripts use the browser's print menu. */
+	const needsPrint = $derived(
+		data.cv ? !isWinAnsiText(toPlainText(toRenderModel(data.cv))) : false
+	);
+	// Loaded ahead, so the "Save as" window can open right on the click.
+	let pdfModule: Promise<typeof import('#lib/ui/pdf/export-pdf.ts')> | undefined;
+	onMount(() => {
+		pdfModule = import('#lib/ui/pdf/export-pdf.ts');
+		pdfModule.catch(() => (pdfModule = undefined));
+	});
+
+	/** "Simpan PDF": choose the folder, then the PDF is made here and written there. */
+	async function saveCv() {
+		const cv = data.cv;
+		if (!cv || unavailable || !Template || !model || loading || saving) return;
+		if (needsPrint) return printCv();
+		saving = true;
+		try {
+			const pdf = await (pdfModule ??= import('#lib/ui/pdf/export-pdf.ts'));
+			const fileName = incognito.active
+				? `${t('printPage.incognitoTitle')}.pdf`
+				: exportFileName(
+						{ fullName: cv.personal.fullName, targetRole: cv.targetRole, title: cv.title },
+						'pdf'
+					);
+			const target = await pdf.chooseSaveTarget(fileName);
+			if (!target || unavailable || data.cv?.id !== cv.id) return;
+			const result = await pdf.createCvPdf(cv);
+			if (unavailable || data.cv?.id !== cv.id) return;
+			await target(result.blob);
+			markCvDownloaded(cv.id);
+			toast.success(t('printPage.saved'));
+		} catch {
+			toast.error(t('printPage.pdfError'));
+		} finally {
+			saving = false;
+		}
 	}
 
 	function printCv() {
@@ -169,11 +214,14 @@
 	{:else if data.cv}
 		<div class="print-toolbar" data-testid="print-toolbar">
 			<Button href={backHref} variant="ghost">{t('printPage.back')}</Button>
-			<Button onclick={printCv} disabled={loading || !Template || !model}>
-				{t('printPage.savePdf')}
+			<Button onclick={saveCv} disabled={loading || !Template || !model || saving} loading={saving}>
+				{t(saving ? 'printPage.saving' : 'printPage.savePdf')}
 			</Button>
 		</div>
-		<details class="print-guide">
+		<p class="print-note">
+			{t(needsPrint ? 'printPage.printFallback' : 'printPage.editableNote')}
+		</p>
+		<details class="print-guide" hidden={!needsPrint}>
 			<summary>{t('printPage.guideTitle')}</summary>
 			<dl>
 				<dt>{t('printPage.android')}</dt>
@@ -196,13 +244,15 @@
 			<div
 				class="paper-viewport"
 				bind:this={viewport}
-				style:height="{height}px"
+				style:height={useZoom ? undefined : `${height}px`}
 				data-testid="print-viewport"
 			>
 				<div
 					class="paper"
 					bind:this={paper}
-					style:transform="scale({scale})"
+					style:zoom={useZoom && scale ? scale : undefined}
+					style:transform={useZoom ? undefined : `scale(${scale})`}
+					style:visibility={scale ? undefined : 'hidden'}
 					data-testid="print-paper"
 				>
 					<Template {model} />
@@ -235,6 +285,15 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 8px;
+	}
+	.print-note {
+		margin: 0 0 16px;
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		line-height: 1.7;
+	}
+	.print-guide[hidden] {
+		display: none;
 	}
 	.print-guide {
 		margin-bottom: 24px;
@@ -315,6 +374,7 @@
 		:global(.cv-print-route .skip-link),
 		:global(.cv-print-route .toaster),
 		.print-toolbar,
+		.print-note,
 		.print-guide,
 		.print-status,
 		.missing {
@@ -337,7 +397,9 @@
 			box-shadow: none;
 		}
 		.paper {
+			zoom: 1 !important;
 			transform: none !important;
+			visibility: visible !important;
 			border: 0;
 			box-shadow: none;
 		}

@@ -10,6 +10,8 @@
 	} from '#lib/templates/registry.ts';
 
 	let { model }: { model: RenderModel } = $props();
+	/** A4 width (210 mm) in CSS pixels: every template is exactly this wide. */
+	const PAPER_WIDTH_PX = (210 * 96) / 25.4;
 	const requestedMeta = $derived(resolveTemplate(model.templateId, model.kind));
 	let renderedModel = $state.raw<RenderModel>(untrack(() => model));
 	let displayedMeta = $state.raw<TemplateMeta>(untrack(() => requestedMeta));
@@ -20,6 +22,12 @@
 	let paper = $state<HTMLDivElement>();
 	let scale = $state(0);
 	let height = $state(0);
+	/**
+	 * Scale the A4 sheet with CSS `zoom` where supported: the text is laid out and drawn at its final
+	 * size, so it stays sharp. `transform: scale()` (fallback) can leave the sheet as a blurry
+	 * bitmap after an animation or under the dark-theme filter.
+	 */
+	const useZoom = typeof CSS !== 'undefined' && CSS.supports('zoom', '0.5');
 
 	$effect(() => {
 		const next = model;
@@ -61,10 +69,10 @@
 		let frame: number | undefined;
 		function measure() {
 			frame = undefined;
-			if (!viewport || !page || !page.offsetWidth) return;
-			const next = Math.min(1, viewport.clientWidth / page.offsetWidth);
+			if (!viewport || !page || !viewport.clientWidth) return;
+			const next = Math.min(1, viewport.clientWidth / PAPER_WIDTH_PX);
 			scale = next;
-			height = page.offsetHeight * next;
+			if (!useZoom) height = page.offsetHeight * next;
 		}
 		function schedule() {
 			if (frame !== undefined) cancelAnimationFrame(frame);
@@ -72,8 +80,9 @@
 		}
 		const observer = new ResizeObserver(schedule);
 		observer.observe(viewport);
-		observer.observe(page);
-		schedule();
+		if (!useZoom) observer.observe(page);
+		// First size at once (before paint), so the sheet never flashes at full size.
+		measure();
 		return () => {
 			observer.disconnect();
 			if (frame !== undefined) cancelAnimationFrame(frame);
@@ -93,12 +102,14 @@
 			{/if}
 		</div>
 	{/if}
-	<div class="viewport" bind:this={container} style:height="{height}px">
+	<div class="viewport" bind:this={container} style:height={useZoom ? undefined : `${height}px`}>
 		<div
 			class="paper"
 			bind:this={paper}
 			use:preventPreviewNavigation
-			style:transform="scale({scale})"
+			style:zoom={useZoom && scale ? scale : undefined}
+			style:transform={useZoom ? undefined : `scale(${scale})`}
+			style:visibility={scale ? undefined : 'hidden'}
 		>
 			{#if Template}<Template model={renderedModel} />{/if}
 		</div>
@@ -171,7 +182,9 @@
 			box-shadow: none;
 		}
 		.paper {
+			zoom: 1 !important;
 			transform: none !important;
+			visibility: visible !important;
 		}
 		figcaption,
 		.loading {

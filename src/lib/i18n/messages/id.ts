@@ -43,7 +43,10 @@ export const id = {
 		about: 'Tentang',
 		privacy: 'Privasi',
 		signIn: 'Masuk',
-		account: 'Akun'
+		account: 'Akun',
+		signOut: 'Keluar',
+		signedOut: 'Kamu sudah keluar.',
+		signOutError: 'Gagal keluar. Periksa koneksi lalu coba lagi.'
 	},
 	footer: {
 		madeBy: 'Dibuat oleh',

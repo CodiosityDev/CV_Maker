@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { CVDocument, CVMeta } from '#lib/core/schema/types.ts';
 	import { LIMITS } from '#lib/core/schema/limits.ts';
@@ -14,6 +15,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import Toggle from '#lib/ui/Toggle.svelte';
 	import ExportPanel from '#lib/ui/ExportPanel.svelte';
+	import PdfUpload from '#lib/ui/PdfUpload.svelte';
 	import { clearLetterOffers, removeLetterOffer } from '#lib/ui/letter/offer.svelte.ts';
 	import JobLinks from '#lib/ui/JobLinks.svelte';
 	import IncognitoEndDialog from '#lib/ui/IncognitoEndDialog.svelte';
@@ -52,6 +54,9 @@
 	let active = $state(false);
 	let listRequest = 0;
 	let showOnHome = $state(homeRecentEnabled());
+	/** Logged in, Google Drive not connected: invite to connect (automatic backup + other devices). */
+	let drivePrompt = $state(false);
+	let driveConnectHref = $state('/api/drive/connect');
 	$effect(() => setHomeRecentEnabled(showOnHome));
 
 	async function refresh() {
@@ -117,13 +122,37 @@
 
 	onMount(() => {
 		active = true;
-		// Logged-in browsers: automatic cloud backup when due (guests never load this code).
+		// Logged-in browsers: CVs from the Drive backup on a new device, the "connect Drive" prompt,
+		// then the automatic backup when due (guests never load this code).
+		// Back from Google (login with Google connects Drive too): `?drive=connected|failed`.
+		const driveResult = page.url.searchParams.get('drive');
+		let hinted = false;
 		try {
-			if (!incognito.active && localStorage.getItem(ACCOUNT_HINT_STORAGE_KEY) === '1') {
-				void import('#lib/core/backup/cloud.ts').then((m) => m.autoBackup.check()).catch(() => {});
-			}
+			hinted = localStorage.getItem(ACCOUNT_HINT_STORAGE_KEY) === '1';
 		} catch {
 			// localStorage unavailable: no automatic backup.
+		}
+		if (!incognito.active && (hinted || driveResult)) {
+			void (async () => {
+				if (driveResult) {
+					// A Google login lands here directly: learn the session (sets the login hint).
+					const { account } = await import('#lib/core/account/session.svelte.ts');
+					await account.load(true);
+					if (!active) return;
+					if (driveResult === 'connected') toast.success(t('backup.driveConnected'));
+					else toast.error(t('backup.driveFailed'));
+					replaceState(resolve('/(app)/cv'), page.state);
+				}
+				const cloud = await import('#lib/core/backup/cloud.ts');
+				const startup = await cloud.driveStartup();
+				if (!active) return;
+				driveConnectHref = cloud.driveConnectUrl('/cv');
+				drivePrompt = startup.promptConnect;
+				if (startup.restored) {
+					toast.success(t('backup.driveSyncRestored', { count: startup.restored }));
+					void refresh();
+				}
+			})().catch(() => {});
 		}
 		const unsubscribe = onExternalChange((event) => {
 			if (event.type === 'cv-removed') forgetCv(event.id);
@@ -476,8 +505,26 @@
 			<h1>{t('dashboard.title')}</h1>
 			{#if incognito.active}<p class="session-label">{t('incognito.sessionLabel')}</p>{/if}
 		</div>
-		<Button href="/buat">{t('dashboard.create')}</Button>
+		<div class="heading-actions">
+			<PdfUpload showHint />
+			<Button href="/buat">{t('dashboard.create')}</Button>
+		</div>
 	</div>
+	{#if drivePrompt && !incognito.active}
+		<section class="drive-prompt" aria-labelledby="drive-prompt-title" data-testid="drive-prompt">
+			<div>
+				<h2 id="drive-prompt-title">{t('backup.drivePromptTitle')}</h2>
+				<p>{t('backup.drivePromptBody')}</p>
+			</div>
+			<div class="drive-prompt-actions">
+				<!-- Full-page navigation to the server (Google consent), back to /cv?drive=… -->
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+				<a class="drive-prompt-connect" href={driveConnectHref} data-sveltekit-reload
+					>{t('backup.driveConnect')}</a
+				>
+			</div>
+		</section>
+	{/if}
 	{#if !incognito.active}<p class="local-note">{t('dashboard.localNote')}</p>{/if}
 	{#if memory}<p class="memory-warning" role="status">{t('dashboard.memoryWarning')}</p>{/if}
 	{#if incognito.active && incognito.expiredAt}
@@ -729,6 +776,54 @@
 	h2 {
 		font-size: 1.25rem;
 		font-weight: 650;
+	}
+	.heading-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: 8px;
+	}
+	.drive-prompt {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		max-width: 800px;
+		margin-bottom: 16px;
+		padding: 20px;
+		border: 1px solid var(--color-brand-100);
+		border-radius: var(--radius-lg);
+		background: var(--color-brand-50);
+	}
+	.drive-prompt > div:first-child {
+		flex: 1 1 22rem;
+		min-width: 0;
+	}
+	.drive-prompt h2 {
+		margin-bottom: 6px;
+		font-size: 1rem;
+	}
+	.drive-prompt p {
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		line-height: 1.7;
+	}
+	.drive-prompt-connect {
+		display: inline-flex;
+		min-height: 48px;
+		align-items: center;
+		padding: 12px 20px;
+		border-radius: var(--radius-md);
+		background: var(--color-brand);
+		color: var(--color-on-brand);
+		font-size: 0.875rem;
+		font-weight: 700;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+	.drive-prompt-connect:hover {
+		background: var(--color-brand-hover);
 	}
 	.local-note {
 		max-width: 800px;

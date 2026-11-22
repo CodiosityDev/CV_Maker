@@ -10,10 +10,11 @@
  * A backup is the backupRepo.export() file of all CVs; the server cleans it again before it is
  * sent to Drive.
  */
-import { driveClient, type Result } from '../account/index';
+import { driveClient, driveConnectUrl, type Result } from '../account/index';
 import {
 	ACCOUNT_HINT_STORAGE_KEY,
 	AUTO_BACKUP_STORAGE_KEY,
+	DRIVE_SYNCED_STORAGE_KEY,
 	LAST_BACKUP_STORAGE_KEY
 } from '../account/hint';
 import { backupRepo, cvRepo, incognito, type ImportResult } from '../storage/index';
@@ -58,6 +59,12 @@ async function backupFile(): Promise<{ file: unknown; latest: string } | null> {
 
 /** Saves the backup file to the user's Google Drive (must be connected). */
 export async function backupToDrive() {
+	// A new device must first take in what is already on Drive, or its (few) CVs would replace the
+	// backup of the other device. An unreadable Drive file does not block saving a fresh one.
+	if (!driveSynced()) {
+		const merged = await mergeFromDrive();
+		if (!merged.ok && merged.error !== 'invalid') return merged;
+	}
 	const data = await backupFile();
 	if (!data) return { ok: false, error: 'invalid' } as const;
 	const result = await driveClient.save(data.file);
@@ -80,6 +87,69 @@ export async function restoreFrom(file: Result<unknown>): Promise<Result<ImportR
 	} catch {
 		return { ok: false, error: 'invalid' };
 	}
+}
+
+/** True once this browser took in the Drive backup after the current login. */
+export function driveSynced(): boolean {
+	return read(DRIVE_SYNCED_STORAGE_KEY) === '1';
+}
+
+const NOTHING: ImportResult = { imported: 0, skipped: 0, copied: 0, updated: 0, ids: [] };
+
+/**
+ * Takes the CVs from the Drive backup into this browser WITHOUT duplicates: CVs that are not here
+ * yet are added, a CV that is here is replaced only by a newer version. Marks the browser as
+ * synced (also when Drive has no backup yet), so it runs once per login per device.
+ */
+export async function mergeFromDrive(): Promise<Result<ImportResult>> {
+	const file = await driveClient.restore();
+	if (!file.ok) {
+		if (file.error !== 'notFound') return file;
+		write(DRIVE_SYNCED_STORAGE_KEY, '1');
+		return { ok: true, data: NOTHING };
+	}
+	try {
+		const result = await backupRepo.import(
+			new Blob([JSON.stringify(file.data)], { type: 'application/json' }),
+			{ merge: true }
+		);
+		write(DRIVE_SYNCED_STORAGE_KEY, '1');
+		return { ok: true, data: result };
+	} catch {
+		return { ok: false, error: 'invalid' };
+	}
+}
+
+/** Where "Hubungkan Google Drive" starts (back to `next?drive=connected` or `=failed`). */
+export { driveConnectUrl };
+
+export interface DriveStartup {
+	/** CVs added or updated from the Drive backup (a new device after login). */
+	restored: number;
+	/** Logged in (e.g. by email), Drive offered by the server but not connected yet. */
+	promptConnect: boolean;
+}
+
+/**
+ * "CV Saya" on a logged-in browser: on a new device the CVs from the Drive backup appear at once
+ * (connected Drive), else the user is invited to connect Drive. Then the usual automatic backup.
+ * Guests and incognito: no request at all.
+ */
+export async function driveStartup(): Promise<DriveStartup> {
+	const none: DriveStartup = { restored: 0, promptConnect: false };
+	if (incognito.active || read(ACCOUNT_HINT_STORAGE_KEY) !== '1') return none;
+	const status = await driveClient.status();
+	if (!status.ok || !status.data.available) return none;
+	if (!status.data.connected) {
+		return { restored: 0, promptConnect: true };
+	}
+	let restored = 0;
+	if (!driveSynced()) {
+		const merged = await mergeFromDrive();
+		if (merged.ok) restored = merged.data.imported + merged.data.updated;
+	}
+	void autoBackup.check().catch(() => {});
+	return { restored, promptConnect: false };
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -121,6 +191,8 @@ export const autoBackup = {
 				return false;
 			const status = await driveClient.status();
 			if (!status.ok || !status.data.connected) return false;
+			// Never replace the Drive backup before this device took it in (see backupToDrive).
+			if (!driveSynced() && !(await mergeFromDrive()).ok) return false;
 			return (await backupToDrive()).ok;
 		} finally {
 			running = false;

@@ -687,6 +687,46 @@ describe('Google Drive backups', () => {
 		expect((await owner.request('GET', '/api/drive')).json.connected).toBe(false);
 	});
 
+	it('a Google login connects Google Drive at once, and only until it is connected', async () => {
+		const { drive } = fakeDrive();
+		const h = await start({
+			google: {
+				authUrl: (s) => `https://accounts.google.com/o/oauth2/v2/auth?state=${s}`,
+				exchange: async () => ({ sub: 'g-9', email: 'sari@gmail.com', name: 'Sari' })
+			},
+			drive
+		});
+		async function googleLogin(browser: ReturnType<typeof client>) {
+			const begin = await browser.request('GET', '/api/auth/google?next=%2Fcv');
+			const state = new URL(begin.headers.get('location') ?? '').searchParams.get('state');
+			return browser.request(
+				'GET',
+				`/api/auth/google/callback?code=c&state=${state}`,
+				undefined,
+				fromGoogle
+			);
+		}
+		const browser = client(h.base);
+		const login = await googleLogin(browser);
+		const consent = new URL(login.headers.get('location') ?? '');
+		expect(consent.searchParams.get('scope')).toBe('drive');
+		// Already logged in while Google asks for Drive access.
+		expect((await browser.request('GET', '/api/auth/me')).json.user).toMatchObject({
+			email: 'sari@gmail.com'
+		});
+		const done = await browser.request(
+			'GET',
+			`/api/auth/google/callback?code=c&state=${consent.searchParams.get('state')}`,
+			undefined,
+			fromGoogle
+		);
+		expect(done.headers.get('location')).toBe('/cv?drive=connected');
+		expect((await browser.request('GET', '/api/drive')).json.connected).toBe(true);
+
+		const again = await googleLogin(client(h.base));
+		expect(again.headers.get('location')).toBe('/cv');
+	});
+
 	it('only the user who started can finish connecting', async () => {
 		const { drive } = fakeDrive();
 		const h = await start({ google, drive });

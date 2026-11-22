@@ -5,6 +5,7 @@ import { HOME_RECENT_STORAGE_KEY } from '../home/index';
 import {
 	ACCOUNT_HINT_STORAGE_KEY,
 	AUTO_BACKUP_STORAGE_KEY,
+	DRIVE_SYNCED_STORAGE_KEY,
 	LAST_BACKUP_STORAGE_KEY
 } from '../account/hint';
 import { createEmptyCv } from '../schema/defaults';
@@ -89,6 +90,7 @@ export const LOCAL_STORAGE_KEYS = [
 	HOME_RECENT_STORAGE_KEY,
 	ACCOUNT_HINT_STORAGE_KEY,
 	AUTO_BACKUP_STORAGE_KEY,
+	DRIVE_SYNCED_STORAGE_KEY,
 	LAST_BACKUP_STORAGE_KEY
 ] as const;
 

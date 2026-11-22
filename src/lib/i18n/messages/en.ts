@@ -38,7 +38,10 @@ export const en: BaseMessages = {
 		about: 'About',
 		privacy: 'Privacy',
 		signIn: 'Sign in',
-		account: 'Account'
+		account: 'Account',
+		signOut: 'Sign out',
+		signedOut: 'You are signed out.',
+		signOutError: 'Could not sign out. Check your connection and try again.'
 	},
 	footer: {
 		madeBy: 'Made by',

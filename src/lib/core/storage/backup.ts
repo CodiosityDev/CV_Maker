@@ -59,6 +59,8 @@ export interface ImportResult {
 	skipped: number;
 	/** CVs whose id already existed here and were added as copies with a new id. */
 	copied: number;
+	/** Merge mode: CVs already here that were replaced by a newer version from the file. */
+	updated: number;
 	/** Ids of the CVs as stored on this device (for "open" links). */
 	ids: string[];
 }
@@ -66,8 +68,12 @@ export interface ImportResult {
 export interface BackupRepository {
 	/** JSON backup of the given CVs (or all) including their photos. */
 	export(ids?: string[]): Promise<Blob>;
-	/** Restore from a backup file. Throws `BackupError` for unusable files. */
-	import(file: Blob): Promise<ImportResult>;
+	/**
+	 * Restore from a backup file. Throws `BackupError` for unusable files.
+	 * `merge`: a CV whose id is already here is NOT copied — it is replaced when the file has a newer
+	 * version and skipped otherwise (Google Drive sync on another device: no duplicates).
+	 */
+	import(file: Blob, options?: { merge?: boolean }): Promise<ImportResult>;
 }
 
 // --- base64 helpers (work in browsers and Node) ---------------------------------------------
@@ -188,7 +194,7 @@ export function createBackupRepository(
 			return new Blob([JSON.stringify(file)], { type: 'application/json' });
 		},
 
-		async import(file) {
+		async import(file, { merge = false } = {}) {
 			if (file.size > BACKUP_LIMITS.maxFileBytes) throw new BackupError('too-large');
 			let parsed: unknown;
 			try {
@@ -204,9 +210,11 @@ export function createBackupRepository(
 			}
 
 			const backend = await getBackend();
-			const existing = new Set<string>();
+			/** id → updatedAt of the CVs already on this device. */
+			const existing = new Map<string, string>();
 			for (const raw of await backend.getAllCvs()) {
-				if (isRecord(raw) && typeof raw.id === 'string') existing.add(raw.id);
+				if (isRecord(raw) && typeof raw.id === 'string')
+					existing.set(raw.id, typeof raw.updatedAt === 'string' ? raw.updatedAt : '');
 			}
 
 			// Photos by their id in the file → validated asset with a fresh id.
@@ -218,7 +226,7 @@ export function createBackupRepository(
 			}
 			const storedAssets = new Map<string, string>();
 
-			const result: ImportResult = { imported: 0, skipped: 0, copied: 0, ids: [] };
+			const result: ImportResult = { imported: 0, skipped: 0, copied: 0, updated: 0, ids: [] };
 			for (const raw of parsed.cvs.slice(0, BACKUP_LIMITS.maxCvs)) {
 				const loaded = loadCvDocument(raw);
 				if (!loaded.ok) {
@@ -226,9 +234,16 @@ export function createBackupRepository(
 					continue;
 				}
 				const cv = loaded.cv;
+				let replaces = false;
 				if (existing.has(cv.id)) {
-					cv.id = newId();
-					result.copied += 1;
+					if (merge) {
+						// Same CV: keep the newer one (ISO dates compare as strings).
+						if (cv.updatedAt <= (existing.get(cv.id) ?? '')) continue;
+						replaces = true;
+					} else {
+						cv.id = newId();
+						result.copied += 1;
+					}
 				}
 
 				const photoId = cv.personal.photoAssetId;
@@ -247,9 +262,10 @@ export function createBackupRepository(
 				}
 
 				await backend.putCv(cv);
-				existing.add(cv.id);
+				existing.set(cv.id, cv.updatedAt);
 				broadcast({ type: 'cv-saved', id: cv.id, updatedAt: cv.updatedAt });
-				result.imported += 1;
+				if (replaces) result.updated += 1;
+				else result.imported += 1;
 				result.ids.push(cv.id);
 			}
 			result.skipped += Math.max(0, parsed.cvs.length - BACKUP_LIMITS.maxCvs);

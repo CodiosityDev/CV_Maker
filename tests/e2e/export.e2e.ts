@@ -152,28 +152,58 @@ test('clipboard denial has a selectable fallback and PDF page prints only the CV
 	const toolbar = page.getByTestId('print-toolbar');
 	await expect(toolbar).toBeVisible();
 	await expect(page.locator('.app-header')).toBeVisible();
-	await page.getByText('Cara menyimpan sebagai PDF', { exact: true }).click();
-	await expect(
-		page.locator('.print-guide dt').filter({ hasText: /Android.*Chrome/ })
-	).toBeVisible();
-
-	const originalTitle = await page.title();
+	const printUrl = page.url();
+	// Latin text: saved straight as a file, no print menu or print guide.
+	await expect(page.locator('.print-guide')).toBeHidden();
+	await expect(page.locator('.print-note')).toContainText('tanpa menu cetak');
 	await page.evaluate(() => {
 		document.documentElement.dataset.printCalls = '0';
 		window.print = () => {
-			document.documentElement.dataset.printCalls = String(
-				Number(document.documentElement.dataset.printCalls) + 1
-			);
-			document.documentElement.dataset.printTitle = document.title;
+			document.documentElement.dataset.printCalls = '1';
 		};
+		// Headless browsers: the "Save as" window would block; a normal download is used instead.
+		Object.defineProperty(window, 'showSaveFilePicker', { value: undefined });
 	});
-	await toolbar.getByRole('button', { name: 'Simpan sebagai PDF', exact: true }).click();
-	expect(await page.evaluate(() => document.documentElement.dataset.printCalls)).toBe('1');
-	expect(await page.evaluate(() => document.documentElement.dataset.printTitle)).toBe(
-		'CV_Alya_Putri_Junior_Web_Developer'
+	const pdfEvent = page.waitForEvent('download');
+	await toolbar.getByRole('button', { name: 'Simpan PDF', exact: true }).click();
+	const pdfDownload = await pdfEvent;
+	expect(pdfDownload.suggestedFilename()).toBe('CV_Alya_Putri_Junior_Web_Developer.pdf');
+	const pdfBytes = await bytes(pdfDownload);
+	expect(pdfBytes.subarray(0, 5).toString()).toBe('%PDF-');
+	const pdfText = pdfBytes.toString('latin1');
+	expect(pdfText).toContain('/CVMakerData');
+	expect(pdfText).not.toContain('Universitas Contoh'); // CV data inside is encoded
+	expect(await page.evaluate(() => document.documentElement.dataset.printCalls)).toBe('0');
+	await expect(page.locator('.notification')).toContainText('PDF tersimpan.');
+
+	// The saved PDF can be uploaded again to keep editing (as a copy: the CV is still here).
+	await page.goto('/cv');
+	await page
+		.getByTestId('upload-pdf-input')
+		.first()
+		.setInputFiles((await pdfDownload.path())!);
+	await expect(page).toHaveURL(/\/cv\/[a-f\d-]+\/edit$/);
+	await expect
+		.poll(() =>
+			page
+				.locator('input')
+				.evaluateAll((inputs) =>
+					inputs.some((input) => (input as HTMLInputElement).value === 'Alya Putri')
+				)
+		)
+		.toBe(true);
+	await page.goto('/cv');
+	await expect(page.getByTestId('cv-card')).toHaveCount(2);
+	await page
+		.getByTestId('upload-pdf-input')
+		.first()
+		.setInputFiles('tests/fixtures/scan-simple.pdf');
+	await expect(page.locator('.notification[data-kind="error"]')).toContainText(
+		'bukan hasil unduhan CV Maker'
 	);
-	await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
-	await expect(page).toHaveTitle(originalTitle);
+	await page.goto(printUrl);
+	await expect(paper).toBeVisible();
+	await expect(toolbar).toBeVisible();
 
 	await page.emulateMedia({ media: 'print' });
 	await expect(page.locator('.app-header')).not.toBeVisible();

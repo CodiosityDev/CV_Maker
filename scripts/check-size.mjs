@@ -11,7 +11,9 @@ const KB = 1024;
 const BUDGETS = {
 	// Landing. 60 → 61 KB on 2026-11-17: every app route adds an entry to the client router that
 	// the landing loads (here /admin); features themselves stay lazy. Keep new code off the landing.
-	'index.html': 61,
+	// 61 → 62 KB on 2026-11-22: the header's "Masuk"/"Keluar" button (owner request); its account
+	// code and the PDF upload link still load lazily.
+	'index.html': 62,
 	'200.html': 150 // SPA shell for app routes (route chunks are lazy and checked separately later)
 };
 

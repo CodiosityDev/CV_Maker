@@ -72,6 +72,24 @@ describe('backup & restore', () => {
 		expect(parsed).toMatchObject({ format: 'cvmaker-backup', version: 1 });
 	});
 
+	it('merge (Google Drive sync): no duplicates, only newer versions replace', async () => {
+		const older = { ...structuredClone(sampleCvAts), updatedAt: '2026-01-01T00:00:00.000Z' };
+		const newer = { ...structuredClone(sampleCvAts), updatedAt: '2026-02-01T00:00:00.000Z' };
+		newer.personal.fullName = 'Nama Baru';
+		const file = (cv: typeof older) =>
+			jsonFile({ format: 'cvmaker-backup', version: 1, cvs: [cv, sampleCvCreative], assets: [] });
+
+		await backend.putCv(older);
+		const first = await backup.import(file(newer), { merge: true });
+		expect(first).toMatchObject({ imported: 1, updated: 1, copied: 0 });
+		expect((await repos.cvRepo.get(sampleCvAts.id))?.personal.fullName).toBe('Nama Baru');
+
+		const again = await backup.import(file(older), { merge: true });
+		expect(again).toMatchObject({ imported: 0, updated: 0, copied: 0 });
+		expect((await repos.cvRepo.get(sampleCvAts.id))?.personal.fullName).toBe('Nama Baru');
+		expect(await repos.cvRepo.list()).toHaveLength(2);
+	});
+
 	it('never overwrites: an existing id is imported as a copy', async () => {
 		await repos.cvRepo.save(structuredClone(sampleCvAts));
 		const file = await backup.export();

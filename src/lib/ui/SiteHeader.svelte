@@ -7,6 +7,7 @@
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
+	import AccountAction from '#lib/ui/AccountAction.svelte';
 
 	/** Site header: logo, language, theme, "Buat CV" and ONE dropdown menu (same as the app header). */
 	const menuId = $props.id();
@@ -104,6 +105,7 @@
 				{/each}
 			</nav>
 		</div>
+		<AccountAction onnavigate={closeMenu} />
 		<div class="create-action">
 			<PrimaryLink href="/buat" size="sm" class="header-cta" onclick={closeMenu}
 				>{t('nav.create')}</PrimaryLink

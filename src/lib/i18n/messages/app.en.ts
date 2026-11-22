@@ -764,7 +764,8 @@ export const appEn: AppMessages = {
 		title: 'Download CV',
 		simpleLayout: 'Word and text use a simple layout that job portals can read easily.',
 		pdf: 'PDF for applications',
-		pdfHint: 'Open the print page, then choose Save as PDF.',
+		pdfHint:
+			'Saved straight as a PDF file. You can upload this PDF again in My CVs to keep editing.',
 		pdfAtsHint: 'This PDF contains real text that ATS systems can read.',
 		docx: 'Word (.docx)',
 		docxHint: 'For job portals that request a Word file.',
@@ -786,7 +787,14 @@ export const appEn: AppMessages = {
 		title: 'Save your CV as PDF',
 		incognitoTitle: 'CV',
 		back: 'Back to My CVs',
-		savePdf: 'Save as PDF',
+		savePdf: 'Save PDF',
+		saving: 'Preparing the PDF…',
+		saved: 'PDF saved.',
+		pdfError: 'The PDF could not be created. Please try again.',
+		editableNote:
+			'The PDF is saved straight to the folder you choose (no print menu). Its text stays readable for ATS, and you can upload this file again in My CVs to keep editing.',
+		printFallback:
+			'This CV uses letters outside the Latin alphabet, so the PDF is made with the browser’s print menu to show every letter. A PDF from the print menu cannot be uploaded again for editing.',
 		guideTitle: 'How to save as PDF',
 		android: 'Android · Chrome',
 		androidGuide:
@@ -797,9 +805,9 @@ export const appEn: AppMessages = {
 		desktop: 'Computer',
 		desktopGuide:
 			'Choose “Save as PDF” as the destination and A4 paper. Turn off “Headers and footers” to leave out the page address. Use Default or None for margins.',
-		loading: 'Preparing the print page…',
-		loadError: 'The print page could not be loaded. Please try again.',
-		retry: 'Reload print page',
+		loading: 'Preparing your CV…',
+		loadError: 'The page could not be loaded. Please try again.',
+		retry: 'Reload',
 		printError: 'The print menu could not be opened. Try again in this browser.',
 		notFound: 'CV not found',
 		notFoundDescription:
@@ -1036,7 +1044,11 @@ export const appEn: AppMessages = {
 		driveLast: 'Last saved: {date}',
 		driveDisconnect: 'Disconnect Drive',
 		driveDisconnected: 'Google Drive disconnected.',
-		driveUnavailable: 'Google Drive is not available yet.'
+		driveUnavailable: 'Google Drive is not available yet.',
+		drivePromptTitle: 'Connect your Google Drive',
+		drivePromptBody:
+			'With Google Drive connected, your CVs are backed up automatically and show up again when you sign in on another device. CV Maker can only see files it created itself.',
+		driveSyncRestored: '{count} CVs from Google Drive were added to this device.'
 	},
 	adminPanel: {
 		pageTitle: 'Admin — CV Maker',

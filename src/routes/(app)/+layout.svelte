@@ -17,6 +17,7 @@
 	import LanguageSwitcher from '#lib/ui/LanguageSwitcher.svelte';
 	import Logo from '#lib/ui/Logo.svelte';
 	import ThemeToggle from '#lib/ui/ThemeToggle.svelte';
+	import AccountAction from '#lib/ui/AccountAction.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -139,6 +140,7 @@
 					>
 				</nav>
 			</details>
+			{#if !incognito.active}<AccountAction onnavigate={() => (menuOpen = false)} />{/if}
 		</div>
 	</header>
 	<IncognitoBanner />
