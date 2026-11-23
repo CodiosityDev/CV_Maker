@@ -401,6 +401,11 @@ export function createAccountRoutes(deps: AccountDeps) {
 		const user = await requireUser(req);
 		const body = asObject(await readJson(req, { maxBytes: SMALL_BODY }));
 		if (body.confirm !== true) throw new HttpError(400, 'invalid');
+		// Give back the Drive access too, so no valid Google grant outlives the account.
+		const link = await accounts.driveLink(user.id);
+		const refreshToken = link ? openSecret(config.appSecret, link.token) : undefined;
+		if (refreshToken && drive) await drive.revoke(refreshToken).catch(() => {});
+		accessTokens.delete(user.id);
 		await accounts.deleteUser(user.id);
 		log({ event: 'account.deleted' });
 		send(res, 200, { ok: true }, { 'Set-Cookie': clearSession() });
@@ -463,7 +468,6 @@ export function createAccountRoutes(deps: AccountDeps) {
 		const saved = readOauthState(signed);
 		const code = params.get('code');
 		if (
-			!code ||
 			typeof saved.s !== 'string' ||
 			typeof saved.v !== 'string' ||
 			typeof saved.e !== 'number' ||
@@ -471,7 +475,18 @@ export function createAccountRoutes(deps: AccountDeps) {
 			params.get('state') !== saved.s
 		)
 			return fail();
-		if (saved.p === 'drive') return driveCallback(req, res, code, saved.v, saved, clear);
+		if (saved.p === 'drive') {
+			// No code = the user declined Drive access. They may already be logged in (login with
+			// Google asks for Drive right after), so this is a Drive failure, not a login failure.
+			if (!code) {
+				const next = safeNext(typeof saved.n === 'string' ? saved.n : '/akun');
+				return redirect(res, `${next}${next.includes('?') ? '&' : '?'}drive=failed`, {
+					'Set-Cookie': clear
+				});
+			}
+			return driveCallback(req, res, code, saved.v, saved, clear);
+		}
+		if (!code) return fail();
 		const profile = await google.exchange(code, saved.v, now());
 		const email = normalizeEmail(profile?.email);
 		if (!profile || !isEmailShaped(email)) return fail();
@@ -566,16 +581,16 @@ export function createAccountRoutes(deps: AccountDeps) {
 
 	// --- shares (visitors) ------------------------------------------------------------------
 
+	/** Visitors can see (and report) only links that are not private, blocked or expired. */
+	const isVisible = (share: ShareRecord) =>
+		!share.blocked &&
+		share.access !== 'private' &&
+		(share.expiresAt === null || share.expiresAt > now());
+
 	async function openShare(req: IncomingMessage, res: ServerResponse, slug: string, ip: string) {
 		const share = isSlugShaped(slug) ? await accounts.shareBySlug(slug) : null;
 		// One answer for missing, private, expired and blocked: the reason is not revealed.
-		if (
-			!share ||
-			share.blocked ||
-			share.access === 'private' ||
-			(share.expiresAt !== null && share.expiresAt <= now())
-		)
-			throw new HttpError(404, 'notFound');
+		if (!share || !isVisible(share)) throw new HttpError(404, 'notFound');
 		if (share.passwordHash !== null) {
 			if (req.method !== 'POST') throw new HttpError(401, 'password');
 			const body = asObject(await readJson(req, { maxBytes: SMALL_BODY }));
@@ -626,7 +641,8 @@ export function createAccountRoutes(deps: AccountDeps) {
 		if (!(REPORT_REASONS as readonly string[]).includes(reason))
 			throw new HttpError(400, 'invalid');
 		const share = isSlugShaped(slug) ? await accounts.shareBySlug(slug) : null;
-		if (!share) throw new HttpError(404, 'notFound');
+		// Same answer as openShare: a private, expired or blocked link must not be confirmed here.
+		if (!share || !isVisible(share)) throw new HttpError(404, 'notFound');
 		if (!(await take('report', subject('ip', ip), LIMITS.reportsPerIp)))
 			throw new HttpError(429, 'busy');
 		await accounts.addReport(share.id, reason, now());

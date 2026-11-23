@@ -109,6 +109,9 @@
 	--shadow-paper: 0 0 0 1px rgb(255 255 255 / 8%), 0 8px 24px rgb(0 0 0 / 28%);
 	/* The white CV paper is dimmed ON SCREEN only (less glare); print and PDF stay pure white. */
 	--paper-dim: brightness(0.9);
+	/* Same dimming as a layer on top (black 10% = brightness 0.9), for papers scaled with `zoom`:
+	   Chrome can leave stale, doubled pixels when a `filter` wraps zoomed content that scrolls. */
+	--paper-dim-overlay: rgb(0 0 0 / 10%);
 }
 
 :root[data-theme='light'] {

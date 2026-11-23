@@ -490,6 +490,11 @@ describe('shared links', () => {
 		expect(
 			(await visitor.request('POST', `/api/s/${slug}/report`, { reason: 'because' })).status
 		).toBe(400);
+		// A private link answers like a missing one (its existence is not confirmed).
+		await owner.request('PUT', `/api/shares/${sampleCvAts.id}`, shareBody({ access: 'private' }));
+		expect(
+			(await visitor.request('POST', `/api/s/${slug}/report`, { reason: 'spam' })).status
+		).toBe(404);
 	});
 });
 
@@ -725,6 +730,47 @@ describe('Google Drive backups', () => {
 
 		const again = await googleLogin(client(h.base));
 		expect(again.headers.get('location')).toBe('/cv');
+	});
+
+	it('declining Drive after a Google login keeps the user logged in (no login error)', async () => {
+		const { drive } = fakeDrive();
+		const h = await start({
+			google: {
+				authUrl: (s) => `https://accounts.google.com/o/oauth2/v2/auth?state=${s}`,
+				exchange: async () => ({ sub: 'g-8', email: 'dewi@gmail.com', name: 'Dewi' })
+			},
+			drive
+		});
+		const browser = client(h.base);
+		const begin = await browser.request('GET', '/api/auth/google?next=%2Fcv');
+		const state = new URL(begin.headers.get('location') ?? '').searchParams.get('state');
+		const login = await browser.request(
+			'GET',
+			`/api/auth/google/callback?code=c&state=${state}`,
+			undefined,
+			fromGoogle
+		);
+		const consent = new URL(login.headers.get('location') ?? '');
+		const declined = await browser.request(
+			'GET',
+			`/api/auth/google/callback?error=access_denied&state=${consent.searchParams.get('state')}`,
+			undefined,
+			fromGoogle
+		);
+		expect(declined.headers.get('location')).toBe('/cv?drive=failed');
+		expect((await browser.request('GET', '/api/auth/me')).json.user).toMatchObject({
+			email: 'dewi@gmail.com'
+		});
+		expect((await browser.request('GET', '/api/drive')).json.connected).toBe(false);
+	});
+
+	it('deleting the account gives the Drive access back to Google', async () => {
+		const { drive, state } = fakeDrive();
+		const h = await start({ google, drive });
+		const owner = await verifiedUser(h);
+		await connect(owner);
+		expect((await owner.request('POST', '/api/auth/delete', { confirm: true })).status).toBe(200);
+		expect(state.revoked).toEqual(['refresh-token']);
 	});
 
 	it('only the user who started can finish connecting', async () => {
