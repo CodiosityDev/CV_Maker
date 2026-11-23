@@ -128,14 +128,25 @@
 		margin: 0;
 	}
 	.viewport {
+		position: relative;
 		width: 100%;
 		overflow: hidden;
 		background: var(--color-paper);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-paper);
-		/* Dark theme only (token unset otherwise); never applies to print. */
-		filter: var(--paper-dim, none);
+	}
+	/*
+	 * Dark theme only (token unset otherwise): dims the white paper with a layer on top, NOT a
+	 * `filter` — a filter around the zoomed sheet in the sticky, scrolling preview panel made Chrome
+	 * keep stale pixels (doubled text, doubled page and caption).
+	 */
+	.viewport::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: var(--paper-dim-overlay, transparent);
+		pointer-events: none;
 	}
 	.paper {
 		--color-focus: var(--color-paper-focus);
@@ -180,6 +191,9 @@
 			border: 0;
 			border-radius: 0;
 			box-shadow: none;
+		}
+		.viewport::after {
+			display: none;
 		}
 		.paper {
 			zoom: 1 !important;
