@@ -1185,6 +1185,8 @@
 			top: 5.5rem;
 			max-height: calc(100svh - 6.5rem);
 			overflow: auto;
+			/* Prevents the CvPreview scale from oscillating as the scrollbar toggles. */
+			scrollbar-gutter: stable;
 		}
 		.show-preview .editor-form {
 			display: block;

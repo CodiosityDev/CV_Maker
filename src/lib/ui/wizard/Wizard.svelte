@@ -1163,6 +1163,9 @@
 		max-height: calc(100dvh - 2rem);
 		height: calc(100dvh - 2rem);
 		overflow-y: auto;
+		/* Keep the width fixed when the scrollbar appears so CvPreview's fit-to-width
+		   scale does not oscillate (scrollbar on → smaller → scrollbar off → larger). */
+		scrollbar-gutter: stable;
 	}
 	.preview-heading {
 		margin-bottom: 1rem;
